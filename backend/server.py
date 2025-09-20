@@ -2142,16 +2142,10 @@ async def launch_crossplatform_campaign(request: dict):
         Include specific launch sequence and timing strategies.
         """
         
-        from openai import OpenAI
-        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        
-        response = client.chat.completions.create(
-            model='gpt-5',
-            messages=[{'role': 'user', 'content': launch_prompt}],
-            max_completion_tokens=2500
-        )
-        
-        launch_plan = response.choices[0].message.content
+        try:
+            launch_plan = await ai_service.orchestrator.route_task("complex_analysis", launch_prompt)
+        except Exception:
+            launch_plan = None
         
         return {
             "success": True,
