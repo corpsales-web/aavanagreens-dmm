@@ -501,6 +501,13 @@ class HybridAIOrchestrator:
     async def _gpt5_quick_analysis(self, query: str, context: ConversationContext) -> Dict:
         """Quick GPT-5 analysis with reduced complexity for speed"""
         try:
+            if not self.openai_client:
+                return {
+                    "analysis": "Quick analysis unavailable due to missing API key",
+                    "error": "No OpenAI API key configured",
+                    "processing_model": "gpt-5-unavailable"
+                }
+            
             # Simplified analysis prompt for faster processing
             analysis_prompt = f"""
             Quick business analysis for: "{query}"
