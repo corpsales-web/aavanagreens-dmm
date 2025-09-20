@@ -78,6 +78,8 @@ const App = () => {
   // New Modal States
   const [showGoalsModal, setShowGoalsModal] = useState(false);
   const [showMarketingModal, setShowMarketingModal] = useState(false);
+  const [showDevTools, setShowDevTools] = useState(false);
+
   const [showNotificationPanel, setShowNotificationPanel] = useState(false);
   
   // Notification State
