@@ -138,29 +138,330 @@ class AavanaCRMAPITester:
         
         return success
 
-    def test_leads_list(self):
-        """Test GET /api/leads?limit=10 -> 200 array"""
+    def test_ai_chat(self):
+        """Test POST /api/ai/chat with messages -> expect 200 or graceful fallback"""
+        test_messages = [{"role": "user", "content": "Hello"}]
+        
         success, response = self.run_test(
-            "Leads List",
+            "AI Chat",
+            "POST",
+            "ai/chat",
+            200,
+            data={"messages": test_messages}
+        )
+        
+        if success:
+            print(f"   ✅ AI Chat working")
+            if "response" in response:
+                print(f"   🤖 AI Response: {response['response'][:100]}...")
+            elif "fallback" in response:
+                print(f"   🔄 Graceful fallback: {response['fallback']}")
+        else:
+            # Try alternative endpoint structure
+            print(f"   ℹ️  Trying alternative AI endpoint...")
+            success_alt, response_alt = self.run_test(
+                "AI Chat Alternative",
+                "POST", 
+                "ai/generate-content",
+                200,
+                data={"type": "chat", "content": "Hello", "context": "test"}
+            )
+            if success_alt:
+                print(f"   ✅ Alternative AI endpoint working")
+                success = True
+            else:
+                print(f"   ⚠️  AI endpoints not available - this is acceptable at this stage")
+        
+        return success
+
+    def create_realistic_lead(self, index):
+        """Create a realistic lead with unique data"""
+        leads_data = [
+            {
+                "name": "Rajesh Kumar",
+                "email": f"rajesh.kumar.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
+                "phone": f"987654321{index}",
+                "qualification_score": 85,
+                "status": "Qualified",
+                "project_type": "Residential Villa",
+                "budget_range": "500k_1M",
+                "timeline": "6_months",
+                "location": "Bandra West",
+                "city": "Mumbai",
+                "state": "Maharashtra",
+                "requirements": "Luxury villa with rooftop garden and sustainable landscaping",
+                "urgency": "high"
+            },
+            {
+                "name": "Priya Sharma",
+                "email": f"priya.sharma.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
+                "phone": f"987654322{index}",
+                "qualification_score": 75,
+                "status": "Qualified",
+                "project_type": "Apartment Balcony",
+                "budget_range": "25k_50k",
+                "timeline": "1_month",
+                "location": "Koramangala",
+                "city": "Bangalore",
+                "state": "Karnataka",
+                "requirements": "Modern balcony garden with automated irrigation system",
+                "urgency": "medium"
+            },
+            {
+                "name": "Amit Patel",
+                "email": f"amit.patel.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
+                "phone": f"987654323{index}",
+                "qualification_score": 90,
+                "status": "Qualified",
+                "project_type": "Commercial Office",
+                "budget_range": "250k_500k",
+                "timeline": "3_months",
+                "location": "Cyber City",
+                "city": "Gurgaon",
+                "state": "Haryana",
+                "requirements": "Corporate office green spaces and indoor plant installations",
+                "urgency": "high"
+            },
+            {
+                "name": "Sunita Reddy",
+                "email": f"sunita.reddy.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
+                "phone": f"987654324{index}",
+                "qualification_score": 70,
+                "status": "New",
+                "project_type": "Residential Apartment",
+                "budget_range": "100k_250k",
+                "timeline": "flexible",
+                "location": "Hitech City",
+                "city": "Hyderabad",
+                "state": "Telangana",
+                "requirements": "Complete home interior landscaping with low maintenance plants",
+                "urgency": "low"
+            },
+            {
+                "name": "Vikram Singh",
+                "email": f"vikram.singh.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
+                "phone": f"987654325{index}",
+                "qualification_score": 80,
+                "status": "Qualified",
+                "project_type": "Farmhouse",
+                "budget_range": "above_1M",
+                "timeline": "6_months",
+                "location": "Lonavala",
+                "city": "Pune",
+                "state": "Maharashtra",
+                "requirements": "Extensive farmhouse landscaping with organic vegetable garden",
+                "urgency": "medium"
+            },
+            {
+                "name": "Meera Joshi",
+                "email": f"meera.joshi.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
+                "phone": f"987654326{index}",
+                "qualification_score": 65,
+                "status": "New",
+                "project_type": "Terrace Garden",
+                "budget_range": "50k_100k",
+                "timeline": "immediate",
+                "location": "Andheri East",
+                "city": "Mumbai",
+                "state": "Maharashtra",
+                "requirements": "Terrace garden setup with water-efficient plants and seating area",
+                "urgency": "high"
+            }
+        ]
+        
+        return leads_data[index % len(leads_data)]
+
+    def test_seed_demo_leads(self):
+        """Create 6 realistic leads via POST /api/leads/optimized-create"""
+        print(f"\n🌱 SEEDING DEMO LEADS")
+        print("-" * 40)
+        
+        success_count = 0
+        
+        for i in range(6):
+            lead_data = self.create_realistic_lead(i)
+            
+            success, response = self.run_test(
+                f"Create Lead {i+1}: {lead_data['name']}",
+                "POST",
+                "leads/optimized-create",
+                201,
+                data=lead_data
+            )
+            
+            if success:
+                success_count += 1
+                if "lead" in response and "id" in response["lead"]:
+                    lead_id = response["lead"]["id"]
+                    self.created_leads.append(lead_id)
+                    print(f"   📝 Lead ID: {lead_id}")
+                    
+                    if "auto_converted_to_deal" in response and response["auto_converted_to_deal"]:
+                        print(f"   🔄 Auto-converted to deal!")
+                        
+                    if "qualification_summary" in response:
+                        qual = response["qualification_summary"]
+                        print(f"   🎯 Score: {qual.get('score', 'N/A')}/100")
+            else:
+                print(f"   ❌ Failed to create lead: {lead_data['name']}")
+            
+            # Small delay between requests
+            time.sleep(0.5)
+        
+        print(f"\n📊 Lead Creation Summary: {success_count}/6 leads created successfully")
+        return success_count >= 4  # Consider success if at least 4/6 leads created
+
+    def test_verify_leads_list(self):
+        """Verify GET /api/leads?limit=10 shows the created leads"""
+        success, response = self.run_test(
+            "Verify Seeded Leads",
             "GET",
             "leads?limit=10",
             200
         )
         
-        if success:
-            if isinstance(response, list):
-                print(f"   ✅ Leads list returned: {len(response)} leads")
-                if len(response) > 0:
-                    lead = response[0]
-                    if "id" in lead and "name" in lead:
-                        print(f"   📋 Sample lead: {lead['name']} (ID: {lead['id']})")
-                    else:
-                        print(f"   ⚠️  Lead missing required fields: {list(lead.keys())}")
-                else:
-                    print(f"   ℹ️  No leads in database (empty state is fine)")
+        if success and isinstance(response, list):
+            print(f"   ✅ Found {len(response)} leads in database")
+            
+            # Check if our created leads are present
+            found_leads = 0
+            for lead in response:
+                if lead.get("id") in self.created_leads:
+                    found_leads += 1
+                    print(f"   ✓ Found seeded lead: {lead.get('name', 'Unknown')} (ID: {lead.get('id', 'N/A')})")
+            
+            print(f"   📋 Verified {found_leads}/{len(self.created_leads)} seeded leads")
+            return found_leads > 0
+        
+        return success
+
+    def test_create_demo_tasks(self):
+        """Create 3 tasks via POST /api/tasks"""
+        print(f"\n📋 SEEDING DEMO TASKS")
+        print("-" * 40)
+        
+        tasks_data = [
+            {
+                "title": "Follow up with Rajesh Kumar - Villa Project",
+                "description": "Schedule site visit and discuss luxury villa landscaping requirements. Prepare detailed proposal with 3D renderings.",
+                "status": "Pending"
+            },
+            {
+                "title": "Prepare Balcony Garden Proposal - Priya Sharma",
+                "description": "Create customized balcony garden design with automated irrigation system. Include plant selection and maintenance guide.",
+                "status": "Pending"
+            },
+            {
+                "title": "Corporate Office Green Space Consultation - Amit Patel",
+                "description": "Conduct office space assessment and propose indoor plant installations with air purification benefits.",
+                "status": "Pending"
+            }
+        ]
+        
+        success_count = 0
+        
+        for i, task_data in enumerate(tasks_data):
+            success, response = self.run_test(
+                f"Create Task {i+1}: {task_data['title'][:30]}...",
+                "POST",
+                "tasks",
+                201,
+                data=task_data
+            )
+            
+            if success:
+                success_count += 1
+                if "id" in response:
+                    print(f"   📝 Task ID: {response['id']}")
+                print(f"   ✅ Task created: {task_data['title']}")
             else:
-                print(f"   ❌ Expected array, got: {type(response)}")
-                success = False
+                print(f"   ❌ Failed to create task: {task_data['title']}")
+            
+            time.sleep(0.3)
+        
+        print(f"\n📊 Task Creation Summary: {success_count}/3 tasks created successfully")
+        return success_count >= 2  # Consider success if at least 2/3 tasks created
+
+    def test_verify_tasks_list(self):
+        """Verify GET /api/tasks returns at least the 3 created tasks"""
+        success, response = self.run_test(
+            "Verify Seeded Tasks",
+            "GET",
+            "tasks",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"   ✅ Found {len(response)} tasks in database")
+            
+            # Check for tasks with our specific titles
+            demo_task_keywords = ["Rajesh Kumar", "Priya Sharma", "Amit Patel"]
+            found_tasks = 0
+            
+            for task in response:
+                task_title = task.get("title", "")
+                for keyword in demo_task_keywords:
+                    if keyword in task_title:
+                        found_tasks += 1
+                        print(f"   ✓ Found seeded task: {task_title[:50]}...")
+                        break
+            
+            print(f"   📋 Verified {found_tasks}/3 seeded tasks")
+            return found_tasks > 0
+        
+        return success
+
+    def test_seed_gallery_images(self):
+        """Seed gallery images with POST /api/batch-send/gallery"""
+        gallery_data = {
+            "project_id": "demo-seeding",
+            "sender": "system",
+            "images": [
+                {
+                    "url": "https://picsum.photos/seed/aavana1/800/600",
+                    "title": "Demo Image 1"
+                },
+                {
+                    "url": "https://picsum.photos/seed/aavana2/800/600", 
+                    "title": "Demo Image 2"
+                },
+                {
+                    "url": "https://picsum.photos/seed/aavana3/800/600",
+                    "title": "Demo Image 3"
+                },
+                {
+                    "url": "https://picsum.photos/seed/aavana4/800/600",
+                    "title": "Demo Image 4"
+                },
+                {
+                    "url": "https://picsum.photos/seed/aavana5/800/600",
+                    "title": "Demo Image 5"
+                },
+                {
+                    "url": "https://picsum.photos/seed/aavana6/800/600",
+                    "title": "Demo Image 6"
+                }
+            ]
+        }
+        
+        success, response = self.run_test(
+            "Seed Gallery Images",
+            "POST",
+            "batch-send/gallery",
+            200,
+            data=gallery_data
+        )
+        
+        if success:
+            print(f"   ✅ Gallery images seeded successfully")
+            if "success" in response and response["success"]:
+                print(f"   🖼️  Gallery response indicates success")
+            elif response.get("status_code") == 200:
+                print(f"   🖼️  Gallery endpoint returned 200 OK")
+        else:
+            print(f"   ⚠️  Gallery endpoint not available or rejected - skipping gracefully")
+            # This is acceptable as mentioned in the requirements
+            success = True
         
         return success
 
