@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Test - Aavana Greens</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #065f46;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+        .header p {
+            color: #6b7280;
+            margin: 0;
+            font-size: 16px;
+        }
+        .video-container {
+            position: relative;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+            transform: scaleX(-1); /* Mirror effect for selfie */
+        }
+        .placeholder {
+            background: #f3f4f6;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #9ca3af;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin: 5px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        .debug {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📷 Camera Test</h1>
+            <p>Test camera functionality for Face Check-in</p>
+        </div>
+
+        <div id="placeholder" class="placeholder">
+            <div class="placeholder-icon">📸</div>
+            <p><strong>Ready to test camera</strong></p>
+            <p>Click "Start Camera" to begin testing</p>
+        </div>
+
+        <div id="video-container" class="video-container">
+            <video id="video" autoplay playsinline muted></video>
+        </div>
+
+        <div class="controls">
+            <button id="start-btn" onclick="startCamera()">📷 Start Camera</button>
+            <button id="stop-btn" onclick="stopCamera()" style="display: none;">⏹️ Stop Camera</button>
+            <button id="capture-btn" onclick="capturePhoto()" style="display: none;">📸 Capture Photo</button>
+        </div>
+
+        <div id="messages"></div>
+
+        <div class="info">
+            <strong>💡 Testing Instructions:</strong><br>
+            1. Click "Start Camera" - your browser should ask for camera permission<br>
+            2. Click "Allow" when prompted<br>
+            3. You should see your camera feed in the video area<br>
+            4. If it works here, the face check-in feature should work in the main app
+        </div>
+
+        <div id="debug" class="debug" style="display: none;">
+            <strong>Debug Information:</strong><br>
+            <div id="debug-info"></div>
+        </div>
+    </div>
+
+    <script>
+        let stream = null;
+        let video = document.getElementById('video');
+        let debugMode = false;
+
+        function showMessage(message, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const className = type === 'error' ? 'error' : (type === 'success' ? 'success' : 'info');
+            messagesDiv.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+
+        function showDebug(info) {
+            if (debugMode) {
+                const debugDiv = document.getElementById('debug-info');
+                debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + info + '<br>';
+                document.getElementById('debug').style.display = 'block';
+            }
+        }
+
+        async function startCamera() {
+            showMessage('🔄 Initializing camera...', 'info');
+            showDebug('Starting camera initialization');
+            
+            try {
+                // Check if browser supports camera
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera API not supported in this browser');
+                }
+
+                showDebug('Browser supports camera API');
+
+                // Request camera access directly
+                const constraints = {
+                    video: {
+                        width: { ideal: 640, max: 1280 },
+                        height: { ideal: 480, max: 720 },
+                        facingMode: 'user'
+                    },
+                    audio: false
+                };
+
+                showDebug('Requesting camera access with constraints: ' + JSON.stringify(constraints));
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                showDebug('Camera stream obtained successfully');
+
+                // Set up video element
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    showDebug('Video metadata loaded');
+                    video.play().then(() => {
+                        showDebug('Video playing successfully');
+                        showMessage('✅ Camera started successfully! You should see your camera feed above.', 'success');
+                        
+                        // Update UI
+                        document.getElementById('placeholder').style.display = 'none';
+                        document.getElementById('video-container').style.display = 'block';
+                        document.getElementById('start-btn').style.display = 'none';
+                        document.getElementById('stop-btn').style.display = 'inline-block';
+                        document.getElementById('capture-btn').style.display = 'inline-block';
+                    }).catch(err => {
+                        showDebug('Video play failed: ' + err.message);
+                        showMessage('⚠️ Camera access granted but video failed to play: ' + err.message, 'error');
+                    });
+                };
+
+            } catch (error) {
+                showDebug('Camera initialization failed: ' + error.name + ' - ' + error.message);
+                
+                let userMessage = '';
+                switch(error.name) {
+                    case 'NotAllowedError':
+                        userMessage = '📷 Camera access denied. Please click "Allow" when your browser asks for camera permission, then try again.';
+                        break;
+                    case 'NotFoundError':
+                        userMessage = '📷 No camera found. Please ensure your camera is connected and not being used by another application.';
+                        break;
+                    case 'NotReadableError':
+                        userMessage = '📷 Camera is busy. Please close other applications that might be using your camera and try again.';
+                        break;
+                    case 'OverconstrainedError':
+                        userMessage = '📷 Camera settings not supported. Your camera might not support the requested resolution.';
+                        break;
+                    case 'SecurityError':
+                        userMessage = '📷 Camera blocked by security settings. Please enable camera access for this site in your browser settings.';
+                        break;
+                    default:
+                        userMessage = `📷 Camera error: ${error.message}. Please try again or contact support.`;
+                }
+                
+                showMessage(userMessage, 'error');
+            }
+        }
+
+        function stopCamera() {
+            showDebug('Stopping camera');
+            
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    showDebug('Stopped track: ' + track.kind);
+                });
+                stream = null;
+            }
+            
+            video.srcObject = null;
+            
+            // Update UI
+            document.getElementById('placeholder').style.display = 'block';
+            document.getElementById('video-container').style.display = 'none';
+            document.getElementById('start-btn').style.display = 'inline-block';
+            document.getElementById('stop-btn').style.display = 'none';
+            document.getElementById('capture-btn').style.display = 'none';
+            
+            showMessage('Camera stopped', 'info');
+        }
+
+        function capturePhoto() {
+            if (!stream || !video) {
+                showMessage('Camera not ready for capture', 'error');
+                return;
+            }
+
+            try {
+                showDebug('Capturing photo');
+                
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+                
+                showDebug('Photo captured: ' + dataURL.length + ' bytes');
+                showMessage('✅ Photo captured successfully! The image data is ready for face check-in.', 'success');
+                
+                // You could display the captured image here if needed
+                // const img = new Image();
+                // img.src = dataURL;
+                // document.getElementById('messages').appendChild(img);
+                
+            } catch (error) {
+                showDebug('Photo capture failed: ' + error.message);
+                showMessage('❌ Failed to capture photo: ' + error.message, 'error');
+            }
+        }
+
+        // Enable debug mode by adding ?debug=1 to URL
+        if (window.location.search.includes('debug=1')) {
+            debugMode = true;
+            showDebug('Debug mode enabled');
+        }
+
+        // Display environment info
+        showDebug('User Agent: ' + navigator.userAgent);
+        showDebug('HTTPS: ' + (window.location.protocol === 'https:'));
+        showDebug('Localhost: ' + (window.location.hostname === 'localhost'));
+        showDebug('MediaDevices API: ' + !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
+    </script>
+</body>
+</html>

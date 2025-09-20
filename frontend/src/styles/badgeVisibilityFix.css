@@ -1,0 +1,216 @@
+/**
+ * Badge Visibility Fix - Ensures error messages and notifications 
+ * appear above the "Made with Emergent" badge
+ * 
+ * Target: Platform badge at bottom-right with high z-index
+ * Solution: Position notifications above badge with higher z-index
+ */
+
+/* Toast Notifications - Ensure they appear above the badge */
+[data-sonner-toaster] {
+  /* Position toasts above the badge */
+  bottom: calc(40px + 1rem) !important; /* Badge height + margin */
+  z-index: 999999 !important; /* Higher than badge z-index */
+}
+
+/* Individual toast styling for visibility */
+[data-sonner-toast] {
+  z-index: 999999 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Error toast specific styling */
+[data-sonner-toast][data-type="error"] {
+  border: 2px solid #ef4444 !important;
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Success toast specific styling */
+[data-sonner-toast][data-type="success"] {
+  border: 2px solid #10b981 !important;
+  background: #f0fdf4 !important;
+  color: #059669 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Warning toast specific styling */
+[data-sonner-toast][data-type="warning"] {
+  border: 2px solid #f59e0b !important;
+  background: #fffbeb !important;
+  color: #d97706 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Form validation errors */
+.form-error {
+  position: relative !important;
+  z-index: 50 !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Global error banners */
+.error-banner,
+.api-error-banner {
+  position: fixed !important;
+  bottom: calc(60px + 1rem) !important; /* Above badge and toasts */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 999998 !important; /* Just below toasts */
+  max-width: calc(100vw - 2rem) !important;
+  width: auto !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Offline indicator */
+.offline-indicator {
+  position: fixed !important;
+  bottom: calc(40px + 1rem) !important; /* Above badge */
+  right: calc(150px + 1rem) !important; /* To the left of badge */
+  z-index: 999997 !important;
+  background: #ef4444 !important;
+  color: white !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  [data-sonner-toaster] {
+    bottom: calc(30px + 0.5rem) !important; /* Smaller offset on mobile */
+    left: 1rem !important;
+    right: 1rem !important;
+    width: calc(100vw - 2rem) !important;
+  }
+
+  .error-banner,
+  .api-error-banner {
+    bottom: calc(50px + 0.5rem) !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    transform: none !important;
+    max-width: none !important;
+    width: calc(100vw - 2rem) !important;
+  }
+
+  .offline-indicator {
+    bottom: calc(30px + 0.5rem) !important;
+    right: calc(120px + 0.5rem) !important; /* Adjusted for smaller badge on mobile */
+    font-size: 0.75rem !important;
+    padding: 0.375rem 0.75rem !important;
+  }
+}
+
+/* Small mobile adjustments */
+@media (max-width: 414px) {
+  [data-sonner-toaster] {
+    bottom: calc(25px + 0.5rem) !important;
+  }
+
+  .error-banner,
+  .api-error-banner {
+    bottom: calc(40px + 0.5rem) !important;
+    font-size: 0.875rem !important;
+  }
+
+  .offline-indicator {
+    bottom: calc(25px + 0.5rem) !important;
+    right: calc(100px + 0.5rem) !important;
+  }
+}
+
+/* Large desktop adjustments */
+@media (min-width: 1440px) {
+  [data-sonner-toaster] {
+    bottom: calc(50px + 1.5rem) !important; /* More space on large screens */
+  }
+
+  .error-banner,
+  .api-error-banner {
+    bottom: calc(70px + 1.5rem) !important;
+  }
+
+  .offline-indicator {
+    bottom: calc(50px + 1.5rem) !important;
+    right: calc(180px + 1.5rem) !important; /* More space from larger badge */
+  }
+}
+
+/* Ensure badge doesn't interfere with floating buttons */
+.floating-buttons {
+  bottom: calc(40px + 1rem) !important; /* Above badge */
+  z-index: 999996 !important;
+}
+
+/* Specific floating button adjustments */
+.fixed.bottom-6.left-6,
+.fixed.bottom-6.left-24,
+.fixed.bottom-6.right-6 {
+  bottom: calc(2.5rem + 40px) !important; /* 2.5rem = bottom-6, + badge height */
+  z-index: 999996 !important;
+}
+
+/* Animation for smooth transitions when notifications appear */
+[data-sonner-toast] {
+  transition: all 0.3s ease-in-out !important;
+}
+
+.error-banner,
+.api-error-banner {
+  animation: slideUp 0.3s ease-out !important;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateX(-50%) translateY(100%) !important;
+    opacity: 0 !important;
+  }
+  to {
+    transform: translateX(-50%) translateY(0) !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Modal and Dialog fixes */
+[role="dialog"],
+[data-state="open"] {
+  z-index: 1000000 !important; /* Highest priority for modals */
+}
+
+/* Modal overlay fixes */
+[data-radix-popper-content-wrapper],
+.fixed.inset-0.bg-black {
+  z-index: 999999 !important;
+}
+
+/* Specific modal content positioning */
+.fixed.inset-0.bg-black.bg-opacity-50 {
+  z-index: 999999 !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+/* Dialog content */
+.bg-white.rounded-lg.max-w-md.w-full.mx-4.max-h-\[90vh\].overflow-y-auto,
+.bg-white.rounded-lg.shadow-lg {
+  z-index: 1000000 !important;
+  position: relative !important;
+}
+
+/* Prevent modal from being hidden behind other elements */
+.modal-container,
+.dialog-container {
+  z-index: 1000000 !important;
+  position: fixed !important;
+}
+
+/* Focus states for accessibility */
+[data-sonner-toast]:focus,
+.error-banner:focus,
+.api-error-banner:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}

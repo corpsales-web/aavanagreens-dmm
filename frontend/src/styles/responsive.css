@@ -1,0 +1,125 @@
+/* Custom responsive styles for Aavana Greens CRM */
+
+/* Scrollbar hiding for tab navigation */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Extra small screens (phones, < 480px) */
+@media (max-width: 479px) {
+  .tab-mobile-compact {
+    font-size: 0.7rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .tab-mobile-icon {
+    font-size: 1rem;
+    margin-right: 0.25rem;
+  }
+}
+
+/* Custom breakpoint for extra small (xs) */
+@media (min-width: 480px) {
+  .xs\:inline { display: inline; }
+  .xs\:flex-row { flex-direction: row; }
+  .xs\:items-center { align-items: center; }
+  .xs\:gap-2 { gap: 0.5rem; }
+  .xs\:max-w-20 { max-width: 5rem; }
+  .xs\:min-w-16 { min-width: 4rem; }
+}
+
+/* Enhanced mobile touch targets */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px; /* Apple's recommended touch target size */
+    min-width: 44px;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tablet-nav-spacing {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 1024px) {
+  .desktop-nav-enhanced {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* High DPI / Retina displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .retina-enhanced {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Focus states for accessibility */
+.tab-focus-visible:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: -2px;
+  border-radius: 0.375rem;
+}
+
+/* Animation for tab transitions */
+.tab-transition {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading state styles */
+.tab-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Dark mode support (future enhancement) */
+@media (prefers-color-scheme: dark) {
+  .dark-mode-tab {
+    background-color: #1f2937;
+    color: #f9fafb;
+    border-color: #374151;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .tab-transition {
+    transition: none;
+  }
+  
+  .tab-loading::after {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
