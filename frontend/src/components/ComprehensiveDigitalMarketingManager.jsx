@@ -568,7 +568,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {contentCreation.reels.map((reel) => (
+            {(contentCreation?.reels || []).map((reel) => (
               <div key={reel.id} className="border rounded-lg p-4">
                 <h4 className="font-semibold mb-2">{reel.title}</h4>
                 <p className="text-sm text-gray-600 mb-3">{reel.concept}</p>
