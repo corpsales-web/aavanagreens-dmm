@@ -21,6 +21,8 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
   // State Management
   const [activeTab, setActiveTab] = useState('ai_strategy');
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
   const [aiProcessing, setAiProcessing] = useState(false);
 
   // AI Strategy States
