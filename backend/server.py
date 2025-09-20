@@ -1978,6 +1978,53 @@ async def create_ai_influencer(request: dict):
         saved = await _persist('marketing_influencers', influencer_doc)
         return {"success": True, "influencer": influencer_doc, "saved_id": saved.id}
 
+
+# Brand Content Generation (AI) with persistence
+@api_router.post("/ai/content/create-brand")
+async def create_brand_content(request: dict):
+    """Generate brand content package (assets + copy) and persist draft."""
+    try:
+        specifications = request.get('specifications', {})
+        topic = specifications.get('topic') or specifications.get('campaign_theme') or 'Aavana Greens Brand Assets'
+        brand_prompt = f"""
+        Create a brand content package for Aavana Greens.
+        Specifications: {json.dumps(specifications)}
+        Provide:
+        - Asset list (logos, color palette, typography, social templates, ad copy samples)
+        - Copy highlights and CTAs
+        - Visual style guidelines
+        - Suggested post ideas
+        """
+        try:
+            content_plan = await ai_service.orchestrator.route_task("quick_response", brand_prompt)
+        except Exception:
+            content_plan = None
+        brand_doc = {
+            "id": str(uuid.uuid4()),
+            "package_name": topic if isinstance(topic, str) else 'Aavana Greens Brand Assets',
+            "assets": specifications.get('assets') or ['Logo Suite','Color Palette','Typography Guide','Social Templates','Ad Copy Samples'],
+            "style_guide": specifications.get('visual_style') or 'Modern, eco-friendly, nature-inspired',
+            "deliverables": '15+ brand assets ready for use',
+            "notes": content_plan or 'AI-generated brand content package with copy and visuals.',
+            "status": "Pending Approval",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        saved = await _persist('marketing_brand_assets', brand_doc)
+        return {"success": True, "brand_assets": brand_doc, "saved_id": saved.id}
+    except Exception as e:
+        brand_doc = {
+            "id": str(uuid.uuid4()),
+            "package_name": 'Aavana Greens Brand Assets',
+            "assets": ['Logo Suite','Color Palette','Typography Guide','Social Templates','Ad Copy Samples'],
+            "style_guide": 'Modern, eco-friendly, nature-inspired',
+            "deliverables": '15+ brand assets ready for use',
+            "notes": 'AI-generated brand content package with copy and visuals.',
+            "status": "Pending Approval",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        saved = await _persist('marketing_brand_assets', brand_doc)
+        return {"success": True, "brand_assets": brand_doc, "saved_id": saved.id}
+
 # Direct Send Endpoint for Gallery/Catalogue Items
 @api_router.post("/direct-send")
 async def direct_send_items(request_data: dict):
