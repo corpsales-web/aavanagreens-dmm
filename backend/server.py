@@ -1664,6 +1664,51 @@ async def recall_client_context(client_id: str, query: str = ""):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Context recall failed: {str(e)}")
 
+
+# ------------------------
+# Marketing persistence helpers and list endpoints
+# ------------------------
+class PersistResult(BaseModel):
+    id: str
+    coll: str
+
+async def _persist(coll_name: str, payload: dict) -> PersistResult:
+    try:
+        doc = dict(payload)
+        if 'id' not in doc:
+            doc['id'] = str(uuid.uuid4())
+        if 'created_at' not in doc:
+            doc['created_at'] = datetime.now(timezone.utc)
+        await db[coll_name].insert_one(make_json_safe(doc))
+        return PersistResult(id=doc['id'], coll=coll_name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB persist failed: {e}")
+
+@api_router.get("/marketing/reels")
+async def list_marketing_reels(limit: int = 50):
+    items = await db.marketing_reels.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
+    return [parse_from_mongo(i) for i in items]
+
+@api_router.get("/marketing/ugc")
+async def list_marketing_ugc(limit: int = 50):
+    items = await db.marketing_ugc.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
+    return [parse_from_mongo(i) for i in items]
+
+@api_router.get("/marketing/influencers")
+async def list_marketing_influencers(limit: int = 50):
+    items = await db.marketing_influencers.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
+    return [parse_from_mongo(i) for i in items]
+
+@api_router.get("/marketing/brand-assets")
+async def list_marketing_brand_assets(limit: int = 50):
+    items = await db.marketing_brand_assets.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
+    return [parse_from_mongo(i) for i in items]
+
+@api_router.get("/marketing/campaigns")
+async def list_marketing_campaigns(limit: int = 50):
+    items = await db.marketing_campaigns.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
+    return [parse_from_mongo(i) for i in items]
+
 # Comprehensive Digital Marketing AI Endpoints
 @api_router.post("/ai/marketing/comprehensive-strategy")
 async def generate_comprehensive_marketing_strategy(request: dict):
