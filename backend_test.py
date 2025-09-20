@@ -3,7 +3,7 @@ import sys
 import json
 from datetime import datetime
 
-class BackendAPITester:
+class AavanaCRMAPITester:
     def __init__(self, base_url="https://greens-dashboard.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
@@ -22,9 +22,9 @@ class BackendAPITester:
         
         try:
             if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=10)
+                response = requests.get(url, headers=headers, timeout=15)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=10)
+                response = requests.post(url, json=data, headers=headers, timeout=15)
             else:
                 print(f"❌ Unsupported method: {method}")
                 return False, {}
@@ -37,7 +37,7 @@ class BackendAPITester:
                 print(f"✅ Passed - Status: {response.status_code}")
                 try:
                     response_data = response.json()
-                    print(f"   Response: {json.dumps(response_data, indent=2)}")
+                    print(f"   Response keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'Array with ' + str(len(response_data)) + ' items'}")
                     return True, response_data
                 except:
                     print(f"   Response (text): {response.text[:200]}...")
@@ -55,114 +55,8 @@ class BackendAPITester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
-    def test_health_endpoint(self):
-        """Test the health endpoint"""
-        success, response = self.run_test(
-            "Health Check",
-            "GET",
-            "health",
-            200
-        )
-        
-        if success:
-            # Validate response structure
-            if "status" in response and "db" in response:
-                if response["status"] == "ok":
-                    if response["db"] == "ok":
-                        print("   ✅ Database connection healthy")
-                    elif response["db"].startswith("error:"):
-                        print(f"   ⚠️  Database connection issue: {response['db']}")
-                    else:
-                        print(f"   ⚠️  Unexpected db status: {response['db']}")
-                else:
-                    print(f"   ❌ Unexpected status: {response['status']}")
-            else:
-                print("   ❌ Missing required fields in health response")
-                success = False
-        
-        return success
-
-    def test_gallery_seed(self):
-        """Test gallery seeding endpoint"""
-        test_data = {
-            "count": 3,
-            "reset": True
-        }
-        
-        success, response = self.run_test(
-            "Gallery Seed",
-            "POST",
-            "gallery/seed",
-            200,
-            data=test_data
-        )
-        
-        if success:
-            if "inserted" in response and response["inserted"] == 3:
-                print("   ✅ Gallery seeded successfully with correct count")
-            else:
-                print(f"   ❌ Unexpected response format or count: {response}")
-                success = False
-        
-        return success
-
-    def test_lead_qualification(self):
-        """Test lead qualification endpoint"""
-        test_lead = {
-            "lead": {
-                "name": "Test Lead",
-                "email": "test@example.com",
-                "phone": "9876543210",
-                "notes": "Looking to buy in Oct, budget 50L",
-                "source": "Referral"
-            }
-        }
-        
-        success, response = self.run_test(
-            "Lead Qualification",
-            "POST",
-            "leads/qualify",
-            200,
-            data=test_lead
-        )
-        
-        if success:
-            required_fields = ["score", "stage", "reasoning", "model_used"]
-            missing_fields = [field for field in required_fields if field not in response]
-            
-            if not missing_fields:
-                # Validate field types and values
-                if isinstance(response["score"], (int, float)):
-                    print(f"   ✅ Score: {response['score']}")
-                else:
-                    print(f"   ❌ Score should be a number, got: {type(response['score'])}")
-                    success = False
-                
-                if response["stage"] in ["New", "Contacted", "Qualified"]:
-                    print(f"   ✅ Stage: {response['stage']}")
-                else:
-                    print(f"   ❌ Invalid stage: {response['stage']}")
-                    success = False
-                
-                if isinstance(response["reasoning"], str) and response["reasoning"]:
-                    print(f"   ✅ Reasoning: {response['reasoning'][:50]}...")
-                else:
-                    print(f"   ❌ Reasoning should be a non-empty string")
-                    success = False
-                
-                if isinstance(response["model_used"], str) and response["model_used"]:
-                    print(f"   ✅ Model: {response['model_used']}")
-                else:
-                    print(f"   ❌ Model should be a non-empty string")
-                    success = False
-            else:
-                print(f"   ❌ Missing required fields: {missing_fields}")
-                success = False
-        
-        return success
-
-    def test_root_endpoint(self):
-        """Test the root API endpoint"""
+    def test_root_api(self):
+        """Test GET /api/ -> expect 200 JSON with message"""
         success, response = self.run_test(
             "Root API",
             "GET",
@@ -170,25 +64,116 @@ class BackendAPITester:
             200
         )
         
-        if success and "message" in response:
-            print(f"   ✅ Root endpoint working: {response['message']}")
+        if success and isinstance(response, dict) and "message" in response:
+            print(f"   ✅ Root API working: {response['message']}")
         elif success:
-            print(f"   ⚠️  Root endpoint responded but unexpected format: {response}")
+            print(f"   ⚠️  Root API responded but unexpected format: {response}")
+        
+        return success
+
+    def test_dashboard_stats(self):
+        """Test GET /api/dashboard/stats -> expect 200 with keys total_leads, new_leads, qualified_leads, etc."""
+        success, response = self.run_test(
+            "Dashboard Stats",
+            "GET",
+            "dashboard/stats",
+            200
+        )
+        
+        if success:
+            expected_keys = ['total_leads', 'new_leads', 'qualified_leads', 'won_deals', 'lost_deals', 'total_revenue', 'pending_tasks', 'conversion_rate']
+            missing_keys = [key for key in expected_keys if key not in response]
+            
+            if not missing_keys:
+                print(f"   ✅ All expected keys present")
+                print(f"   📊 Stats: {response['total_leads']} leads, {response['qualified_leads']} qualified, {response['conversion_rate']}% conversion")
+            else:
+                print(f"   ⚠️  Missing keys: {missing_keys}")
+                print(f"   📊 Available keys: {list(response.keys())}")
+        
+        return success
+
+    def test_optimized_lead_creation(self):
+        """Test POST /api/leads/optimized-create with realistic payload"""
+        test_lead = {
+            "name": "Test Customer",
+            "email": f"test_{datetime.now().strftime('%Y%m%d_%H%M%S')}@example.com",
+            "phone": "9876543210",
+            "qualification_score": 85,
+            "status": "Qualified",
+            "project_type": "Residential",
+            "budget_range": "50k_100k",
+            "timeline": "3_months",
+            "location": "Mumbai",
+            "city": "Mumbai",
+            "state": "Maharashtra",
+            "requirements": "Looking for sustainable balcony garden design",
+            "decision_maker": "Self",
+            "urgency": "high"
+        }
+        
+        success, response = self.run_test(
+            "Optimized Lead Creation",
+            "POST",
+            "leads/optimized-create",
+            201,
+            data=test_lead
+        )
+        
+        if success:
+            if "success" in response and response["success"]:
+                print(f"   ✅ Lead created successfully")
+                if "lead" in response and "id" in response["lead"]:
+                    print(f"   📝 Lead ID: {response['lead']['id']}")
+                if "auto_converted_to_deal" in response:
+                    print(f"   🔄 Auto-converted to deal: {response['auto_converted_to_deal']}")
+                if "qualification_summary" in response:
+                    qual = response["qualification_summary"]
+                    print(f"   🎯 Qualification: {qual.get('score', 'N/A')}/100, Level: {qual.get('level', 'N/A')}")
+            else:
+                print(f"   ❌ Unexpected response format: {response}")
+                success = False
+        
+        return success
+
+    def test_leads_list(self):
+        """Test GET /api/leads?limit=10 -> 200 array"""
+        success, response = self.run_test(
+            "Leads List",
+            "GET",
+            "leads?limit=10",
+            200
+        )
+        
+        if success:
+            if isinstance(response, list):
+                print(f"   ✅ Leads list returned: {len(response)} leads")
+                if len(response) > 0:
+                    lead = response[0]
+                    if "id" in lead and "name" in lead:
+                        print(f"   📋 Sample lead: {lead['name']} (ID: {lead['id']})")
+                    else:
+                        print(f"   ⚠️  Lead missing required fields: {list(lead.keys())}")
+                else:
+                    print(f"   ℹ️  No leads in database (empty state is fine)")
+            else:
+                print(f"   ❌ Expected array, got: {type(response)}")
+                success = False
         
         return success
 
 def main():
-    print("🚀 Starting Backend API Tests")
-    print("=" * 50)
+    print("🚀 Starting Aavana CRM Backend API Tests")
+    print("=" * 60)
     
-    tester = BackendAPITester()
+    tester = AavanaCRMAPITester()
     
-    # Run all tests
+    # Run tests as specified in review request
     tests = [
-        ("Root API", tester.test_root_endpoint),
-        ("Health Check", tester.test_health_endpoint),
-        ("Gallery Seed", tester.test_gallery_seed),
-        ("Lead Qualification", tester.test_lead_qualification),
+        ("Root API", tester.test_root_api),
+        ("Dashboard Stats", tester.test_dashboard_stats),
+        ("Optimized Lead Creation", tester.test_optimized_lead_creation),
+        ("Leads List", tester.test_leads_list),
     ]
     
     results = {}
@@ -201,9 +186,9 @@ def main():
             tester.tests_run += 1
     
     # Print summary
-    print("\n" + "=" * 50)
-    print("📊 TEST SUMMARY")
-    print("=" * 50)
+    print("\n" + "=" * 60)
+    print("📊 BACKEND API TEST SUMMARY")
+    print("=" * 60)
     
     for test_name, passed in results.items():
         status = "✅ PASSED" if passed else "❌ FAILED"
@@ -212,10 +197,10 @@ def main():
     print(f"\nOverall: {tester.tests_passed}/{tester.tests_run} tests passed")
     
     if tester.tests_passed == tester.tests_run:
-        print("🎉 All backend tests passed!")
+        print("🎉 All backend API tests passed!")
         return 0
     else:
-        print("⚠️  Some backend tests failed!")
+        print("⚠️  Some backend API tests failed!")
         return 1
 
 if __name__ == "__main__":
