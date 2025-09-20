@@ -107,15 +107,18 @@
 ## backend:
 ##   - task: "Health endpoint and gallery seed + lead qualification fallback"
 ##     implemented: true
-##     working: "NA"
+##     working: true
 ##     file: "/app/backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: true
+##     needs_retesting: false
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
 ##         -comment: "Added /api/health, /api/gallery/seed seeding with picsum placeholder, and /api/leads/qualify deterministic rules-based fallback (no external keys needed). Preserved Mongo + CORS + /api prefix rules."
+##         -working: true
+##         -agent: "testing"
+##         -comment: "All backend API tests passed: Health endpoint returns status=ok and db=ok, Gallery seed correctly inserts requested count (tested with 3 items), Lead qualification returns proper score/stage/reasoning/model_used fields with correct data types and valid values. API accessible at https://greens-dashboard.preview.emergentagent.com/api"
 
 ## frontend:
 ##   - task: "Seed UI + Lead Qualification UI + Modal z-index fix"
