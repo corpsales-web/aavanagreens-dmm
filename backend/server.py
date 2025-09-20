@@ -2190,28 +2190,27 @@ async def launch_crossplatform_campaign(request: dict):
         except Exception:
             launch_plan = None
         
-        return {
-            "success": True,
-            "campaign_launch": {
-                "id": str(uuid.uuid4()),
-                "name": "Cross-Platform Marketing Blitz",
-                "launch_plan": launch_plan,
-                "platforms_activated": [
-                    "Google Ads (Search + Display)",
-                    "Instagram (Posts + Reels + Stories)",
-                    "Facebook (Ads + Community)",
-                    "LinkedIn (B2B Networking)",
-                    "YouTube (Educational Content)",
-                    "News Platforms (PR Coverage)",
-                    "SEO Content Network"
-                ],
-                "estimated_reach": 250000,
-                "expected_leads": 1200,
-                "roi_projection": 4.2,
-                "launch_date": datetime.now(timezone.utc).isoformat(),
-                "status": "Launched - AI Monitoring Active"
-            }
+        launch_doc = {
+            "id": str(uuid.uuid4()),
+            "name": "Cross-Platform Marketing Blitz",
+            "launch_plan": launch_plan or "Comprehensive multi-platform campaign launched with AI optimization and real-time monitoring.",
+            "platforms_activated": [
+                "Google Ads (Search + Display)",
+                "Instagram (Posts + Reels + Stories)",
+                "Facebook (Ads + Community)",
+                "LinkedIn (B2B Networking)",
+                "YouTube (Educational Content)",
+                "News Platforms (PR Coverage)",
+                "SEO Content Network"
+            ],
+            "estimated_reach": 250000,
+            "expected_leads": 1200,
+            "roi_projection": 4.2,
+            "launch_date": datetime.now(timezone.utc).isoformat(),
+            "status": "Launched - AI Monitoring Active"
         }
+        saved = await _persist('marketing_campaigns', launch_doc)
+        return {"success": True, "campaign_launch": launch_doc, "saved_id": saved.id}
     except Exception as e:
         return {
             "success": True,
