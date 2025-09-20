@@ -574,7 +574,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
                 <p className="text-sm text-gray-600 mb-3">{reel.concept}</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span>Estimated Reach:</span><span className="font-semibold">{Number(reel.estimated_reach || 0).toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span>Engagement Score:</span><span className="font-semibold">{reel.engagement_prediction}/10</span></div>
+                  <div className="flex justify-between"><span>Engagement Score:</span><span className="font-semibold">{Number(reel.engagement_prediction || 0)}</span></div>
                   <div className="flex justify-between"><span>Production Cost:</span><span className="font-semibold">₹{reel.production_cost}</span></div>
                 </div>
                 <div className="flex space-x-2 mt-4">
