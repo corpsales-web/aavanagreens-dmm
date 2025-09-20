@@ -90,6 +90,57 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
     voice_tone: 'friendly_expert'
   });
 
+  // Approval dialog state
+  const [approvalOpen, setApprovalOpen] = useState(false);
+  const [approvalTarget, setApprovalTarget] = useState({ type: '', id: '', display: '' });
+  const [targeting, setTargeting] = useState({
+    geography: { area: [], city: [], state: [], country: [] },
+    demographics: { gender: [], age: [] },
+    behavior: { interests: [], personality: [] },
+    schedule: { weekly: [], monthly: [], daily: [] },
+    other: { device: [], language: [], income: [], purchase_history: false, events: [] }
+  });
+
+  const openApprove = (type, item, label) => {
+    if (!item?.id) {
+      toast({ title: 'Cannot approve yet', description: 'This item has no saved ID. Please use the action buttons to generate and save it first.', variant: 'destructive' });
+      return;
+    }
+    setApprovalTarget({ type, id: item.id, display: label || item.title || item.name || item.package_name || 'Item' });
+    setApprovalOpen(true);
+  };
+
+  const submitApprove = async () => {
+    try {
+      await axios.post(`${API}/api/marketing/approve`, {
+        type: approvalTarget.type,
+        id: approvalTarget.id,
+        targeting,
+      });
+      toast({ title: 'Approved', description: `${approvalTarget.display} approved with targeting filters.` });
+      setApprovalOpen(false);
+    } catch (e) {
+      toast({ title: 'Approval failed', description: e?.response?.data?.detail || e.message, variant: 'destructive' });
+    }
+  };
+
+  // Helpers to fetch saved items (View All)
+  const fetchReels = async () => {
+    try { const { data } = await axios.get(`${API}/api/marketing/reels`); setContentCreation(prev => ({ ...prev, reels: data || [] })); toast({ title: 'Loaded', description: `Loaded ${data?.length || 0} reels` }); } catch {}
+  };
+  const fetchUGC = async () => {
+    try { const { data } = await axios.get(`${API}/api/marketing/ugc`); setContentCreation(prev => ({ ...prev, ugc_content: data || [] })); toast({ title: 'Loaded', description: `Loaded ${data?.length || 0} UGC campaigns` }); } catch {}
+  };
+  const fetchInfluencers = async () => {
+    try { const { data } = await axios.get(`${API}/api/marketing/influencers`); setContentCreation(prev => ({ ...prev, ai_influencers: data || [] })); toast({ title: 'Loaded', description: `Loaded ${data?.length || 0} influencers` }); } catch {}
+  };
+  const fetchBrandAssets = async () => {
+    try { const { data } = await axios.get(`${API}/api/marketing/brand-assets`); setContentCreation(prev => ({ ...prev, brand_content: data || [] })); toast({ title: 'Loaded', description: `Loaded ${data?.length || 0} brand packages` }); } catch {}
+  };
+  const fetchCampaigns = async () => {
+    try { const { data } = await axios.get(`${API}/api/marketing/campaigns`); setCampaigns(data || []); toast({ title: 'Loaded', description: `Loaded ${data?.length || 0} campaigns` }); } catch {}
+  };
+
   // Initialize comprehensive marketing data
   useEffect(() => {
     if (isOpen) {
