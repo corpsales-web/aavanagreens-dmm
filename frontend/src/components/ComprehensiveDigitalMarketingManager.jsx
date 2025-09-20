@@ -532,7 +532,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Button onClick={launchCrossplatformCampaign} disabled={aiProcessing} className="bg-green-600 hover:bg-green-700 p-6 h-auto">
+        <Button onClick={() => launchCrossplatformCampaign('comprehensive')} disabled={aiProcessing} className="bg-green-600 hover:bg-green-700 p-6 h-auto">
           <div className="text-center"><Monitor className="h-8 w-8 mx-auto mb-2" /><div className="font-semibold">Launch Multi-Platform Campaign</div><div className="text-sm opacity-90">Google Ads + Social + News</div></div>
         </Button>
         <Button onClick={() => setActiveTab('content_creation')} className="bg-blue-600 hover:bg-blue-700 p-6 h-auto">
