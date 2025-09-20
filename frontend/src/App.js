@@ -489,6 +489,14 @@ const App = () => {
               </div>
 
               <div className="flex items-center space-x-1 sm:space-x-4">
+                {/* Dev Tools Toggle */}
+                <button
+                  onClick={() => setShowDevTools(!showDevTools)}
+                  className="bg-gray-100 text-gray-700 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg hover:bg-gray-200 text-xs sm:text-sm"
+                  title="Developer Quick Tools"
+                >
+                  Dev
+                </button>
                 <div className="flex items-center space-x-1 sm:space-x-2">
                   <button
                     onClick={() => setShowGoalsModal(true)}
