@@ -446,15 +446,20 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
       setCampaigns(prev => [...prev, newCampaign]);
 
       try {
-        await axios.post(`${API}/api/ai/campaigns/launch-crossplatform`, {
+        const res = await axios.post(`${API}/api/ai/campaigns/launch-crossplatform`, {
           campaign_data: { ...strategyForm, campaign_type: campaignType, config },
           platform_allocation: config.budget,
           ai_optimization: true,
           real_time_adjustment: true
         });
-      } catch {}
-
-      alert(`🚀 ${config.name} Launched Successfully!`);
+        if (res?.data?.success) {
+          toast({ title: 'Campaign Saved', description: `${config.name} persisted (Pending Approval)` });
+        } else {
+          toast({ title: 'Campaign Draft', description: `${config.name} saved as draft (offline)` });
+        }
+      } catch (e) {
+        toast({ title: 'Campaign Draft', description: `${config.name} saved as draft (offline)` });
+      }
     } catch (error) {
       console.error('Cross-platform campaign launch failed:', error);
       alert(`🚀 ${campaignType} Campaign Launched Successfully!`);
