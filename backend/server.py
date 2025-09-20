@@ -1709,6 +1709,13 @@ async def list_marketing_campaigns(limit: int = 50):
     items = await db.marketing_campaigns.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
     return [parse_from_mongo(i) for i in items]
 
+    return [parse_from_mongo(i) for i in items]
+
+@api_router.get("/marketing/campaigns")
+async def list_marketing_campaigns(limit: int = 50):
+    items = await db.marketing_campaigns.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
+    return [parse_from_mongo(i) for i in items]
+
 # Comprehensive Digital Marketing AI Endpoints
 @api_router.post("/ai/marketing/comprehensive-strategy")
 async def generate_comprehensive_marketing_strategy(request: dict):
