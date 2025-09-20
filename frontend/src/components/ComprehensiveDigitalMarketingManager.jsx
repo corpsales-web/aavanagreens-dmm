@@ -607,11 +607,11 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span>Projected Followers:</span><span className="font-semibold">{Number(influencer.follower_projection || 0).toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span>Monthly Posts:</span><span className="font-semibold">{influencer.monthly_posts}</span></div>
-                  <div className="flex justify-between"><span>Engagement Rate:</span><span className="font-semibold">{influencer.engagement_rate}%</span></div>
+                  <div className="flex justify-between"><span>Monthly Posts:</span><span className="font-semibold">{influencer.monthly_posts || 0}</span></div>
+                  <div className="flex justify-between"><span>Engagement Rate:</span><span className="font-semibold">{influencer.engagement_rate || 0}%</span></div>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-3">
-                  {influencer.content_themes.map((theme, index) => (
+                  {(influencer.content_themes || []).map((theme, index) => (
                     <Badge key={index} variant="outline" className="text-xs">{theme}</Badge>
                   ))}
                 </div>
