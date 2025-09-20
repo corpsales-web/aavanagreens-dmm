@@ -329,14 +329,14 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
         });
         if (response.data && response.data.success) {
           updateContentArrays(contentType, response.data);
-          showSuccessMessage(contentType, response.data);
+          toast({ title: 'Success', description: `${contentType.replace('_',' ')} created and saved.` });
         } else {
           throw new Error('API response unsuccessful');
         }
       } catch (apiError) {
         const mockResponse = createMockContentResponse(contentType);
         updateContentArrays(contentType, mockResponse);
-        showSuccessMessage(contentType, mockResponse);
+        toast({ title: 'Created (offline)', description: `${contentType.replace('_',' ')} draft saved locally.` });
       }
     } catch (error) {
       console.error(`${contentType} creation failed:`, error);
