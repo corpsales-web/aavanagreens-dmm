@@ -594,7 +594,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
           <CardDescription>Community-driven campaigns to boost engagement</CardDescription>
         </CardHeader>
         <CardContent>
-          {contentCreation.ugc_content.length === 0 ? (
+          {(contentCreation?.ugc_content || []).length === 0 ? (
             <div className="text-sm text-gray-600">No UGC campaigns yet. Click "UGC Campaign" to generate one.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
