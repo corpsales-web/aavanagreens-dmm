@@ -407,6 +407,16 @@ class HybridAIOrchestrator:
     async def _gpt4o_contextual_response(self, query: str, context: ConversationContext) -> AIResponse:
         """GPT-4o response with full context awareness"""
         try:
+            if not self.openai_client:
+                return AIResponse(
+                    content="AI features are currently unavailable due to missing API key configuration.",
+                    source="error",
+                    confidence=0.0,
+                    tokens_used=0,
+                    response_time=0.0,
+                    reasoning="No OpenAI API key configured"
+                )
+            
             messages = self._build_gpt4o_messages(query, context, simple=False)
             
             response = self.openai_client.chat.completions.create(
