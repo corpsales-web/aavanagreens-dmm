@@ -536,6 +536,14 @@ const App = () => {
             <TabNavigation />
 
             {/* Content Area - New Tab System */}
+            {showDevTools && (
+              <div className="p-3 rounded-lg border bg-white/70">
+                <div className="flex items-center gap-2">
+                  <Button variant="secondary" onClick={seedGallery}>Seed Gallery (6)</Button>
+                  <Button variant="secondary" onClick={quickAiPing}>AI Chat Ping</Button>
+                </div>
+              </div>
+            )}
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
