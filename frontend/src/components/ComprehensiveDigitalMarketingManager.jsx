@@ -858,6 +858,53 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Follower Growth</p><p className="text-2xl font-bold text-green-600">+{analytics.growth_metrics?.follower_growth}%</p></div><TrendingUp className="h-8 w-8 text-green-600" /></div></CardContent></Card>
         <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Engagement Growth</p><p className="text-2xl font-bold text-blue-600">+{analytics.growth_metrics?.engagement_growth}%</p></div><Megaphone className="h-8 w-8 text-blue-600" /></div></CardContent></Card>
+
+      {/* Approval Dialog */}
+      {approvalOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setApprovalOpen(false)} />
+          <div className="relative bg-white rounded-lg w-[95%] max-w-2xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-xl font-bold">Approve: {approvalTarget.display}</h3>
+                <p className="text-sm text-gray-600">Specify exact targeting before execution</p>
+              </div>
+              <Button variant="ghost" onClick={() => setApprovalOpen(false)}><X className="h-4 w-4"/></Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs">Geography</Label>
+                <Input placeholder="City (comma-separated)" onBlur={(e) => setTargeting(t => ({...t, geography: {...t.geography, city: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} />
+                <Input placeholder="State (comma-separated)" onBlur={(e) => setTargeting(t => ({...t, geography: {...t.geography, state: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} className="mt-2" />
+                <Input placeholder="Country (comma-separated)" onBlur={(e) => setTargeting(t => ({...t, geography: {...t.geography, country: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} className="mt-2" />
+              </div>
+              <div>
+                <Label className="text-xs">Demographics</Label>
+                <Input placeholder="Gender (male,female,other)" onBlur={(e) => setTargeting(t => ({...t, demographics: {...t.demographics, gender: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} />
+                <Input placeholder="Age groups (e.g., 18-24,25-44)" onBlur={(e) => setTargeting(t => ({...t, demographics: {...t.demographics, age: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} className="mt-2" />
+              </div>
+              <div>
+                <Label className="text-xs">Behavior & Interests</Label>
+                <Input placeholder="Interests (comma-separated)" onBlur={(e) => setTargeting(t => ({...t, behavior: {...t.behavior, interests: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} />
+                <Input placeholder="Personality traits (comma-separated)" onBlur={(e) => setTargeting(t => ({...t, behavior: {...t.behavior, personality: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} className="mt-2" />
+              </div>
+              <div>
+                <Label className="text-xs">Schedule & Other</Label>
+                <Input placeholder="Weekly days (Mon,Fri)" onBlur={(e) => setTargeting(t => ({...t, schedule: {...t.schedule, weekly: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} />
+                <Input placeholder="Events/Festivals" onBlur={(e) => setTargeting(t => ({...t, other: {...t.other, events: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} className="mt-2" />
+                <Input placeholder="Languages (comma-separated)" onBlur={(e) => setTargeting(t => ({...t, other: {...t.other, language: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))} className="mt-2" />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-5">
+              <Button variant="outline" onClick={() => setApprovalOpen(false)}>Cancel</Button>
+              <Button className="bg-green-600" onClick={submitApprove}>Approve</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
         <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Lead Generation</p><p className="text-2xl font-bold text-purple-600">+{analytics.growth_metrics?.lead_generation_growth}%</p></div><Target className="h-8 w-8 text-purple-600" /></div></CardContent></Card>
         <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Brand Mentions</p><p className="text-2l font-bold text-orange-600">+{analytics.growth_metrics?.brand_mention_growth}%</p></div><TrendingUp className="h-8 w-8 text-orange-600" /></div></CardContent></Card>
       </div>
