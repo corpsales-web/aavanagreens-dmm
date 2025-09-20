@@ -1899,16 +1899,11 @@ async def create_ai_influencer(request: dict):
         Include specific content ideas and engagement tactics.
         """
         
-        from openai import OpenAI
-        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        
-        response = client.chat.completions.create(
-            model='gpt-5',
-            messages=[{'role': 'user', 'content': influencer_prompt}],
-            max_completion_tokens=2000
-        )
-        
-        influencer_profile = response.choices[0].message.content
+        # Unified orchestrator call (cost-aware)
+        try:
+            influencer_profile = await ai_service.orchestrator.route_task("quick_response", influencer_prompt)
+        except Exception:
+            influencer_profile = None
         
         return {
             "success": True,
