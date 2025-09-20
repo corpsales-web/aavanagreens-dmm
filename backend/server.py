@@ -1885,22 +1885,21 @@ async def create_ugc_campaign(request: dict):
         except Exception:
             campaign_plan = None
         
-        return {
-            "success": True,
-            "campaign": {
-                "id": str(uuid.uuid4()),
-                "name": f"AI UGC Campaign: {specifications.get('campaign_theme', 'Green Living')}",
-                "concept": campaign_plan,
-                "hashtag": "#MyAavanaGreenJourney",
-                "incentive": "Monthly winner gets ₹10,000 garden makeover + feature",
-                "expected_submissions": 350,
-                "estimated_reach": 75000,
-                "platforms": ['Instagram', 'Facebook', 'YouTube'],
-                "duration": "3 months",
-                "status": "AI Generated - Ready to Launch",
-                "created_at": datetime.now(timezone.utc).isoformat()
-            }
+        campaign_doc = {
+            "id": str(uuid.uuid4()),
+            "name": f"AI UGC Campaign: {specifications.get('campaign_theme', 'Green Living')}",
+            "concept": campaign_plan or "Comprehensive user-generated content campaign designed to boost authentic engagement and community building.",
+            "hashtag": "#MyAavanaGreenJourney",
+            "incentive": "Monthly winner gets ₹10,000 garden makeover + feature",
+            "expected_submissions": 350,
+            "estimated_reach": 75000,
+            "platforms": ['Instagram', 'Facebook', 'YouTube'],
+            "duration": "3 months",
+            "status": "AI Generated - Ready to Launch",
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
+        saved = await _persist('marketing_ugc', campaign_doc)
+        return {"success": True, "campaign": campaign_doc, "saved_id": saved.id}
     except Exception as e:
         return {
             "success": True,
