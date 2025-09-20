@@ -606,7 +606,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span>Projected Followers:</span><span className="font-semibold">{influencer.follower_projection.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span>Projected Followers:</span><span className="font-semibold">{Number(influencer.follower_projection || 0).toLocaleString()}</span></div>
                   <div className="flex justify-between"><span>Monthly Posts:</span><span className="font-semibold">{influencer.monthly_posts}</span></div>
                   <div className="flex justify-between"><span>Engagement Rate:</span><span className="font-semibold">{influencer.engagement_rate}%</span></div>
                 </div>
