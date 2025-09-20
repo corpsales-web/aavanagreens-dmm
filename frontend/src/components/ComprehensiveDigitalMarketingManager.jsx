@@ -649,7 +649,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
                 </div>
                 <div className="flex space-x-2 mt-4">
                   <Button size="sm" variant="outline" className="flex-1"><Play className="h-3 w-3 mr-1" />Preview</Button>
-                  <Button size="sm" className="flex-1 bg-green-600"><Download className="h-3 w-3 mr-1" />Produce</Button>
+                  <Button size="sm" className="flex-1 bg-green-600" onClick={() => openApprove('reel', reel, reel.title)}><Download className="h-3 w-3 mr-1" />Approve</Button>
                 </div>
               </div>
             ))}
