@@ -138,6 +138,26 @@ const App = () => {
       setLoading(false);
     }
   };
+  // Dev Tools: easy seeding + AI chat sanity
+  const seedGallery = async () => {
+    try {
+      const res = await axios.post(`${API}/api/gallery/seed`, { count: 6, reset: true });
+      toast({ title: 'Gallery Seeded', description: `Inserted: ${res.data?.inserted ?? 0}` });
+    } catch (e) {
+      toast({ title: 'Gallery Seed Failed', description: e?.response?.data?.detail || e.message, variant: 'destructive' });
+    }
+  };
+
+  const quickAiPing = async () => {
+    try {
+      const res = await axios.post(`${API}/api/ai/chat`, { messages: [{ role: 'user', content: 'Hello AI, quick ping' }] });
+      const msg = res.data?.response?.slice(0, 180) || 'OK';
+      toast({ title: 'AI Chat OK', description: msg });
+    } catch (e) {
+      toast({ title: 'AI Chat Failed', description: e?.response?.data?.detail || e.message, variant: 'destructive' });
+    }
+  };
+
 
   // API Functions
   const fetchDashboardStats = async () => {
