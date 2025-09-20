@@ -626,7 +626,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
           <CardDescription>Logo, graphics, copy, and social templates</CardDescription>
         </CardHeader>
         <CardContent>
-          {contentCreation.brand_content.length === 0 ? (
+          {(contentCreation?.brand_content || []).length === 0 ? (
             <div className="text-sm text-gray-600">No brand content yet. Click "Brand Content" to generate assets.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
