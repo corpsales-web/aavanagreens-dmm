@@ -1835,16 +1835,11 @@ async def create_ugc_campaign(request: dict):
         Include innovative reward structures and viral mechanics.
         """
         
-        from openai import OpenAI
-        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        
-        response = client.chat.completions.create(
-            model='gpt-5',
-            messages=[{'role': 'user', 'content': ugc_prompt}],
-            max_completion_tokens=2000
-        )
-        
-        campaign_plan = response.choices[0].message.content
+        # Unified orchestrator call (cost-aware)
+        try:
+            campaign_plan = await ai_service.orchestrator.route_task("quick_response", ugc_prompt)
+        except Exception:
+            campaign_plan = None
         
         return {
             "success": True,
