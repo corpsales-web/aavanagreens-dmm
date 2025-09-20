@@ -712,6 +712,10 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
                         ))}
                       </div>
                     </div>
+                    <div className="flex gap-2 mt-3">
+                      <Button size="sm" variant="outline">Preview</Button>
+                      <Button size="sm" className="bg-indigo-600" onClick={() => openApprove('brand', pkg, pkg.package_name)}>Approve</Button>
+                    </div>
                   </div>
                 </div>
               ))}
