@@ -1900,17 +1900,16 @@ async def create_ugc_campaign(request: dict):
         saved = await _persist('marketing_ugc', campaign_doc)
         return {"success": True, "campaign": campaign_doc, "saved_id": saved.id}
     except Exception as e:
-        return {
-            "success": True,
-            "campaign": {
-                "id": str(uuid.uuid4()),
-                "name": "AI UGC Campaign: Green Living",
-                "concept": "Comprehensive user-generated content campaign designed to boost authentic engagement and community building.",
-                "expected_submissions": 350,
-                "estimated_reach": 75000,
-                "status": "AI Generated - Ready to Launch"
-            }
+        campaign_doc = {
+            "id": str(uuid.uuid4()),
+            "name": "AI UGC Campaign: Green Living",
+            "concept": "Comprehensive user-generated content campaign designed to boost authentic engagement and community building.",
+            "expected_submissions": 350,
+            "estimated_reach": 75000,
+            "status": "AI Generated - Ready to Launch"
         }
+        saved = await _persist('marketing_ugc', campaign_doc)
+        return {"success": True, "campaign": campaign_doc, "saved_id": saved.id}
 
 @api_router.post("/ai/content/create-influencer")
 async def create_ai_influencer(request: dict):
