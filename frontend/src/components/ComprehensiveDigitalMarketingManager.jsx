@@ -605,6 +605,17 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
         </div>
       </div>
 
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={fetchReels}>View All Reels</Button>
+          <Button variant="secondary" onClick={fetchUGC}>View All UGC</Button>
+          <Button variant="secondary" onClick={fetchInfluencers}>View All Influencers</Button>
+          <Button variant="secondary" onClick={fetchBrandAssets}>View All Brand</Button>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchCampaigns}><BarChart3 className="h-3 w-3 mr-1"/>Refresh Campaigns</Button>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Button onClick={() => createAIContent('reel')} className="bg-red-600 hover:bg-red-700 p-6 h-auto">
           <div className="text-center"><Video className="h-8 w-8 mx-auto mb-2" /><div className="font-semibold">Create Reels</div><div className="text-sm opacity-90">AI-Generated Scripts</div></div>
