@@ -1700,17 +1700,11 @@ async def generate_comprehensive_marketing_strategy(request: dict):
         """
         
         # Use GPT-5 for comprehensive strategy generation - EXCLUSIVE GPT-5 USAGE
-        from openai import OpenAI
-        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        
-        response = client.chat.completions.create(
-            model='gpt-5',  # EXPLICIT GPT-5 MODEL - NO FALLBACKS
-            messages=[{'role': 'user', 'content': strategy_prompt}],
-            max_completion_tokens=2000
-            # temperature removed as GPT-5 only supports default value
-        )
-        
-        strategy_content = response.choices[0].message.content
+        # Route through unified AI orchestrator using Emergent key (cost-aware)
+        try:
+            strategy_content = await ai_service.orchestrator.route_task("complex_analysis", strategy_prompt)
+        except Exception as _e:
+            strategy_content = None
         
         return {
             "success": True,
