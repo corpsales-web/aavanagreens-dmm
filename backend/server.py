@@ -6860,6 +6860,106 @@ async def get_background_services_status():
 
 # Aavana 2.0 endpoints moved to correct location before router inclusion
 
+# ------------------------
+# Gallery Seed Adapter (safe seeding for demo data)
+# ------------------------
+class GallerySeedRequest(BaseModel):
+    count: int = 9
+    reset: bool = False
+
+@api_router.post("/gallery/seed")
+async def seed_gallery_adapter(req: GallerySeedRequest):
+    """Seed demo Project Gallery items for UI/testing.
+    - Inserts lightweight ProjectGallery-like documents
+    - Writes into BOTH collections used in codebase: `projects` (ERP routes) and `project_gallery` (batch-send)
+    - If reset=True, only removes previously auto-seeded items to avoid deleting real data
+    """
+    try:
+        inserted = 0
+        # Remove only auto-seeded docs if requested
+        if req.reset:
+            await db.projects.delete_many({"tags": {"$in": ["auto-seeded"]}})
+            await db.project_gallery.delete_many({"tags": {"$in": ["auto-seeded"]}})
+
+        from datetime import datetime, timezone
+        import uuid as _uuid
+
+        def make_item(i: int):
+            gid = str(_uuid.uuid4())
+            before = [f"https://picsum.photos/seed/aavana_before_{gid}/800/600"]
+            after = [f"https://picsum.photos/seed/aavana_after_{gid}/800/600"]
+            return {
+                "id": gid,
+                "project_name": f"Sample Project {i+1}",
+                "client_name": "Demo Client",
+                "location": "Demo City",
+                "project_type": ["Balcony Garden", "Rooftop", "Landscape", "Interior"][i % 4],
+                "budget_range": ["25k_50k", "50k_100k", "100k_250k"][i % 3],
+                "completion_date": datetime.now(timezone.utc),
+                "before_images": before,
+                "after_images": after,
+                "description": "Auto-seeded gallery item for demo.",
+                "testimonial": None,
+                "tags": ["auto-seeded", "demo"],
+                "is_featured": (i % 3 == 0),
+                "created_at": datetime.now(timezone.utc)
+            }
+
+        docs = [make_item(i) for i in range(max(1, int(req.count)))]
+        if docs:
+            # Insert into both used collections
+            res1 = await db.projects.insert_many(docs)
+            res2 = await db.project_gallery.insert_many(docs)
+            inserted = min(len(res1.inserted_ids), len(res2.inserted_ids))
+
+        return {"inserted": inserted}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gallery seed failed: {e}")
+
+
+# ------------------------
+# AI Chat Convenience Endpoint (uses AI orchestrator)
+# ------------------------
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+    task_type: Optional[str] = "simple_query"  # simple_query | quick_response | automation | insights | complex_analysis
+
+class ChatResponse(BaseModel):
+    success: bool
+    response: str
+    fallback: Optional[bool] = False
+
+@api_router.post("/ai/chat", response_model=ChatResponse)
+async def ai_chat(request: ChatRequest):
+    try:
+        if not request.messages:
+            raise HTTPException(status_code=400, detail="messages cannot be empty")
+        user_msg = None
+        # Pick the last user message; if not present, take last content
+        for m in reversed(request.messages):
+            if m.role.lower() == "user":
+                user_msg = m.content
+                break
+        if not user_msg:
+            user_msg = request.messages[-1].content
+
+        # Route via existing AI orchestrator
+        try:
+            text = await ai_service.orchestrator.route_task(request.task_type or "simple_query", user_msg)
+            return ChatResponse(success=True, response=str(text or ""), fallback=False)
+        except Exception as inner:
+            # Graceful fallback (no crash)
+            return ChatResponse(success=False, response=f"AI temporarily unavailable: {inner}", fallback=True)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI chat error: {e}")
+
+
 @app.get("/api/health/services")
 async def get_services_health():
     """Get health status of all services"""
