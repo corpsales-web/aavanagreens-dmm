@@ -205,7 +205,12 @@ class HybridAIOrchestrator:
     """Main orchestrator for hybrid GPT-4o + GPT-5 system"""
     
     def __init__(self):
-        self.openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        api_key = os.getenv('OPENAI_API_KEY')
+        if api_key:
+            self.openai_client = OpenAI(api_key=api_key)
+        else:
+            print("⚠️  WARNING: No OpenAI API key found. AI features will have limited functionality.")
+            self.openai_client = None
         self.task_router = TaskRouter()
         self.context_manager = ContextManager()
         
