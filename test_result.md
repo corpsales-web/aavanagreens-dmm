@@ -101,3 +101,52 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+## user_problem_statement: PROJECT HANDOFF - AAVANA GREENS CRM
+
+## backend:
+##   - task: "Health endpoint and gallery seed + lead qualification fallback"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/backend/server.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##         -working: "NA"
+##         -agent: "main"
+##         -comment: "Added /api/health, /api/gallery/seed seeding with picsum placeholder, and /api/leads/qualify deterministic rules-based fallback (no external keys needed). Preserved Mongo + CORS + /api prefix rules."
+
+## frontend:
+##   - task: "Seed UI + Lead Qualification UI + Modal z-index fix"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/frontend/src/App.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##         -working: "NA"
+##         -agent: "main"
+##         -comment: "Added UI panels for gallery seeding and lead qualification, included robust modal overlay with high z-index; wired to backend via REACT_APP_BACKEND_URL env using /api prefix."
+
+## metadata:
+##   created_by: "main_agent"
+##   version: "1.0"
+##   test_sequence: 1
+##   run_ui: true
+
+## test_plan:
+##   current_focus:
+##     - "Verify /api/health returns status ok and db ok"
+##     - "POST /api/gallery/seed inserts requested items and returns count"
+##     - "POST /api/leads/qualify returns score, stage, reasoning, model_used"
+##     - "Frontend connects using process.env.REACT_APP_BACKEND_URL and shows results"
+##   stuck_tasks:
+##     - "None yet"
+##   test_all: false
+##   test_priority: "high_first"
+
+## agent_communication:
+##     -agent: "main"
+##     -message: "Please run automated smoke tests for the three endpoints and the new UI panels. Use screenshots to confirm and share console logs if failures occur."
