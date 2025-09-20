@@ -444,6 +444,15 @@ class HybridAIOrchestrator:
     async def _gpt5_deep_analysis(self, query: str, context: ConversationContext) -> Dict:
         """GPT-5 deep reasoning and analysis - OPTIMIZED FOR SPEED"""
         try:
+            if not self.openai_client:
+                return {
+                    "analysis": "Deep analysis unavailable due to missing API key",
+                    "strategic_implications": self._extract_strategic_insights(query),
+                    "recommended_actions": self._get_business_recommendations(query),
+                    "error": "No OpenAI API key configured",
+                    "processing_model": "gpt-5-unavailable"
+                }
+            
             # Optimized analysis prompt for faster processing
             analysis_prompt = f"""
             Business analysis for: "{query}"
