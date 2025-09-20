@@ -553,7 +553,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
         <Button onClick={() => createAIContent('ugc_campaign')} disabled={aiProcessing} className="bg-green-600 hover:bg-green-700 p-6 h-auto">
           <div className="text-center"><Users className="h-8 w-8 mx-auto mb-2" /><div className="font-semibold">UGC Campaign</div><div className="text-sm opacity-90">User Generated Content</div></div>
         </Button>
-        <Button onClick={() => setShowInfluencerModal(true)} className="bg-purple-600 hover:bg-purple-700 p-6 h-auto">
+        <Button onClick={() => createAIContent('influencer')} className="bg-purple-600 hover:bg-purple-700 p-6 h-auto">
           <div className="text-center"><Bot className="h-8 w-8 mx-auto mb-2" /><div className="font-semibold">AI Influencer</div><div className="text-sm opacity-90">Virtual Brand Ambassador</div></div>
         </Button>
         <Button onClick={() => createAIContent('brand_content')} disabled={aiProcessing} className="bg-indigo-600 hover:bg-indigo-700 p-6 h-auto">
