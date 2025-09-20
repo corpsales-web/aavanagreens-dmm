@@ -1769,17 +1769,11 @@ async def create_ai_reel_content(request: dict):
         Include trending audio suggestions and viral content techniques.
         """
         
-        from openai import OpenAI
-        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        
-        response = client.chat.completions.create(
-            model='gpt-5',  # EXCLUSIVE GPT-5 USAGE
-            messages=[{'role': 'user', 'content': reel_prompt}],
-            max_completion_tokens=1500  # Updated parameter name for GPT-5
-            # temperature removed as GPT-5 only supports default value
-        )
-        
-        content_plan = response.choices[0].message.content
+        # Unified orchestrator call (cost-aware)
+        try:
+            content_plan = await ai_service.orchestrator.route_task("quick_response", reel_prompt)
+        except Exception:
+            content_plan = None
         
         return {
             "success": True,
