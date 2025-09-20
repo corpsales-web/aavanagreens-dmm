@@ -13,6 +13,7 @@ import {
   Instagram, Mail, Bot, Sparkles, Palette, Layout, Monitor, Search, Target, BarChart3, X, Edit, Play, Pause, Wand2, RefreshCw, Download
 } from 'lucide-react';
 import axios from 'axios';
+import { useToast } from '../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
