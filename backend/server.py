@@ -1704,6 +1704,67 @@ async def list_marketing_brand_assets(limit: int = 50):
     items = await db.marketing_brand_assets.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
     return [parse_from_mongo(i) for i in items]
 
+
+@api_router.get("/marketing/approvals")
+async def list_marketing_approvals(limit: int = 100):
+    items = await db.marketing_approvals.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
+    return [parse_from_mongo(i) for i in items]
+
+@api_router.post("/marketing/approve")
+async def approve_marketing_item(payload: dict):
+    """Approval-gated execution. Updates item status to Approved and records explicit targeting.
+    Expected payload: {
+      type: 'campaign'|'reel'|'ugc'|'influencer'|'brand',
+      id: string,
+      targeting: { geography: {...}, demographics: {...}, behavior: {...}, schedule: {...}, other?: {...} },
+      notes?: str
+    }
+    """
+    try:
+        item_type = (payload.get('type') or '').lower()
+        item_id = payload.get('id')
+        targeting = payload.get('targeting') or {}
+        notes = payload.get('notes')
+        if not item_type or not item_id:
+            raise HTTPException(status_code=400, detail="type and id are required")
+        coll_map = {
+            'campaign': 'marketing_campaigns',
+            'reel': 'marketing_reels',
+            'ugc': 'marketing_ugc',
+            'influencer': 'marketing_influencers',
+            'brand': 'marketing_brand_assets',
+        }
+        coll_name = coll_map.get(item_type)
+        if not coll_name:
+            raise HTTPException(status_code=400, detail="Unsupported type")
+        # Update item
+        update = {
+            "$set": {
+                "status": "Approved",
+                "targeting": targeting,
+                "approved_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+        result = await db[coll_name].update_one({"id": item_id}, update)
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail=f"{item_type} not found")
+        # Log approval
+        approval_log = {
+            "id": str(uuid.uuid4()),
+            "item_type": item_type,
+            "item_id": item_id,
+            "collection": coll_name,
+            "targeting": targeting,
+            "notes": notes,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.marketing_approvals.insert_one(approval_log)
+        return {"success": True, "approved": True, "item_type": item_type, "item_id": item_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Approval failed: {e}")
+
 @api_router.get("/marketing/campaigns")
 async def list_marketing_campaigns(limit: int = 50):
     items = await db.marketing_campaigns.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
