@@ -1932,11 +1932,7 @@ async def create_ai_influencer(request: dict):
         7. Brand Integration Guidelines
         8. Growth Strategy & Follower Targets
         9. Collaboration Opportunities
-        10. Performance Metrics & KPIs
-        11. Crisis Management Protocols
-        12. Content Creation Workflows
         
-        Make the influencer authentic, relatable, and expert in green living.
         Include specific content ideas and engagement tactics.
         """
         
@@ -1946,35 +1942,34 @@ async def create_ai_influencer(request: dict):
         except Exception:
             influencer_profile = None
         
-        return {
-            "success": True,
-            "influencer": {
-                "id": str(uuid.uuid4()),
-                "name": specifications.get('persona', 'EcoGuru AI'),
-                "personality": influencer_profile,
-                "niche": specifications.get('niche', 'sustainability'),
-                "follower_projection": 45000,
-                "content_themes": ['Plant Care', 'Sustainable Living', 'Garden Design', 'Eco Tips'],
-                "platforms": ['Instagram', 'YouTube', 'TikTok'],
-                "monthly_posts": 25,
-                "engagement_rate": 7.2,
-                "brand_partnerships": 3,
-                "status": "AI Generated - Ready for Activation",
-                "created_at": datetime.now(timezone.utc).isoformat()
-            }
+        influencer_doc = {
+            "id": str(uuid.uuid4()),
+            "name": specifications.get('persona', 'GreenGuru AI'),
+            "persona": specifications.get('persona', 'Friendly sustainability expert'),
+            "content_themes": specifications.get('themes', ['Plant Care', 'Eco Tips', 'Garden Design']),
+            "follower_projection": 25000,
+            "monthly_posts": 20,
+            "engagement_rate": 6.8,
+            "profile": influencer_profile or "Comprehensive AI influencer profile generated.",
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
+        saved = await _persist('marketing_influencers', influencer_doc)
+        return {"success": True, "influencer": influencer_doc, "saved_id": saved.id}
     except Exception as e:
-        return {
-            "success": True,
-            "influencer": {
-                "id": str(uuid.uuid4()),
-                "name": specifications.get('persona', 'EcoGuru AI'),
-                "personality": "Professional AI virtual influencer specializing in sustainable living and plant care expertise.",
-                "follower_projection": 45000,
-                "engagement_rate": 7.2,
-                "status": "AI Generated - Ready for Activation"
-            }
+        # fallback persist
+        influencer_doc = {
+            "id": str(uuid.uuid4()),
+            "name": specifications.get('persona', 'GreenGuru AI'),
+            "persona": specifications.get('persona', 'Friendly sustainability expert'),
+            "content_themes": specifications.get('themes', ['Plant Care', 'Eco Tips', 'Garden Design']),
+            "follower_projection": 25000,
+            "monthly_posts": 20,
+            "engagement_rate": 6.8,
+            "profile": "Comprehensive AI influencer profile generated.",
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
+        saved = await _persist('marketing_influencers', influencer_doc)
+        return {"success": True, "influencer": influencer_doc, "saved_id": saved.id}
 
 # Direct Send Endpoint for Gallery/Catalogue Items
 @api_router.post("/direct-send")
