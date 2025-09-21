@@ -1710,6 +1710,186 @@ async def list_marketing_approvals(limit: int = 100):
     items = await db.marketing_approvals.find({}).sort("created_at", -1).limit(limit).to_list(length=limit)
     return [parse_from_mongo(i) for i in items]
 
+
+# ------------------------
+# Notifications (Web Push scaffolding)
+# ------------------------
+@api_router.get("/notifications/public-key")
+async def get_vapid_public_key():
+    key = os.environ.get("VAPID_PUBLIC_KEY")
+    if not key:
+        raise HTTPException(status_code=404, detail="VAPID public key not configured")
+    return {"publicKey": key}
+
+@api_router.post("/notifications/subscribe")
+async def subscribe_web_push(payload: dict):
+    try:
+        sub = dict(payload or {})
+        sub_id = sub.get("id") or str(uuid.uuid4())
+        sub["id"] = sub_id
+        sub["created_at"] = datetime.now(timezone.utc).isoformat()
+        await db.web_push_subscriptions.update_one({"id": sub_id}, {"$set": make_json_safe(sub)}, upsert=True)
+        return {"success": True, "subscription_id": sub_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Subscription failed: {e}")
+
+@api_router.post("/notifications/test")
+async def test_notification(payload: dict):
+    try:
+        note = {
+            "id": str(uuid.uuid4()),
+            "title": payload.get("title", "Test Notification"),
+            "body": payload.get("body", "Hello from Aavana"),
+            "target": payload.get("subscription_id"),
+            "queued_at": datetime.now(timezone.utc).isoformat(),
+            "status": "queued_local"
+        }
+        await db.notifications.insert_one(note)
+        # Actual web push send will be implemented after VAPID keys are configured
+        return {"success": True, "queued": True, "id": note["id"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Notify failed: {e}")
+
+# ------------------------
+# WhatsApp (Meta/360dialog adapter scaffolding)
+# ------------------------
+@api_router.get("/whatsapp/webhook")
+async def whatsapp_verify(mode: str = "", challenge: str = "", verify_token: str = "", hub_mode: str = "", hub_challenge: str = "", hub_verify_token: str = ""):
+    token = os.environ.get("WHATSAPP_VERIFY_TOKEN")
+    # Meta uses hub.* params; 360dialog can forward similarly
+    mode = hub_mode or mode
+    challenge = hub_challenge or challenge
+    incoming_token = hub_verify_token or verify_token
+    if token and incoming_token == token and mode == "subscribe":
+        return JSONResponse(status_code=200, content=challenge)
+    raise HTTPException(status_code=403, detail="Verification failed")
+
+@api_router.post("/whatsapp/webhook")
+async def whatsapp_webhook(payload: dict):
+    try:
+        event = {
+            "id": str(uuid.uuid4()),
+            "provider": os.environ.get("WHATSAPP_PROVIDER", "unknown"),
+            "raw": payload,
+            "received_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.whatsapp_messages.insert_one(make_json_safe(event))
+        # Try to extract a minimal text + phone
+        text = None
+        phone = None
+        try:
+            entry = (payload.get("entry") or [{}])[0]
+            changes = (entry.get("changes") or [{}])[0]
+            value = changes.get("value", {})
+            messages = value.get("messages", [])
+            if messages:
+                msg = messages[0]
+                text = msg.get("text", {}).get("body") or msg.get("button", {}).get("text")
+                phone = msg.get("from")
+        except Exception:
+            pass
+        if text:
+            # Create an AI-delegated task from inbound WhatsApp
+            try:
+                task_prompt = f"Convert this WhatsApp message into a task with title, description, and due hints: {text}"
+                ai_text = await ai_service.orchestrator.route_task("quick_response", task_prompt)
+            except Exception:
+                ai_text = None
+            task = {
+                "id": str(uuid.uuid4()),
+                "title": (ai_text or text)[:64],
+                "description": ai_text or text,
+                "status": "Pending",
+                "priority": "Medium",
+                "channel": "whatsapp",
+                "contact_phone": phone,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "ai_generated": True
+            }
+            await db.tasks.insert_one(make_json_safe(task))
+            return {"success": True, "task_id": task["id"]}
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Webhook error: {e}")
+
+@api_router.post("/whatsapp/send")
+async def whatsapp_send_stub(payload: dict):
+    """Approval-gated send stub. Stores intent; execution wired post-go-live with 360dialog/Meta."""
+    try:
+        msg = {
+            "id": str(uuid.uuid4()),
+            "to": payload.get("to"),
+            "template": payload.get("template"),
+            "text": payload.get("text"),
+            "status": "queued",
+            "provider": os.environ.get("WHATSAPP_PROVIDER", "staged"),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.whatsapp_messages.insert_one(make_json_safe(msg))
+        return {"success": True, "queued": True, "id": msg["id"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Send failed: {e}")
+
+# ------------------------
+# Unified Calendar (internal) – appointments across Task/CRM
+# ------------------------
+@api_router.post("/calendar/events")
+async def create_calendar_event(event: dict):
+    try:
+        ev = dict(event or {})
+        ev["id"] = ev.get("id") or str(uuid.uuid4())
+        ev["created_at"] = datetime.now(timezone.utc).isoformat()
+        await db.calendar_events.insert_one(make_json_safe(ev))
+        return {"success": True, "event_id": ev["id"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Create event failed: {e}")
+
+@api_router.get("/calendar/events")
+async def list_calendar_events(linkTo: Optional[str] = None, refId: Optional[str] = None, limit: int = 100):
+    try:
+        q = {}
+        if linkTo and refId:
+            q["linkTo"] = linkTo
+            q["refId"] = refId
+        items = await db.calendar_events.find(q).sort("start", 1).limit(limit).to_list(length=limit)
+        return [parse_from_mongo(i) for i in items]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"List events failed: {e}")
+
+@api_router.post("/calendar/events/{event_id}/remind-now")
+async def remind_now(event_id: str):
+    try:
+        ev = await db.calendar_events.find_one({"id": event_id})
+        if not ev:
+            raise HTTPException(status_code=404, detail="Event not found")
+        # Queue local notifications (web push + whatsapp stub)
+        note = {
+            "id": str(uuid.uuid4()),
+            "event_id": event_id,
+            "type": "calendar_reminder",
+            "queued_at": datetime.now(timezone.utc).isoformat(),
+            "status": "queued_local"
+        }
+        await db.notifications.insert_one(note)
+        # WhatsApp stub to client if set
+        try:
+            client_phone = ev.get("client", {}).get("phone")
+            if client_phone:
+                await db.whatsapp_messages.insert_one(make_json_safe({
+                    "id": str(uuid.uuid4()),
+                    "to": client_phone,
+                    "text": f"Reminder: {ev.get('title','Meeting')} at {ev.get('start')}",
+                    "status": "queued",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }))
+        except Exception:
+            pass
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Remind failed: {e}")
+
 @api_router.post("/marketing/approve")
 async def approve_marketing_item(payload: dict):
     """Approval-gated execution. Updates item status to Approved and records explicit targeting.
