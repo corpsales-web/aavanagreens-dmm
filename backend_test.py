@@ -615,6 +615,147 @@ class AavanaCRMAPITester:
         
         return success
 
+    def test_marketing_endpoints(self):
+        """Test new marketing endpoints as specified in review request"""
+        print(f"\n🎯 TESTING MARKETING ENDPOINTS")
+        print("-" * 50)
+        
+        # Step 1: POST /api/marketing/save
+        campaign_data = {
+            "item_type": "campaign",
+            "data": {
+                "name": "Demo Campaign",
+                "description": "Test",
+                "platforms": ["Google Ads"],
+                "status": "Pending Approval"
+            },
+            "default_filters": {
+                "geo": "India (all)",
+                "language": ["English", "Hinglish", "Hindi"],
+                "device": ["mobile", "desktop", "iPad", "Tablets"],
+                "time": "9am–9pm",
+                "behavior": ["engaged-with-green-content"]
+            }
+        }
+        
+        success_save, response_save = self.run_test(
+            "Marketing Save Campaign",
+            "POST",
+            "marketing/save",
+            200,
+            data=campaign_data
+        )
+        
+        campaign_id = None
+        if success_save:
+            if "success" in response_save and response_save["success"]:
+                if "item" in response_save and "id" in response_save["item"]:
+                    campaign_id = response_save["item"]["id"]
+                    print(f"   ✅ Campaign saved with ID: {campaign_id}")
+                else:
+                    print(f"   ❌ No item.id in response: {response_save}")
+                    return False
+            else:
+                print(f"   ❌ Save not successful: {response_save}")
+                return False
+        else:
+            print(f"   ❌ Marketing save failed")
+            return False
+        
+        # Step 2: GET /api/marketing/list?type=campaign&status=Pending%20Approval
+        success_list_pending, response_list_pending = self.run_test(
+            "Marketing List Pending Campaigns",
+            "GET",
+            "marketing/list?type=campaign&status=Pending%20Approval",
+            200
+        )
+        
+        if success_list_pending:
+            if isinstance(response_list_pending, list) and len(response_list_pending) >= 1:
+                print(f"   ✅ Found {len(response_list_pending)} pending campaigns")
+                # Verify our campaign is in the list
+                found_campaign = any(item.get("id") == campaign_id for item in response_list_pending)
+                if found_campaign:
+                    print(f"   ✅ Our campaign found in pending list")
+                else:
+                    print(f"   ⚠️  Our campaign not found in pending list")
+            else:
+                print(f"   ❌ Expected array with length >= 1, got: {response_list_pending}")
+                return False
+        else:
+            print(f"   ❌ Marketing list pending failed")
+            return False
+        
+        # Step 3: POST /api/marketing/approve
+        if campaign_id:
+            approve_data = {
+                "item_type": "campaign",
+                "item_id": campaign_id,
+                "status": "Approved",
+                "filters": {
+                    "geo": "India (all)"
+                },
+                "approved_by": "admin"
+            }
+            
+            success_approve, response_approve = self.run_test(
+                "Marketing Approve Campaign",
+                "POST",
+                "marketing/approve",
+                200,
+                data=approve_data
+            )
+            
+            if success_approve:
+                if "success" in response_approve and response_approve["success"]:
+                    print(f"   ✅ Campaign approved successfully")
+                else:
+                    print(f"   ❌ Approval not successful: {response_approve}")
+                    return False
+            else:
+                print(f"   ❌ Marketing approve failed")
+                return False
+        else:
+            print(f"   ❌ Cannot approve - no campaign ID")
+            return False
+        
+        # Step 4: GET /api/marketing/list?type=campaign&status=Approved
+        success_list_approved, response_list_approved = self.run_test(
+            "Marketing List Approved Campaigns",
+            "GET",
+            "marketing/list?type=campaign&status=Approved",
+            200
+        )
+        
+        if success_list_approved:
+            if isinstance(response_list_approved, list):
+                print(f"   ✅ Found {len(response_list_approved)} approved campaigns")
+                # Verify our campaign is in the approved list
+                found_approved = any(item.get("id") == campaign_id for item in response_list_approved)
+                if found_approved:
+                    print(f"   ✅ Our campaign found in approved list")
+                    # Print summary of the approved campaign
+                    approved_campaign = next((item for item in response_list_approved if item.get("id") == campaign_id), None)
+                    if approved_campaign:
+                        print(f"   📋 Campaign Status: {approved_campaign.get('status', 'N/A')}")
+                        print(f"   📋 Approved By: {approved_campaign.get('approved_by', 'N/A')}")
+                else:
+                    print(f"   ❌ Our campaign not found in approved list")
+                    return False
+            else:
+                print(f"   ❌ Expected array, got: {response_list_approved}")
+                return False
+        else:
+            print(f"   ❌ Marketing list approved failed")
+            return False
+        
+        print(f"\n🎉 All marketing endpoint tests passed!")
+        print(f"   📊 Campaign ID: {campaign_id}")
+        print(f"   📊 Status Flow: Pending Approval → Approved")
+        print(f"   📊 All endpoints working correctly")
+        
+        return True
+
 def main():
     print("🚀 Starting Aavana CRM Backend API Tests")
     print("🎯 Testing Goals: Authentication, AI Integration, Health Checks")
