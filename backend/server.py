@@ -6985,7 +6985,7 @@ async def marketing_save(item: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
 
-@api_router.get("/marketing/list")
+@app.get("/api/marketing/list")
 async def marketing_list(type: str, status: Optional[str] = None):
     """List marketing items by type and optional status."""
     if type not in MARKETING_COLLECTIONS:
