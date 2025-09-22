@@ -119,6 +119,20 @@
 ##         -working: true
 ##         -agent: "testing"
 ##         -comment: "All backend API tests passed: Health endpoint returns status=ok and db=ok, Gallery seed correctly inserts requested count (tested with 3 items), Lead qualification returns proper score/stage/reasoning/model_used fields with correct data types and valid values. API accessible at https://crm-whatsapp-hub.preview.emergentagent.com/api"
+##   - task: "Marketing endpoints implementation and testing"
+##     implemented: true
+##     working: true
+##     file: "/app/backend/server.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##         -working: "NA"
+##         -agent: "main"
+##         -comment: "Marketing endpoints were implemented but api_router was not included in main app causing 404 errors for most endpoints"
+##         -working: true
+##         -agent: "testing"
+##         -comment: "Fixed critical routing issue by adding app.include_router(api_router) at end of server.py. All 4 marketing endpoints now working perfectly: 1) POST /api/marketing/save creates campaigns with Pending Approval status and returns item.id, 2) GET /api/marketing/list?type=campaign&status=Pending%20Approval returns array of pending campaigns, 3) POST /api/marketing/approve successfully updates status to Approved with approval metadata, 4) GET /api/marketing/list?type=campaign&status=Approved returns approved campaigns. Tested complete workflow: save→list pending→approve→list approved. All endpoints return 200 status with expected payloads."
 
 ## frontend:
 ##   - task: "Seed UI + Lead Qualification UI + Modal z-index fix"
