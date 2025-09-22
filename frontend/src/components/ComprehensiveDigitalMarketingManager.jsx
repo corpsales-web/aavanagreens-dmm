@@ -522,6 +522,25 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
           ai_optimization: true,
           real_time_adjustment: true
         });
+        // Persist Pending Approval record
+        try {
+          await axios.post(`${API}/api/marketing/save`, {
+            item_type: 'campaign',
+            data: {
+              name: (data?.campaign_data?.config?.name) || 'AI Campaign',
+              description: (data?.campaign_data?.config?.description) || 'Cross-platform campaign',
+              platforms: data?.campaign_data?.config?.platforms || [],
+              status: 'Pending Approval'
+            },
+            default_filters: {
+              geo: 'India (all)',
+              language: ['English', 'Hinglish', 'Hindi'],
+              device: ['mobile', 'desktop', 'iPad', 'Tablets'],
+              time: '9am–9pm',
+              behavior: ['engaged-with-green-content']
+            }
+          });
+        } catch (_) { /* non-blocking */ }
         
         console.log('Campaign launched successfully:', response.data);
       } catch (apiError) {
