@@ -658,6 +658,10 @@ def main():
                 if success and token:
                     auth_token = token
                     print(f"   🔑 Authentication token captured for future requests")
+            elif test_name == "Seed Admin User":
+                # Special handling for seed admin test
+                success, response = test_func()
+                results[test_name] = success
             else:
                 results[test_name] = test_func()
         except Exception as e:
