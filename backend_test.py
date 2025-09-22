@@ -138,6 +138,156 @@ class AavanaCRMAPITester:
         
         return success
 
+    def test_auth_seed_admin(self):
+        """Test POST /api/auth/seed-admin -> expect 200 with user data"""
+        admin_data = {
+            "email": "admin@aavana.local",
+            "password": "Admin@12345"
+        }
+        
+        success, response = self.run_test(
+            "Seed Admin User",
+            "POST",
+            "auth/seed-admin",
+            200,
+            data=admin_data
+        )
+        
+        if success:
+            if "user" in response:
+                print(f"   ✅ Admin user seeded successfully")
+                print(f"   👤 User: {response['user'].get('email', 'N/A')} ({response['user'].get('role', 'N/A')})")
+                return True, response
+            else:
+                print(f"   ❌ Unexpected response format: {response}")
+                return False, {}
+        
+        return False, {}
+
+    def test_auth_login(self):
+        """Test POST /api/auth/login -> expect 200 with token"""
+        login_data = {
+            "identifier": "admin@aavana.local",
+            "password": "Admin@12345"
+        }
+        
+        success, response = self.run_test(
+            "Admin Login",
+            "POST",
+            "auth/login",
+            200,
+            data=login_data
+        )
+        
+        if success:
+            if "access_token" in response:
+                print(f"   ✅ Login successful")
+                print(f"   🔑 Token received: {response['access_token'][:20]}...")
+                return True, response['access_token']
+            else:
+                print(f"   ❌ No access token in response: {response}")
+                return False, None
+        
+        return False, None
+
+    def test_ai_chat_quick_response(self):
+        """Test POST /api/ai/chat with quick_response task_type -> expect 200 with response string"""
+        chat_data = {
+            "message": "Generate 3 taglines for Aavana Greens",
+            "task_type": "quick_response"
+        }
+        
+        success, response = self.run_test(
+            "AI Chat Quick Response",
+            "POST",
+            "ai/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            if response.get("status_code") != 502:
+                print(f"   ✅ AI Chat working (no 502 error)")
+                if "response" in response:
+                    print(f"   🤖 AI Response: {response['response'][:100]}...")
+                return True
+            else:
+                print(f"   ❌ Got 502 error - AI service unavailable")
+                return False
+        else:
+            print(f"   ⚠️  AI Chat endpoint not responding properly")
+            return False
+
+    def test_ai_specialized_chat(self):
+        """Test POST /api/ai/specialized-chat -> expect 200 with EnhancedChatResponse"""
+        chat_data = {
+            "message": "Create a UGC campaign idea",
+            "session_id": "test",
+            "language": "en",
+            "context": {}
+        }
+        
+        success, response = self.run_test(
+            "AI Specialized Chat",
+            "POST",
+            "ai/specialized-chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            print(f"   ✅ Specialized Chat working")
+            if "response" in response or "message" in response:
+                print(f"   🎯 Specialized response received")
+            return True
+        else:
+            print(f"   ⚠️  Specialized Chat endpoint not available")
+            return False
+
+    def test_aavana2_enhanced_chat(self):
+        """Test POST /api/aavana2/enhanced-chat -> expect 200 with EnhancedChatResponse"""
+        chat_data = {
+            "message": "Summarize sales goals",
+            "session_id": "test",
+            "language": "en",
+            "context": {}
+        }
+        
+        success, response = self.run_test(
+            "Aavana 2.0 Enhanced Chat",
+            "POST",
+            "aavana2/enhanced-chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            print(f"   ✅ Aavana 2.0 Enhanced Chat working")
+            if "response" in response or "message" in response:
+                print(f"   🚀 Enhanced response received")
+            return True
+        else:
+            print(f"   ⚠️  Aavana 2.0 Enhanced Chat endpoint not available")
+            return False
+
+    def test_aavana_health(self):
+        """Test GET /api/aavana/health -> expect 200 with healthy status"""
+        success, response = self.run_test(
+            "Aavana Health Check",
+            "GET",
+            "aavana/health",
+            200
+        )
+        
+        if success:
+            print(f"   ✅ Health endpoint working")
+            if "status" in response:
+                print(f"   💚 Health Status: {response['status']}")
+            return True
+        else:
+            print(f"   ⚠️  Health endpoint not available")
+            return False
+
     def test_ai_chat(self):
         """Test POST /api/ai/chat with messages -> expect 200 or graceful fallback"""
         test_messages = [{"role": "user", "content": "Hello"}]
