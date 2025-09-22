@@ -994,6 +994,34 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
         </CardContent>
       </Card>
 
+      {/* Pending Approval */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Approval</CardTitle>
+          <CardDescription>Review and approve campaigns before launch</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pendingCampaigns.length === 0 ? (
+            <div className="text-sm text-gray-500">No items pending approval</div>
+          ) : (
+            <div className="space-y-3">
+              {pendingCampaigns.map(item => (
+                <div key={item.id} className="border rounded-md p-3 flex items-center justify-between">
+                  <div>
+                    <div className="font-semibold">{item.name || 'Untitled Campaign'}</div>
+                    <div className="text-xs text-gray-500">{item.description || 'Pending Approval'}</div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary">Pending Approval</Badge>
+                    <Button size="sm" onClick={() => approveCampaign(item)}>Approve</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Active Campaigns */}
       <Card>
         <CardHeader>
