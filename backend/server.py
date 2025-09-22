@@ -178,11 +178,12 @@ async def seed_admin(req: SeedAdminRequest):
         # Check if exists
         existing = await db.users.find_one({"email": req.email})
         if existing:
-            # Ensure admin role and permissions
+            # Ensure admin role and permissions AND update password
             updated_fields = {
                 "role": UserRole.SUPER_ADMIN,
                 "status": UserStatus.ACTIVE,
                 "permissions": [perm.value for perm in Permission],
+                "password_hash": hash_password(req.password),  # Update password hash
                 "updated_at": datetime.now(timezone.utc)
             }
             await db.users.update_one({"id": existing.get("id")}, {"$set": updated_fields})
