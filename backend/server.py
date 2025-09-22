@@ -6952,3 +6952,88 @@ async def get_services_health():
     except Exception as e:
         logger.error(f"Error getting services health: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# ================= MARKETING PERSISTENCE (Minimal, Safe) =================
+# Collections map
+MARKETING_COLLECTIONS = {
+    "campaign": "marketing_campaigns",
+    "reel": "marketing_reels",
+    "ugc": "marketing_ugc",
+    "brand": "marketing_brand_assets",
+    "influencer": "marketing_influencers",
+}
+
+@api_router.post("/marketing/save")
+async def marketing_save(item: dict):
+    """Persist a marketing artifact with Pending Approval status by default."""
+    try:
+        item_type = item.get("item_type")
+        data = item.get("data", {})
+        default_filters = item.get("default_filters", {})
+        if item_type not in MARKETING_COLLECTIONS:
+            raise HTTPException(status_code=400, detail="Invalid item_type")
+        doc = {
+            **data,
+            "id": data.get("id") or str(uuid.uuid4()),
+            "status": data.get("status") or "Pending Approval",
+            "approval_filters": default_filters or None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db[MARKETING_COLLECTIONS[item_type]].insert_one(prepare_for_mongo(doc))
+        return {"success": True, "item": {k: v for k, v in doc.items() if k != "_id"}}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
+
+@api_router.get("/marketing/list")
+async def marketing_list(type: str, status: Optional[str] = None):
+    """List marketing items by type and optional status."""
+    if type not in MARKETING_COLLECTIONS:
+        raise HTTPException(status_code=400, detail="Invalid type")
+    q = {"status": status} if status else {}
+    items = await db[MARKETING_COLLECTIONS[type]].find(q).to_list(length=200)
+    return [parse_from_mongo(i) for i in items]
+
+@api_router.post("/marketing/approve")
+async def marketing_approve(request: dict):
+    """Approve a marketing item and record approval details."""
+    try:
+        item_type = request.get("item_type")
+        item_id = request.get("item_id")
+        status_val = request.get("status", "Approved")
+        filters = request.get("filters", {})
+        approved_by = request.get("approved_by", "system")
+        if not item_type or not item_id:
+            raise HTTPException(status_code=400, detail="item_type and item_id are required")
+        if item_type not in MARKETING_COLLECTIONS:
+            raise HTTPException(status_code=400, detail="Invalid item_type")
+        await db[MARKETING_COLLECTIONS[item_type]].update_one(
+            {"id": item_id},
+            {"$set": {
+                "status": status_val,
+                "approval_filters": filters,
+                "approved_by": approved_by,
+                "approved_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }}
+        )
+        updated = await db[MARKETING_COLLECTIONS[item_type]].find_one({"id": item_id})
+        if not updated:
+            raise HTTPException(status_code=404, detail="Item not found")
+        approval_log = {
+            "id": str(uuid.uuid4()),
+            "item_type": item_type,
+            "item_id": item_id,
+            "status": status_val,
+            "filters": filters,
+            "approved_by": approved_by,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db["marketing_approvals"].insert_one(prepare_for_mongo(approval_log))
+        return {"success": True, "item": parse_from_mongo(updated)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Approval failed: {str(e)}")
