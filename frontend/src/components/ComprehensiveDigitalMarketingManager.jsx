@@ -566,7 +566,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
         });
         // Persist Pending Approval record
         try {
-          await axios.post(`${API}/api/marketing/save`, {
+          const persistRes = await axios.post(`${API}/api/marketing/save`, {
             item_type: 'campaign',
             data: {
               name: config?.name || 'AI Campaign',
@@ -582,6 +582,9 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
               behavior: ['engaged-with-green-content']
             }
           });
+          if (persistRes?.data?.item) {
+            setPendingCampaigns(prev => [persistRes.data.item, ...prev]);
+          }
         } catch (_) { /* non-blocking */ }
         
         console.log('Campaign launched successfully:', response.data);
