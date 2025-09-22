@@ -205,12 +205,7 @@ class HybridAIOrchestrator:
     """Main orchestrator for hybrid GPT-4o + GPT-5 system"""
     
     def __init__(self):
-        api_key = os.getenv('OPENAI_API_KEY')
-        if api_key:
-            self.openai_client = OpenAI(api_key=api_key)
-        else:
-            print("⚠️  WARNING: No OpenAI API key found. AI features will have limited functionality.")
-            self.openai_client = None
+        self.openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         self.task_router = TaskRouter()
         self.context_manager = ContextManager()
         
@@ -262,16 +257,6 @@ class HybridAIOrchestrator:
     async def _gpt4o_simple_response(self, query: str, context: ConversationContext) -> AIResponse:
         """Fast GPT-4o response for simple queries"""
         try:
-            if not self.openai_client:
-                return AIResponse(
-                    content="AI features are currently unavailable due to missing API key configuration.",
-                    source="error",
-                    confidence=0.0,
-                    tokens_used=0,
-                    response_time=0.0,
-                    reasoning="No OpenAI API key configured"
-                )
-            
             # Build context-aware messages
             messages = self._build_gpt4o_messages(query, context, simple=True)
             
@@ -407,16 +392,6 @@ class HybridAIOrchestrator:
     async def _gpt4o_contextual_response(self, query: str, context: ConversationContext) -> AIResponse:
         """GPT-4o response with full context awareness"""
         try:
-            if not self.openai_client:
-                return AIResponse(
-                    content="AI features are currently unavailable due to missing API key configuration.",
-                    source="error",
-                    confidence=0.0,
-                    tokens_used=0,
-                    response_time=0.0,
-                    reasoning="No OpenAI API key configured"
-                )
-            
             messages = self._build_gpt4o_messages(query, context, simple=False)
             
             response = self.openai_client.chat.completions.create(
@@ -444,15 +419,6 @@ class HybridAIOrchestrator:
     async def _gpt5_deep_analysis(self, query: str, context: ConversationContext) -> Dict:
         """GPT-5 deep reasoning and analysis - OPTIMIZED FOR SPEED"""
         try:
-            if not self.openai_client:
-                return {
-                    "analysis": "Deep analysis unavailable due to missing API key",
-                    "strategic_implications": self._extract_strategic_insights(query),
-                    "recommended_actions": self._get_business_recommendations(query),
-                    "error": "No OpenAI API key configured",
-                    "processing_model": "gpt-5-unavailable"
-                }
-            
             # Optimized analysis prompt for faster processing
             analysis_prompt = f"""
             Business analysis for: "{query}"
@@ -501,13 +467,6 @@ class HybridAIOrchestrator:
     async def _gpt5_quick_analysis(self, query: str, context: ConversationContext) -> Dict:
         """Quick GPT-5 analysis with reduced complexity for speed"""
         try:
-            if not self.openai_client:
-                return {
-                    "analysis": "Quick analysis unavailable due to missing API key",
-                    "error": "No OpenAI API key configured",
-                    "processing_model": "gpt-5-unavailable"
-                }
-            
             # Simplified analysis prompt for faster processing
             analysis_prompt = f"""
             Quick business analysis for: "{query}"
