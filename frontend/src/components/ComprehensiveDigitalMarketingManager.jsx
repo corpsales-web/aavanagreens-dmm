@@ -605,6 +605,9 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
         </Button>
       </div>
 
+  // Expose final render at end (after all helpers are declared)
+  return modalUI;
+
       {/* Brand Analysis Card */}
       <Card>
         <CardHeader>
