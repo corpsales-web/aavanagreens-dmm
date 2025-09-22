@@ -99,6 +99,46 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
+  // Fetch persisted campaigns on open
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      if (!isOpen) return;
+      try {
+        const [pendingRes, approvedRes] = await Promise.all([
+          axios.get(`${API}/api/marketing/list`, { params: { type: 'campaign', status: 'Pending Approval' } }),
+          axios.get(`${API}/api/marketing/list`, { params: { type: 'campaign', status: 'Approved' } }),
+        ]);
+        setPendingCampaigns(Array.isArray(pendingRes.data) ? pendingRes.data : []);
+        setApprovedCampaigns(Array.isArray(approvedRes.data) ? approvedRes.data : []);
+      } catch (e) {
+        // non-blocking
+      }
+    };
+    fetchCampaigns();
+  }, [isOpen]);
+
+  const approveCampaign = async (item) => {
+    try {
+      await axios.post(`${API}/api/marketing/approve`, {
+        item_type: 'campaign',
+        item_id: item.id,
+        status: 'Approved',
+        filters: {
+          geo: 'India (all)',
+          language: ['English', 'Hinglish', 'Hindi'],
+          device: ['mobile', 'desktop', 'iPad', 'Tablets'],
+          time: '9am–9pm',
+          behavior: ['engaged-with-green-content']
+        },
+        approved_by: 'admin'
+      });
+      setPendingCampaigns(prev => prev.filter(c => c.id !== item.id));
+      setApprovedCampaigns(prev => [item, ...prev]);
+    } catch (e) {
+      alert('Approval failed');
+    }
+  };
+
   const initializeAIMarketingData = async () => {
     setLoading(true);
     try {
