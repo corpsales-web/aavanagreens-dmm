@@ -51,30 +51,38 @@ class AIOrchestrator:
         ).with_model("openai", "gpt-5-nano")
 
     async def route_task(self, task_type: str, content: str, context: Dict = None) -> str:
-        """Route tasks to GPT-5 models based on complexity - NO FALLBACKS"""
-        import asyncio
-        
+        """Route tasks to GPT-5 models with micro-cache and fast-path."""
+        import asyncio, hashlib
+        # Fast-path: hash prompt + task_type for tiny cache
+        key_src = json.dumps({"t": task_type, "c": content, "ctx": context}, sort_keys=True)
+        key = hashlib.sha256(key_src.encode()).hexdigest()
+        now = datetime.now(timezone.utc).timestamp()
+        cached = self._cache.get(key)
+        if cached and cached.get("exp", 0) > now:
+            return cached["val"]
         try:
-            # Route to appropriate GPT-5 model based on task complexity
-            if task_type in ["automation", "workflow", "insights", "analytics", "complex_analysis"]:
-                # Use GPT-5 main for complex tasks
-                task = self._use_gpt5_main(content, context)
-            elif task_type in ["simple_query", "quick_response", "basic_task"]:
-                # Use GPT-5 nano for simple tasks
+            # Prefer nano for quick_response path
+            if task_type in ["simple_query", "quick_response", "basic_task"]:
                 task = self._use_gpt5_nano(content, context)
+                timeout = 12.0
+            elif task_type in ["automation", "workflow", "insights", "analytics", "complex_analysis"]:
+                task = self._use_gpt5_main(content, context)
+                timeout = 25.0
             else:
-                # Use GPT-5 mini for general tasks (balanced speed/capability)
                 task = self._use_gpt5_mini(content, context)
-            
-            # Execute task with timeout
-            return await asyncio.wait_for(task, timeout=30.0)
-                
+                timeout = 18.0
+            result = await asyncio.wait_for(task, timeout=timeout)
+            # Store to micro-cache
+            self._cache[key] = {"val": result, "exp": now + self._cache_ttl_seconds}
+            return result
         except asyncio.TimeoutError:
-            # Return timeout-specific response (no fallback to older models)
-            return self._get_timeout_response(task_type, content, context)
+            result = self._get_timeout_response(task_type, content, context)
+            self._cache[key] = {"val": result, "exp": now + 10}
+            return result
         except Exception as e:
-            # Return error-specific response (no fallback to older models)
-            return self._get_error_response(task_type, content, context, str(e))
+            result = self._get_error_response(task_type, content, context, str(e))
+            self._cache[key] = {"val": result, "exp": now + 10}
+            return result
 
     async def _use_gpt5_main(self, content: str, context: Dict = None) -> str:
         """Use GPT-5 main model for complex tasks"""
