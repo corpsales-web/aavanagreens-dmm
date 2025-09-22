@@ -125,7 +125,7 @@ from calendar_service import (
 )
 
 # Import new services
-from file_upload_service import file_upload_service
+# from file_upload_service import file_upload_service  # Temporarily disabled due to libmagic dependency
 from role_management_service import initialize_role_management_service, role_management_service
 from lead_management_service import initialize_lead_management_service, lead_management_service
 from voice_stt_service import initialize_voice_stt_service, voice_stt_service
