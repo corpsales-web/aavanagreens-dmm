@@ -6388,66 +6388,67 @@ async def shutdown_event():
         logger.error(f"Error during shutdown: {e}")
 
 # ============== FILE UPLOAD ENDPOINTS ==============
+# Temporarily disabled due to libmagic dependency issues
 
-@app.post("/api/upload/file")
-async def upload_file(
-    file: UploadFile = File(...),
-    project_id: Optional[str] = Form(None),
-    current_user: UserResponse = Depends(get_current_user)
-):
-    """Upload a single file"""
-    try:
-        result = await file_upload_service.upload_file(file, project_id, current_user.id)
-        return result
-    except Exception as e:
-        logger.error(f"File upload error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.post("/api/upload/file")
+# async def upload_file(
+#     file: UploadFile = File(...),
+#     project_id: Optional[str] = Form(None),
+#     current_user: UserResponse = Depends(get_current_user)
+# ):
+#     """Upload a single file"""
+#     try:
+#         result = await file_upload_service.upload_file(file, project_id, current_user.id)
+#         return result
+#     except Exception as e:
+#         logger.error(f"File upload error: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/upload/multiple")
-async def upload_multiple_files(
-    files: List[UploadFile] = File(...),
-    project_id: Optional[str] = Form(None),
-    current_user: UserResponse = Depends(get_current_user)
-):
-    """Upload multiple files"""
-    try:
-        result = await file_upload_service.upload_multiple_files(files, project_id, current_user.id)
-        return result
-    except Exception as e:
-        logger.error(f"Multiple file upload error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.post("/api/upload/multiple")
+# async def upload_multiple_files(
+#     files: List[UploadFile] = File(...),
+#     project_id: Optional[str] = Form(None),
+#     current_user: UserResponse = Depends(get_current_user)
+# ):
+#     """Upload multiple files"""
+#     try:
+#         result = await file_upload_service.upload_multiple_files(files, project_id, current_user.id)
+#         return result
+#     except Exception as e:
+#         logger.error(f"Multiple file upload error: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/upload/presigned-url")
-async def generate_presigned_url(
-    request: dict,
-    current_user: UserResponse = Depends(get_current_user)
-):
-    """Generate presigned URL for direct client upload"""
-    try:
-        filename = request.get('filename')
-        content_type = request.get('content_type')
+# @app.post("/api/upload/presigned-url")
+# async def generate_presigned_url(
+#     request: dict,
+#     current_user: UserResponse = Depends(get_current_user)
+# ):
+#     """Generate presigned URL for direct client upload"""
+#     try:
+#         filename = request.get('filename')
+#         content_type = request.get('content_type')
         
-        if not filename or not content_type:
-            raise HTTPException(status_code=400, detail="Filename and content_type required")
+#         if not filename or not content_type:
+#             raise HTTPException(status_code=400, detail="Filename and content_type required")
         
-        result = file_upload_service.generate_presigned_upload_url(filename, content_type)
-        return result
-    except Exception as e:
-        logger.error(f"Presigned URL generation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+#         result = file_upload_service.generate_presigned_upload_url(filename, content_type)
+#         return result
+#     except Exception as e:
+#         logger.error(f"Presigned URL generation error: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/api/upload/{s3_key:path}")
-async def delete_file(s3_key: str, current_user: UserResponse = Depends(get_current_user)):
-    """Delete a file from S3"""
-    try:
-        success = await file_upload_service.delete_file(s3_key)
-        if success:
-            return {"message": "File deleted successfully"}
-        else:
-            raise HTTPException(status_code=404, detail="File not found or could not be deleted")
-    except Exception as e:
-        logger.error(f"File deletion error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.delete("/api/upload/{s3_key:path}")
+# async def delete_file(s3_key: str, current_user: UserResponse = Depends(get_current_user)):
+#     """Delete a file from S3"""
+#     try:
+#         success = await file_upload_service.delete_file(s3_key)
+#         if success:
+#             return {"message": "File deleted successfully"}
+#         else:
+#             raise HTTPException(status_code=404, detail="File not found or could not be deleted")
+#     except Exception as e:
+#         logger.error(f"File deletion error: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 # ============== ROLE & DEPARTMENT MANAGEMENT ENDPOINTS ==============
 
