@@ -141,7 +141,7 @@ class AavanaCRMAPITester:
     def test_auth_seed_admin(self):
         """Test POST /api/auth/seed-admin -> expect 200 with user data"""
         admin_data = {
-            "email": "admin@aavana.local",
+            "email": "admin@aavanagreens.com",
             "password": "Admin@12345"
         }
         
@@ -167,7 +167,7 @@ class AavanaCRMAPITester:
     def test_auth_login(self):
         """Test POST /api/auth/login -> expect 200 with token"""
         login_data = {
-            "identifier": "admin@aavana.local",
+            "identifier": "admin@aavanagreens.com",
             "password": "Admin@12345"
         }
         
