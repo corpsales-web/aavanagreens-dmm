@@ -13,6 +13,9 @@ load_dotenv()
 # AI Models Configuration - Updated to use GPT-5 models exclusively
 class AIOrchestrator:
     def __init__(self):
+        # Simple micro-cache: prompt_hash -> (response, expires_at)
+        self._cache: Dict[str, Any] = {}
+        self._cache_ttl_seconds = 60
         # Try to get API key from environment variables only
         self.api_key = os.environ.get('OPENAI_API_KEY') or os.environ.get('EMERGENT_LLM_KEY')
         
