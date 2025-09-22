@@ -43,6 +43,8 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
 
   // Campaign Management States
   const [campaigns, setCampaigns] = useState([]);
+  const [pendingCampaigns, setPendingCampaigns] = useState([]);
+  const [approvedCampaigns, setApprovedCampaigns] = useState([]);
   const [analytics, setAnalytics] = useState({});
 
   // Modal States - Fixed to prevent overlay conflicts
