@@ -783,6 +783,7 @@ def main():
     additional_tests = [
         ("Root API Message", tester.test_root_api),
         ("Dashboard Stats", tester.test_dashboard_stats),
+        ("Marketing Endpoints", tester.test_marketing_endpoints),
     ]
     
     # Run priority tests first
