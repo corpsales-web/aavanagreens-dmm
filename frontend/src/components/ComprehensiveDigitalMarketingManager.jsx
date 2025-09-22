@@ -545,67 +545,6 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Main Component Return - Fixed Modal Structure with Proper Portal
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-      {/* Backdrop Overlay */}
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50" 
-        onClick={onClose}
-      />
-      
-      {/* Modal Content */}
-      <div className="relative bg-white rounded-lg max-w-6xl w-[95%] max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Digital Marketing Manager</h2>
-            <p className="text-gray-600">AI-powered marketing automation and campaign management</p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 h-8 w-8"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        {/* Tabs Navigation */}
-        <div className="flex border-b px-6 bg-gray-50">
-          {[
-            { id: 'ai_strategy', label: 'AI Strategy', icon: Brain },
-            { id: 'content_creation', label: 'Content Creation', icon: Image },
-            { id: 'campaigns', label: 'Campaign Manager', icon: Target },
-            { id: 'analytics', label: 'Analytics', icon: BarChart3 }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-3 border-b-2 font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600 bg-white'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <tab.icon className="h-4 w-4" />
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Modal Content Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === 'ai_strategy' && renderAIStrategy()}
-          {activeTab === 'content_creation' && renderContentCreation()}
-          {activeTab === 'campaigns' && renderCampaignManager()}
-          {activeTab === 'analytics' && renderAnalytics()}
-        </div>
-      </div>
-    </div>
-  );
-
   // AI Strategy Dashboard Render
   const renderAIStrategy = () => (
     <div className="space-y-6">
