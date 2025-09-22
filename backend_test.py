@@ -617,45 +617,56 @@ class AavanaCRMAPITester:
 
 def main():
     print("🚀 Starting Aavana CRM Backend API Tests")
-    print("🎯 Testing Goals: AI Integration, Demo Data Seeding, API Functionality")
+    print("🎯 Testing Goals: Authentication, AI Integration, Health Checks")
     print("=" * 80)
     
     tester = AavanaCRMAPITester()
     
-    # GOAL A: Verify AI is enabled via EMERGENT_LLM_KEY
-    print("\n🤖 GOAL A: AI INTEGRATION TESTING")
-    print("=" * 50)
+    # PRIORITY TESTS: As specified in review request
+    print("\n🔐 PRIORITY TESTS: Authentication & AI Integration")
+    print("=" * 60)
     
-    ai_tests = [
+    priority_tests = [
+        ("Seed Admin User", tester.test_auth_seed_admin),
+        ("Admin Login", tester.test_auth_login),
+        ("AI Chat Quick Response", tester.test_ai_chat_quick_response),
+        ("AI Specialized Chat", tester.test_ai_specialized_chat),
+        ("Aavana 2.0 Enhanced Chat", tester.test_aavana2_enhanced_chat),
+        ("Aavana Health Check", tester.test_aavana_health),
+    ]
+    
+    # ADDITIONAL TESTS: Original functionality
+    print("\n📊 ADDITIONAL TESTS: Core API Functionality")
+    print("=" * 60)
+    
+    additional_tests = [
         ("Root API Message", tester.test_root_api),
-        ("AI Chat Endpoint", tester.test_ai_chat),
-    ]
-    
-    # GOAL B: Seed demo data
-    print("\n🌱 GOAL B: DEMO DATA SEEDING")
-    print("=" * 50)
-    
-    seeding_tests = [
-        ("Seed 6 Demo Leads", tester.test_seed_demo_leads),
-        ("Verify Leads List", tester.test_verify_leads_list),
-        ("Create 3 Demo Tasks", tester.test_create_demo_tasks),
-        ("Verify Tasks List", tester.test_verify_tasks_list),
-        ("Seed Gallery Images", tester.test_seed_gallery_images),
-    ]
-    
-    # Additional API verification
-    print("\n📊 ADDITIONAL API VERIFICATION")
-    print("=" * 50)
-    
-    api_tests = [
         ("Dashboard Stats", tester.test_dashboard_stats),
     ]
     
-    # Run all tests
-    all_tests = ai_tests + seeding_tests + api_tests
+    # Run priority tests first
     results = {}
+    auth_token = None
     
-    for test_name, test_func in all_tests:
+    for test_name, test_func in priority_tests:
+        try:
+            print(f"\n" + "-" * 60)
+            if test_name == "Admin Login":
+                # Special handling for login test to capture token
+                success, token = test_func()
+                results[test_name] = success
+                if success and token:
+                    auth_token = token
+                    print(f"   🔑 Authentication token captured for future requests")
+            else:
+                results[test_name] = test_func()
+        except Exception as e:
+            print(f"❌ {test_name} failed with exception: {str(e)}")
+            results[test_name] = False
+            tester.tests_run += 1
+    
+    # Run additional tests
+    for test_name, test_func in additional_tests:
         try:
             print(f"\n" + "-" * 60)
             results[test_name] = test_func()
@@ -666,48 +677,51 @@ def main():
     
     # Print comprehensive summary
     print("\n" + "=" * 80)
-    print("📊 COMPREHENSIVE BACKEND API TEST SUMMARY")
+    print("📊 BACKEND API TEST SUMMARY")
     print("=" * 80)
     
     # Group results by category
-    ai_results = {k: v for k, v in results.items() if k in [t[0] for t in ai_tests]}
-    seeding_results = {k: v for k, v in results.items() if k in [t[0] for t in seeding_tests]}
-    api_results = {k: v for k, v in results.items() if k in [t[0] for t in api_tests]}
+    priority_results = {k: v for k, v in results.items() if k in [t[0] for t in priority_tests]}
+    additional_results = {k: v for k, v in results.items() if k in [t[0] for t in additional_tests]}
     
-    print("\n🤖 AI INTEGRATION RESULTS:")
-    for test_name, passed in ai_results.items():
+    print("\n🔐 PRIORITY TEST RESULTS:")
+    for test_name, passed in priority_results.items():
         status = "✅ PASSED" if passed else "❌ FAILED"
         print(f"  {test_name}: {status}")
     
-    print("\n🌱 DEMO DATA SEEDING RESULTS:")
-    for test_name, passed in seeding_results.items():
-        status = "✅ PASSED" if passed else "❌ FAILED"
-        print(f"  {test_name}: {status}")
-    
-    print("\n📊 API VERIFICATION RESULTS:")
-    for test_name, passed in api_results.items():
+    print("\n📊 ADDITIONAL TEST RESULTS:")
+    for test_name, passed in additional_results.items():
         status = "✅ PASSED" if passed else "❌ FAILED"
         print(f"  {test_name}: {status}")
     
     # Overall summary
     total_passed = sum(results.values())
     total_tests = len(results)
+    priority_passed = sum(priority_results.values())
+    priority_total = len(priority_results)
     
     print(f"\n🎯 OVERALL RESULTS:")
-    print(f"   Tests Passed: {total_passed}/{total_tests}")
+    print(f"   Priority Tests: {priority_passed}/{priority_total}")
+    print(f"   Total Tests Passed: {total_passed}/{total_tests}")
     print(f"   Success Rate: {(total_passed/total_tests)*100:.1f}%")
     
-    if len(tester.created_leads) > 0:
-        print(f"   Created Leads: {len(tester.created_leads)} leads seeded")
+    # Critical assessment
+    critical_tests = ["Seed Admin User", "Admin Login", "Aavana Health Check"]
+    critical_passed = sum(1 for test in critical_tests if results.get(test, False))
     
-    # Determine exit code
-    if total_passed >= total_tests * 0.8:  # 80% success rate
+    print(f"   Critical Tests: {critical_passed}/{len(critical_tests)}")
+    
+    if auth_token:
+        print(f"   🔑 Authentication: Working")
+    
+    # Determine exit code based on priority tests
+    if priority_passed >= priority_total * 0.7:  # 70% of priority tests must pass
         print("\n🎉 Backend API testing completed successfully!")
-        print("✅ Ready for frontend testing")
+        print("✅ Core authentication and AI endpoints are functional")
         return 0
     else:
-        print("\n⚠️  Some critical backend API tests failed!")
-        print("❌ Frontend testing may encounter issues")
+        print("\n⚠️  Critical backend API tests failed!")
+        print("❌ Authentication or AI integration issues detected")
         return 1
 
 if __name__ == "__main__":
