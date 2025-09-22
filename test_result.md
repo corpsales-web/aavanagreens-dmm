@@ -144,11 +144,13 @@
 
 ## test_plan:
 ##   current_focus:
-##     - "All tests completed successfully"
+##     - "Seed admin user via /api/auth/seed-admin"
+##     - "Backend AI chat fast-path /api/ai/chat"
+##     - "Aavana 2.0 chat endpoints (specialized, enhanced, standard)"
 ##   stuck_tasks:
-##     - "None"
-##   test_all: true
-##   test_priority: "completed"
+##     - "Marketing modal runtime error regression"
+##   test_all: false
+##   test_priority: "high_first"
 
 ## agent_communication:
 ##     -agent: "main"
