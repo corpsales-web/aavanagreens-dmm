@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
   // State Management
