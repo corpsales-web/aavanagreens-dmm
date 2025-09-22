@@ -527,9 +527,9 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
           await axios.post(`${API}/api/marketing/save`, {
             item_type: 'campaign',
             data: {
-              name: (data?.campaign_data?.config?.name) || 'AI Campaign',
-              description: (data?.campaign_data?.config?.description) || 'Cross-platform campaign',
-              platforms: data?.campaign_data?.config?.platforms || [],
+              name: config?.name || 'AI Campaign',
+              description: config?.description || 'Cross-platform campaign',
+              platforms: config?.platforms || [],
               status: 'Pending Approval'
             },
             default_filters: {
