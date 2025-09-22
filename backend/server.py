@@ -6257,6 +6257,18 @@ async def get_chat_history(session_id: str, limit: int = 20):
 # Include the router in the main app
 app.include_router(api_router)
 
+# Create a faster route_task wrapper to mitigate 502s
+@api_router.post("/ai/chat")
+async def ai_chat_fast(payload: dict):
+    try:
+        message = payload.get("message") or payload.get("prompt") or payload.get("text") or ""
+        task_type = payload.get("task_type") or ("quick_response" if len(message) < 160 else "complex_analysis")
+        context = payload.get("context") or {}
+        result = await ai_service.orchestrator.route_task(task_type, message, context)
+        return {"response": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI chat failed: {str(e)}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
