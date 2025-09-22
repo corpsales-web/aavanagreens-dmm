@@ -167,6 +167,47 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Utility: seed admin user for testing
+class SeedAdminRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+@api_router.post("/auth/seed-admin")
+async def seed_admin(req: SeedAdminRequest):
+    try:
+        # Check if exists
+        existing = await db.users.find_one({"email": req.email})
+        if existing:
+            # Ensure admin role and permissions
+            updated_fields = {
+                "role": UserRole.SUPER_ADMIN,
+                "status": UserStatus.ACTIVE,
+                "permissions": [perm.value for perm in Permission],
+                "updated_at": datetime.now(timezone.utc)
+            }
+            await db.users.update_one({"id": existing.get("id")}, {"$set": updated_fields})
+            existing.update(updated_fields)
+            user_obj = User(**parse_from_mongo(existing))
+            user_response = {k: v for k, v in user_obj.dict().items() if k not in ['password_hash','reset_token','reset_token_expires']}
+            return {"seeded": False, "user": user_response}
+        # Create new admin
+        user = User(
+            username=req.email.split('@')[0],
+            email=req.email,
+            full_name="Admin User",
+            role=UserRole.SUPER_ADMIN,
+            status=UserStatus.ACTIVE,
+            department="Admin",
+            permissions=[perm.value for perm in Permission],
+            password_hash=hash_password(req.password)
+        )
+        doc = prepare_for_mongo(user.dict())
+        await db.users.insert_one(doc)
+        user_response = {k: v for k, v in user.dict().items() if k not in ['password_hash','reset_token','reset_token_expires']}
+        return {"seeded": True, "user": user_response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Admin seeding failed: {str(e)}")
+
 # Enums
 class LeadStatus(str, Enum):
     NEW = "New"
