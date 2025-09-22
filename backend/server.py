@@ -6256,8 +6256,6 @@ async def get_chat_history(session_id: str, limit: int = 20):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Include the router in the main app
-app.include_router(api_router)
-
 # Create a faster route_task wrapper to mitigate 502s
 @api_router.post("/ai/chat")
 async def ai_chat_fast(payload: dict):
