@@ -6961,7 +6961,7 @@ MARKETING_COLLECTIONS = {
     "influencer": "marketing_influencers",
 }
 
-@api_router.post("/marketing/save")
+@app.post("/api/marketing/save")
 async def marketing_save(item: dict):
     """Persist a marketing artifact with Pending Approval status by default."""
     try:
