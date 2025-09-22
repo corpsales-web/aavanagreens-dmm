@@ -7035,3 +7035,6 @@ async def marketing_approve(request: dict):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Approval failed: {str(e)}")
+
+# Include the API router in the main app
+app.include_router(api_router)
