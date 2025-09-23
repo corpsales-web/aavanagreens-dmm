@@ -950,7 +950,7 @@ const ComprehensiveDigitalMarketingManager = ({ isOpen, onClose }) => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button 
-              onClick={() => launchCrossplatformCampaign('google_ads')}
+              onClick={() => openQuickCampaignWizard('google_ads')}
               disabled={aiProcessing}
               className="bg-blue-600 hover:bg-blue-700 p-6 h-auto"
             >
