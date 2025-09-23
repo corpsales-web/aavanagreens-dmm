@@ -6994,7 +6994,7 @@ async def marketing_list(type: str, status: Optional[str] = None):
     items = await db[MARKETING_COLLECTIONS[type]].find(q).to_list(length=200)
     return [parse_from_mongo(i) for i in items]
 
-@app.post("/api/marketing/approve")
+@api_router.post("/marketing/approve")
 async def marketing_approve(request: dict):
     """Approve a marketing item and record approval details."""
     try:
