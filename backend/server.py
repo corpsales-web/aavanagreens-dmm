@@ -6997,6 +6997,30 @@ async def marketing_list(type: str, status: Optional[str] = None):
 @api_router.post("/marketing/approve")
 async def marketing_approve(request: dict):
     """Approve a marketing item and record approval details."""
+
+@app.post("/api/marketing/update")
+async def marketing_update(request: dict):
+    """Update a marketing item before approval (edit in Pending state)."""
+    try:
+        item_type = request.get("item_type")
+        item_id = request.get("item_id")
+        updates = request.get("updates", {})
+        if not item_type or not item_id:
+            raise HTTPException(status_code=400, detail="item_type and item_id are required")
+        if item_type not in MARKETING_COLLECTIONS:
+            raise HTTPException(status_code=400, detail="Invalid item_type")
+        # Normalize timestamps and remove _id
+        updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db[MARKETING_COLLECTIONS[item_type]].update_one({"id": item_id}, {"$set": prepare_for_mongo(updates)})
+        updated = await db[MARKETING_COLLECTIONS[item_type]].find_one({"id": item_id})
+        if not updated:
+            raise HTTPException(status_code=404, detail="Item not found")
+        return {"success": True, "item": parse_from_mongo(updated)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Update failed: {str(e)}")
+
     try:
         item_type = request.get("item_type")
         item_id = request.get("item_id")
