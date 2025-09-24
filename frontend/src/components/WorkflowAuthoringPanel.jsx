@@ -142,24 +142,21 @@ const WorkflowAuthoringPanel = () => {
   };
 
   const getDemoTemplates = () => [
-    {
-      id: '1',
-      name: 'Welcome Email',
-      description: 'Initial welcome message for new leads',
-      category: 'lead_nurturing',
-      template: 'Hello {{name}}, welcome to Aavana Greens! We are excited to help you find your dream property.',
-      variables: ['name'],
-      created_at: new Date().toISOString()
-    },
-    {
-      id: '2',
-      name: 'Follow-up Reminder',
-      description: 'Reminder for sales team follow-ups',
-      category: 'internal_communication',
-      template: 'Reminder: Follow up with {{lead_name}} ({{phone}}) regarding {{property_type}} inquiry.',
-      variables: ['lead_name', 'phone', 'property_type'],
-      created_at: new Date().toISOString()
-    }
+    { id: '1', name: 'Lead follow-up (WhatsApp-first)', description: 'First-touch WhatsApp with nudge planning', category: 'lead_nurturing', template: 'Hi {{name}}, thanks for reaching out about {{interest}}. When is a good time to connect this week?', variables: ['name','interest'], created_at: new Date().toISOString() },
+    { id: '2', name: 'High-budget fast track', description: 'Auto-assign senior + urgent task + meeting slots', category: 'lead_qualification', template: 'Lead {{name}} budget {{budget}} in {{city}}. Assign Senior. Create urgent task and propose 3 slots.', variables: ['name','budget','city'], created_at: new Date().toISOString() },
+    { id: '3', name: 'Missed call capture', description: 'Create lead/task and apology WhatsApp (approval-gated)', category: 'operations', template: 'Missed call from {{phone}}. Create lead if new. Task: call back. Draft apology WhatsApp.', variables: ['phone'], created_at: new Date().toISOString() },
+    { id: '4', name: 'Proposal follow-up', description: 'Task, 48h wait, AI nudge, escalate if no reply', category: 'sales', template: 'Proposal sent to {{name}}. Task follow-up in 48h. Draft nudge if no response, escalate in 72h.', variables: ['name'], created_at: new Date().toISOString() },
+    { id: '5', name: 'Site-visit booking', description: 'Create calendar event + confirmation message', category: 'appointments', template: 'Site visit for {{name}} at {{address}} on {{date}} {{time}}. Confirm via WhatsApp (approval-gated).', variables: ['name','address','date','time'], created_at: new Date().toISOString() },
+    { id: '6', name: 'Campaign approval nudge', description: 'Remind approver for pending marketing items', category: 'marketing', template: 'Marketing {{item_type}} {{item_name}} pending >24h. Create review task and nudge approver.', variables: ['item_type','item_name'], created_at: new Date().toISOString() },
+    { id: '7', name: 'UGC participation management', description: 'Track UGC entries and pick winner', category: 'community', template: 'UGC participant {{name}} with hashtag {{hashtag}}. Create review task. Pick winner in 14 days.', variables: ['name','hashtag'], created_at: new Date().toISOString() },
+    { id: '8', name: 'Warm → Hot escalation', description: 'Elevate stage when intent is high', category: 'sales', template: 'Intent detected for {{name}}. Move to Hot. Assign Senior. Task: book visit today.', variables: ['name'], created_at: new Date().toISOString() },
+    { id: '9', name: 'Dormant lead reactivation', description: '30+ days inactive: draft personalized ping', category: 'retention', template: 'Lead {{name}} inactive 30+ days. Draft personal reactivation message. Task retry in 3 days.', variables: ['name'], created_at: new Date().toISOString() },
+    { id: '10', name: 'After-sales NPS', description: 'NPS ask and branching actions', category: 'support', template: 'Deal Won for {{name}} 7 days ago. Ask NPS. If <=6: create escalation. If >=9: ask review/UGC.', variables: ['name'], created_at: new Date().toISOString() },
+    { id: '11', name: 'SEO keyword kickoff', description: 'AI keyword set + blog tasks + calendar', category: 'marketing', template: 'Suggest keywords for {{topic}}. Create 5 blog tasks and schedule calendar slots.', variables: ['topic'], created_at: new Date().toISOString() },
+    { id: '12', name: 'WhatsApp keyword router', description: 'Route inbound WhatsApp by keywords', category: 'routing', template: 'Inbound msg with {{keyword}}. Route: pricing/schedule/catalogue/visit flows.', variables: ['keyword'], created_at: new Date().toISOString() },
+    { id: '13', name: 'Duplicate lead merge gate', description: 'Detect and review potential duplicates', category: 'data_quality', template: 'Potential duplicate: {{phone}} / {{email}}. Create review task; merge if confirmed.', variables: ['phone','email'], created_at: new Date().toISOString() },
+    { id: '14', name: 'Payment reminder (stub)', description: 'Gentle reminders before due date', category: 'finance', template: 'Invoice {{invoice_id}} due in {{days}} days. Create reminder task. Draft WhatsApp (approval-gated).', variables: ['invoice_id','days'], created_at: new Date().toISOString() },
+    { id: '15', name: 'Abandoned chat re-engage', description: 'Summarize and re-engage after long chat', category: 'support', template: 'Chat {{session_id}} ended after {{minutes}} min. AI summary. Task: re-engage with next steps.', variables: ['session_id','minutes'], created_at: new Date().toISOString() }
   ];
 
   const createOrUpdateWorkflow = async () => {
