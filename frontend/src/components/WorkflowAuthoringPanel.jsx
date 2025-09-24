@@ -126,13 +126,13 @@ const WorkflowAuthoringPanel = () => {
   const fetchTemplates = async () => {
     try {
       const response = await axios.get(`${API}/api/workflow-templates`);
-      // Ensure response.data is an array
-      if (Array.isArray(response.data)) {
+      // Accept array or {templates: []}; if empty, fallback to demo seeds
+      if (Array.isArray(response.data) && response.data.length > 0) {
         setTemplates(response.data);
-      } else if (response.data && Array.isArray(response.data.templates)) {
+      } else if (response.data && Array.isArray(response.data.templates) && response.data.templates.length > 0) {
         setTemplates(response.data.templates);
       } else {
-        console.warn('Invalid templates data format, using demo data');
+        console.warn('No templates from API, seeding demo templates');
         setTemplates(getDemoTemplates());
       }
     } catch (error) {
