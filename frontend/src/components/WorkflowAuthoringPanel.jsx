@@ -165,34 +165,31 @@ const WorkflowAuthoringPanel = () => {
   const createOrUpdateWorkflow = async () => {
     setLoading(true);
     try {
-      const response = await axios.post(`${API}/api/workflows`, newWorkflow);
-      setWorkflows(prev => [...prev, response.data]);
+      if (editingWorkflowId) {
+        // Update path
+        const response = await axios.put(`${API}/api/workflows/${editingWorkflowId}`, newWorkflow);
+        const updated = response.data || { id: editingWorkflowId, ...newWorkflow };
+        setWorkflows(prev => Array.isArray(prev) ? prev.map(w => w.id === editingWorkflowId ? updated : w) : []);
+      } else {
+        // Create path
+        const response = await axios.post(`${API}/api/workflows`, newWorkflow);
+        setWorkflows(prev => [...prev, response.data]);
+      }
       setShowCreateModal(false);
-      setNewWorkflow({
-        name: '',
-        description: '',
-        trigger: 'manual',
-        steps: [],
-        is_active: true
-      });
+      setEditingWorkflowId(null);
+      setNewWorkflow({ name: '', description: '', trigger: 'manual', steps: [], is_active: true, variables: [] });
     } catch (error) {
-      console.error('Create workflow error:', error);
-      // Add to demo data
-      const mockWorkflow = {
-        id: Date.now().toString(),
-        ...newWorkflow,
-        steps: newWorkflow.steps.length,
-        created_at: new Date().toISOString()
-      };
-      setWorkflows(prev => [...prev, mockWorkflow]);
-      setShowCreateModal(false);
-      setNewWorkflow({
-        name: '',
-        description: '',
-        trigger: 'manual',
-        steps: [],
-        is_active: true
+      console.error('Create/Update workflow error:', error);
+      // Demo fallback
+      const id = editingWorkflowId || Date.now().toString();
+      const mock = { id, ...newWorkflow, steps: Array.isArray(newWorkflow.steps) ? newWorkflow.steps : [], created_at: new Date().toISOString() };
+      setWorkflows(prev => {
+        if (editingWorkflowId) return prev.map(w => w.id === id ? mock : w);
+        return [...prev, mock];
       });
+      setShowCreateModal(false);
+      setEditingWorkflowId(null);
+      setNewWorkflow({ name: '', description: '', trigger: 'manual', steps: [], is_active: true, variables: [] });
     } finally {
       setLoading(false);
     }
