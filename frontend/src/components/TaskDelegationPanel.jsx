@@ -12,9 +12,12 @@ export default function TaskDelegationPanel() {
   const suggestAI = async () => {
     try {
       setLoading(true);
-      const res = await axios.post(`${API}/api/ai/chat`, { messages: [{ role: 'user', content: `Create a clear task title and description for: ${form.description || form.title}` }] });
-      const text = (res.data?.response || '').slice(0, 240);
-      setForm((f) => ({ ...f, title: f.title || text.split('\n')[0] || 'AI Task', description: text }));
+      const prompt = `Create a clear, concise task title and a 2-3 sentence description for: ${form.description || form.title || 'Follow up with client'}. Return title on first line, then description.`;
+      const res = await axios.post(`${API}/api/ai/chat`, { message: prompt, task_type: 'quick_response' });
+      const text = (res.data?.response || '').trim();
+      const [first, ...rest] = text.split('\n');
+      const desc = rest.join('\n').trim() || text;
+      setForm((f) => ({ ...f, title: f.title || first?.slice(0, 120) || 'AI Task', description: (f.description || desc).slice(0, 500) }));
       toast({ title: 'AI Suggestion', description: 'Title/description updated' });
     } catch (e) {
       toast({ title: 'AI Suggestion failed', description: e.message, variant: 'destructive' });
