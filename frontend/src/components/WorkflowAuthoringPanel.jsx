@@ -20,6 +20,7 @@ const WorkflowAuthoringPanel = () => {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [editingWorkflowId, setEditingWorkflowId] = useState(null);
 
   // New Workflow State
   const [newWorkflow, setNewWorkflow] = useState({
