@@ -388,6 +388,7 @@ const WorkflowAuthoringPanel = () => {
                   <Button
                     size="sm"
                     variant="outline"
+                    onClick={() => openEditWorkflow(workflow)}
                   >
                     <Edit className="h-3 w-3 mr-1" />
                     Edit
