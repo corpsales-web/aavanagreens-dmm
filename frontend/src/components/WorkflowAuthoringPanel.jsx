@@ -452,13 +452,13 @@ const WorkflowAuthoringPanel = () => {
                   )}
                   
                   <div className="flex space-x-2 pt-2">
+                    <Button size="sm" variant="outline" onClick={() => openUseTemplate(template)}>
+                      <Play className="h-3 w-3 mr-1" />
+                      Use Template
+                    </Button>
                     <Button size="sm" variant="outline">
                       <Edit className="h-3 w-3 mr-1" />
                       Edit
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Play className="h-3 w-3 mr-1" />
-                      Test
                     </Button>
                     <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
                       <Trash2 className="h-3 w-3" />
