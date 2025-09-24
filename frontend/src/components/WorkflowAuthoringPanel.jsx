@@ -666,7 +666,7 @@ const WorkflowAuthoringPanel = () => {
 
             <div className="flex space-x-2">
               <Button 
-                onClick={createWorkflow}
+                onClick={createOrUpdateWorkflow}
                 disabled={loading || !newWorkflow.name}
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
