@@ -35,10 +35,12 @@ export default function TaskDelegationPanel() {
         due_date: form.due_date ? new Date(form.due_date).toISOString() : undefined,
       };
       const t = await axios.post(`${API}/api/tasks`, body);
-      toast({ title: 'Task Created', description: t.data?.title });
+      toast({ title: 'Task Created', description: t.data?.title || 'Task saved' });
       if (form.due_date) {
-        await axios.post(`${API}/api/calendar/events`, { title: form.title, start: new Date(form.due_date).toISOString(), linkTo: 'task', refId: t.data.id });
+        try { await axios.post(`${API}/api/calendar/events`, { title: form.title || body.title, start: new Date(form.due_date).toISOString(), linkTo: 'task', refId: t.data.id }); } catch(_){}
       }
+      // reset form
+      setForm({ title: '', description: '', assigned_to: '', priority: 'Medium', due_date: '' });
       const subId = localStorage.getItem('pushSubId');
       if (subId) {
         await axios.post(`${API}/api/notifications/push`, { subscription_id: subId, title: `Task: ${form.title}`, body: 'Scheduled and saved', url: '/' });
