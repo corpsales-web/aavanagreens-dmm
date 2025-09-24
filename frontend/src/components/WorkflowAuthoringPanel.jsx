@@ -670,7 +670,7 @@ const WorkflowAuthoringPanel = () => {
                 disabled={loading || !newWorkflow.name}
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
-                {loading ? 'Creating...' : 'Create Workflow'}
+                {loading ? (editingWorkflowId ? 'Updating...' : 'Creating...') : (editingWorkflowId ? 'Update Workflow' : 'Create Workflow')}
               </Button>
               <Button variant="outline" onClick={() => setShowCreateModal(false)}>
                 Cancel
