@@ -306,6 +306,18 @@ const TabContent = ({
               </div>
             </div>
             
+            {/* Task Delegation Panel (Lightweight, Stable) */}
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <h3 className="text-lg font-semibold mb-3">Task Delegation</h3>
+              <p className="text-sm text-gray-600 mb-3">Create tasks quickly with AI assistance.</p>
+              <div className="border-t pt-3">
+                {(() => {
+                  const Panel = require('./TaskDelegationPanel').default;
+                  return <Panel />;
+                })()}
+              </div>
+            </div>
+
             {/* Enhanced Task System */}
             <EnhancedTaskSystem />
           </div>
