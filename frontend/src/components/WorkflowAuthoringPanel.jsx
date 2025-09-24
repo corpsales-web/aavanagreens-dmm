@@ -162,7 +162,7 @@ const WorkflowAuthoringPanel = () => {
     }
   ];
 
-  const createWorkflow = async () => {
+  const createOrUpdateWorkflow = async () => {
     setLoading(true);
     try {
       const response = await axios.post(`${API}/api/workflows`, newWorkflow);
