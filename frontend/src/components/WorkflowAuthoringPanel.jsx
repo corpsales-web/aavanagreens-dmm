@@ -32,6 +32,40 @@ const WorkflowAuthoringPanel = () => {
     variables: []
   });
 
+  // Helpers: open edit and use-template flows
+  const openEditWorkflow = (wf) => {
+    setEditingWorkflowId(wf.id);
+    setNewWorkflow({
+      name: wf.name || '',
+      description: wf.description || '',
+      trigger: wf.trigger || 'manual',
+      steps: Array.isArray(wf.steps) ? wf.steps : [],
+      is_active: wf.is_active !== undefined ? wf.is_active : true,
+      variables: wf.variables || []
+    });
+    setShowCreateModal(true);
+  };
+
+  const openUseTemplate = (tpl) => {
+    const baseStep = {
+      id: Date.now(),
+      type: tpl.category === 'lead_nurturing' ? 'task' : 'email',
+      content: tpl.template || tpl.description || '',
+      delay: 0,
+      conditions: []
+    };
+    setEditingWorkflowId(null);
+    setNewWorkflow({
+      name: tpl.name || 'New Workflow',
+      description: tpl.description || '',
+      trigger: 'manual',
+      steps: [baseStep],
+      is_active: true,
+      variables: tpl.variables || []
+    });
+    setShowCreateModal(true);
+  };
+
   // New Template State
   const [newTemplate, setNewTemplate] = useState({
     name: '',
