@@ -268,3 +268,121 @@ async def marketing_approve(body: ApproveRequest, db=Depends(get_db)):
     }
     await (await collections_map(db))["approvals"].insert_one(approval_log)
     return {"success": True, "item": updated}
+
+# ----------------------
+# AI Orchestration Endpoints
+# ----------------------
+
+@app.post("/api/ai/generate-strategy")
+async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
+    """Generate marketing strategy using GPT-5 beta"""
+    try:
+        if not EMERGENT_LLM_KEY:
+            raise HTTPException(status_code=500, detail="AI service not configured")
+        
+        strategy_content = await generate_marketing_strategy(request)
+        
+        # Save strategy to database
+        strategy_doc = {
+            "id": str(uuid.uuid4()),
+            "company_name": request.company_name,
+            "industry": request.industry,
+            "target_audience": request.target_audience,
+            "budget": request.budget,
+            "goals": request.goals,
+            "website_url": request.website_url,
+            "strategy_content": strategy_content,
+            "status": "Generated",
+            "created_at": now_iso(),
+            "updated_at": now_iso()
+        }
+        
+        cmap = await collections_map(db)
+        await cmap["strategy"].insert_one(strategy_doc)
+        strategy_doc.pop("_id", None)
+        
+        return {"success": True, "strategy": strategy_doc}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI strategy generation failed: {str(e)}")
+
+@app.post("/api/ai/generate-content")
+async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
+    """Generate content ideas using GPT-5 beta"""
+    try:
+        if not EMERGENT_LLM_KEY:
+            raise HTTPException(status_code=500, detail="AI service not configured")
+        
+        content_ideas = await generate_content_ideas(request)
+        
+        # Save content ideas to appropriate collection
+        content_doc = {
+            "id": str(uuid.uuid4()),
+            "content_type": request.content_type,
+            "brief": request.brief,
+            "target_audience": request.target_audience,
+            "platform": request.platform,
+            "budget": request.budget,
+            "festival": request.festival,
+            "ai_content": content_ideas,
+            "status": "Generated",
+            "created_at": now_iso(),
+            "updated_at": now_iso()
+        }
+        
+        cmap = await collections_map(db)
+        # Map content type to collection
+        collection_map = {
+            "reel": "reel",
+            "ugc": "ugc", 
+            "brand": "brand",
+            "influencer": "influencer"
+        }
+        collection_key = collection_map.get(request.content_type, "reel")
+        await cmap[collection_key].insert_one(content_doc)
+        content_doc.pop("_id", None)
+        
+        return {"success": True, "content": content_doc}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI content generation failed: {str(e)}")
+
+@app.post("/api/ai/optimize-campaign")
+async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
+    """Optimize campaign using GPT-5 beta"""
+    try:
+        if not EMERGENT_LLM_KEY:
+            raise HTTPException(status_code=500, detail="AI service not configured")
+        
+        optimization = await optimize_campaign(request)
+        
+        # Save optimized campaign
+        campaign_doc = {
+            "id": str(uuid.uuid4()),
+            "campaign_name": request.campaign_name,
+            "objective": request.objective,
+            "target_audience": request.target_audience,
+            "budget": request.budget,
+            "channels": request.channels,
+            "duration_days": request.duration_days,
+            "ai_optimization": optimization,
+            "status": "Optimized",
+            "created_at": now_iso(),
+            "updated_at": now_iso()
+        }
+        
+        cmap = await collections_map(db)
+        await cmap["campaign"].insert_one(campaign_doc)
+        campaign_doc.pop("_id", None)
+        
+        return {"success": True, "campaign": campaign_doc}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI campaign optimization failed: {str(e)}")
+
+@app.get("/api/ai/strategies")
+async def list_strategies(db=Depends(get_db)):
+    """List all generated strategies"""
+    cmap = await collections_map(db)
+    strategies = await cmap["strategy"].find({}, {"_id": 0}).to_list(length=100)
+    return strategies
