@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const BASE = (import.meta?.env?.REACT_APP_BACKEND_URL || process?.env?.REACT_APP_BACKEND_URL || '').replace(/\/$/, '')
+// Vite-safe env resolution (no direct process reference)
+const ENV = (typeof import.meta !== 'undefined' ? import.meta.env : {}) || {}
+const BASE = String(ENV.REACT_APP_BACKEND_URL || '').replace(/\/$/, '')
 
 export const api = axios.create({
   baseURL: BASE,
