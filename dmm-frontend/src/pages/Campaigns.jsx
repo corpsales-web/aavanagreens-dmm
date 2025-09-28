@@ -54,7 +54,7 @@ export default function Campaigns() {
     return Object.values(budgetSplits).reduce((sum, amount) =&gt; sum + parseFloat(amount || 0), 0)
   }
 
-  const optimizeCampaign = async () =&gt; {
+  const optimizeCampaign = async () => {
     // Intentionally left usable when AI is enabled. Disabled otherwise via UI.
     if (!formData.campaign_name || !formData.objective || !formData.target_audience || !formData.budget || formData.channels.length === 0) {
       setError('Please fill in all required fields and select at least one channel')
