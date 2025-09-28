@@ -197,6 +197,6 @@ export default function Strategy() {
           </div>
         </div>
       )}
-    &lt;/div&gt;
+    </div>
   )
 }
