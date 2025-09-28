@@ -51,7 +51,7 @@ export default function Campaigns() {
   }
 
   const getTotalAllocated = () => {
-    return Object.values(budgetSplits).reduce((sum, amount) =&gt; sum + parseFloat(amount || 0), 0)
+    return Object.values(budgetSplits).reduce((sum, amount) => sum + parseFloat(amount || 0), 0)
   }
 
   const optimizeCampaign = async () => {
