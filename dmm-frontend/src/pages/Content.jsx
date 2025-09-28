@@ -214,8 +214,8 @@ export default function Content() {
                       {contentResult.platform && <p><strong>Platform:</strong> {contentResult.platform}</p>}
                       {contentResult.created_at && <p><strong>Created:</strong> {new Date(contentResult.created_at).toLocaleString()}</p>}
                     </div>
-                    &lt;div className="ai-content"&gt;
-                      &lt;pre&gt;{contentResult.ai_content || '(AI pending)'}&lt;/pre&gt;
+                    <div className="ai-content">
+                      <pre>{contentResult.ai_content || '(AI pending)'}</pre>
                     </div>
                   </div>
                 </div>
