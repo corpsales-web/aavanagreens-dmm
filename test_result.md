@@ -118,7 +118,7 @@
 ##         -comment: "Added /api/health, /api/gallery/seed seeding with picsum placeholder, and /api/leads/qualify deterministic rules-based fallback (no external keys needed). Preserved Mongo + CORS + /api prefix rules."
 ##         -working: true
 ##         -agent: "testing"
-##         -comment: "All backend API tests passed: Health endpoint returns status=ok and db=ok, Gallery seed correctly inserts requested count (tested with 3 items), Lead qualification returns proper score/stage/reasoning/model_used fields with correct data types and valid values. API accessible at https://crm-whatsapp-hub.preview.emergentagent.com/api"
+##         -comment: "All backend API tests passed: Health endpoint returns status=ok and db=ok, Gallery seed correctly inserts requested count (tested with 3 items), Lead qualification returns proper score/stage/reasoning/model_used fields with correct data types and valid values. API accessible at https://dmm-platform.preview.emergentagent.com/api"
 ##   - task: "Marketing endpoints implementation and testing"
 ##     implemented: true
 ##     working: true

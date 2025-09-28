@@ -1,0 +1,65 @@
+<analysis>
+The previous AI engineer has been engaged in a highly iterative and challenging development process for the Aavana Greens CRM. Initially, the focus was on enhancing core CRM features and integrating AI-driven modules like a Marketing Manager, advanced Task Management, and communication features. However, the development was frequently disrupted by UI regressions, persistent API errors (especially 502s related to AI), and complex dependency management.
+
+A significant shift in strategy occurred when the user, experiencing frustration with the Marketing module's incomplete functionality and perceived instability, requested its separation into a dedicated application. The current efforts are now entirely concentrated on building and deploying this new, isolated Digital Marketing Manager (DMM) application on the Emergent platform. This involves scaffolding separate backend and frontend services for DMM, configuring their deployment, and setting up external dependencies like MongoDB Atlas and SSO. The primary CRM application is currently in a state requiring critical recovery due to a corrupted core backend file (), while other CRM features (Task Delegation, Workflow Authoring) have seen incremental fixes. The ongoing challenge is bridging the communication gap with the non-technical user regarding deployment steps and platform access.
+</analysis>
+
+<product_requirements>
+The Aavana Greens CRM, built on React, FastAPI, and MongoDB, encompasses Leads, Tasks, HRMS, ERP, AI Assistant (Aavana 2.0), Digital Marketing, Pipeline, Workflow Authoring, and User Authentication. Key required enhancements included AI orchestration (), a comprehensive Marketing Manager (autonomous analysis, approval-gated campaigns for Reels, UGC, Influencers, Brand Content, Google Ads, Social Media, Email, Bulk WhatsApp, with persistence and continuous optimization), upgraded Task Management (AI task creation, auto-assign, reminders, calendar sync), enhanced CRM (AI qualification, WhatsApp-first outreach, appointments), and Web Push/WhatsApp notifications. UI consistency and role-based access were crucial.
+Most recently, the Digital Marketing Manager was specifically requested to be extracted into a 100% autonomous app. This DMM app must independently analyze company data (products, website, stores) to create and manage marketing strategies including AI influencer creation, UGC generation, brand promotion, all media content creation, Google/Meta Ads, Reel creation, social media, email, and bulk WhatsApp campaigns. All activities require explicit user approval with fully customizable targeting filters (geographical, demographic, behavioral, event-based, time-based, device, language, income, purchase history). The AI must continuously optimize performance, always seeking approval before execution.
+</product_requirements>
+
+<key_technical_concepts>
+-   **Full-stack Architecture:** React frontend, FastAPI backend, MongoDB database.
+-   **AI Orchestration:** Centralized  with , micro-caching, timeouts, multi-agent pipeline.
+-   **Persistence:** MongoDB collections (e.g., , ) using UUIDs.
+-   **Notifications:** Web Push (VAPID, Service Worker), WhatsApp (Meta Cloud API/360dialog scaffolding).
+-   **Deployment:** Docker, Kubernetes (manifests), Emergent (no-code/low-code platform, GitHub integration).
+-   **Authentication:** JWT (HS256) for SSO deep-link.
+-   **UI Library:** Radix UI (for dropdowns).
+-   **Speech-to-Text (STT):** Web Speech API (browser), Google Cloud Speech-to-Text v2 (cloud fallback).
+</key_technical_concepts>
+
+<code_architecture>
+The application's codebase is structured as a full-stack mono-repository, with a recent shift towards decoupling the Digital Marketing Manager (DMM) into its own, separately deployable microservice application.
+
+
+
+**Key Files & Changes Summaries:**
+
+*   **/app/backend/server.py**: Main CRM backend. Integrated AI orchestration, marketing persistence, approvals, notifications. Currently corrupted, replaced by placeholder string.
+*   **/app/backend/ai_service.py**: Central AI Orchestrator. Configured with , micro-caching, timeouts. Planned for a multi-agent pipeline.
+*   **/app/backend/stt_service.py**: New Google Cloud STT v2 adapter. Scaffolded for streaming STT with language hints; not yet wired to  due to corruption.
+*   **/app/frontend/src/App.js**: CRM's main React component. Manages routing, navigation, and conditionally renders components based on roles/permissions.
+*   **/app/frontend/src/components/ComprehensiveDigitalMarketingManager.jsx**: CRM's Marketing UI. Extensively modified, repeatedly fixed, now soft-disabled for extraction.
+*   **/app/frontend/src/components/TaskDelegationPanel.jsx**: CRM's Task Delegation UI. Mounted, with AI Suggest using  and task/calendar event creation. Voice-to-Task mic is planned.
+*   **/app/frontend/src/components/WhatsAppInboxPanel.jsx**: CRM's WhatsApp Inbox UI. The file is currently missing, requiring implementation.
+*   **/app/frontend/src/components/WorkflowAuthoringPanel.jsx**: CRM's Workflow management. Edit mode, local templates with Use Template functionality.
+*   **/app/frontend/src/components/ui/select.jsx**: Shared Radix Select component. A global guard was added to prevent runtime errors from empty  props.
+*   **/app/dmm-backend/server.py**: New DMM app's backend. Scaffolded with health, SSO consume, and core marketing (save/list/approve) endpoints. Reuses  collections.
+*   **/app/dmm-frontend/src/** (various files): New DMM app's frontend. UI shells for Strategy (stub), Content (Reels, UGC, Brand, Influencer modals), Campaigns (with budget splits), and Approvals are being developed, wired to DMM backend endpoints.
+*   **/app/deploy/dmm/**: Contains Dockerfiles, Kubernetes manifests, and a  script to automate DMM app deployment.
+
+</code_architecture>
+
+<pending_tasks>
+-   **CRM App Stability:** Restore  to a stable state (critical).
+-   **CRM App Features:** Implement reliable Voice-to-Task (cloud STT) and build  to wire WhatsApp Inbox UI to backend APIs.
+-   **DMM App Deployment:** Complete Emergent deployment process (GitHub access connection, DNS configuration, TLS setup).
+-   **DMM App Frontend:** Finalize UI shells (Strategy, Content, Campaigns, Approvals) with all widgets and ensure full backend wiring.
+-   **DMM App Backend:** Implement AI orchestrator, strategy persistence, server-side RBAC, and notifications.
+-   **DMM App Integrations:** Implement SSO deep-link, integrate external data sources (website URLs, etc.), and real ad execution (requires credentials).
+-   **DMM App Infrastructure:** Provide Docker/K8s manifests and apply branding.
+</pending_tasks>
+
+<current_work>
+The immediate, overriding task is to successfully deploy the new, isolated Digital Marketing Manager (DMM) application onto the Emergent platform. This involves guiding the user, who has limited technical experience, through the platform's UI to connect their GitHub repository (), configure environment variables (MongoDB connection string, JWT secret, CORS origins), set up domain routing ( for frontend and  for backend), and attach TLS certificates.
+
+The DMM app itself is currently in a state where its backend () is scaffolded with essential marketing endpoints (, , ) and JWT SSO consumption logic. The frontend () is actively being developed to include UI shells for Strategy (stubbed AI generation), Content Creation (Reels, UGC, Brand, Influencer modals with budget, festival, and targeting widgets), Campaign Manager (with channel-specific budget splits and auto-normalization), and a consolidated Approvals tab. These frontend components are being wired to the DMM backend endpoints to handle save, list, and approve actions, all designed with UI-only RBAC placeholders and resilient error handling (e.g., non-blocking banners for backend unavailability).
+
+Crucially, the main CRM application is in a critical, degraded state: its  file has been inadvertently overwritten with placeholder text, rendering the CRM backend non-functional if restarted. This unaddressed corruption is blocking further integration of cloud STT for Task Delegation and the full wiring of the WhatsApp Inbox. Previous work on CRM features, such as Task Delegation (AI Suggest, task/calendar creation) and Workflow Authoring (edit mode, templates), and a global UI dropdown crash fix are present but cannot be fully relied upon until the CRM backend is restored.
+</current_work>
+
+<optional_next_step>
+Guide the user through connecting their GitHub repository to Emergent and granting Editor access to their Emergent workspace.
+</optional_next_step>
