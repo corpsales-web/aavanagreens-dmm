@@ -35,10 +35,10 @@ export default function App() {
         ))}
       </div>
       <div className="page">
-        {tab==='strategy' &amp;&amp; &lt;Strategy /&gt;}
-        {tab==='content' &amp;&amp; &lt;Content /&gt;}
-        {tab==='campaigns' &amp;&amp; &lt;Campaigns /&gt;}
-        {tab==='approvals' &amp;&amp; &lt;Approvals /&gt;}
+        {tab==='strategy' && <Strategy />}
+        {tab==='content' && <Content />}
+        {tab==='campaigns' && <Campaigns />}
+        {tab==='approvals' && <Approvals />}
       </div>
     </div>
   )
