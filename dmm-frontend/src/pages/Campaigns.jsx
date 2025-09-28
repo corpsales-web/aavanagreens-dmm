@@ -39,7 +39,7 @@ export default function Campaigns() {
     if (formData.budget && newChannels.length > 0) {
       const budgetPerChannel = parseFloat(formData.budget) / newChannels.length
       const newSplits = {}
-      newChannels.forEach(channel =&gt; {
+      newChannels.forEach(channel => {
         newSplits[channel] = budgetPerChannel.toFixed(2)
       })
       setBudgetSplits(newSplits)
