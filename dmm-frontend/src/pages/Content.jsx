@@ -210,9 +210,9 @@ export default function Content() {
                   &lt;h3&gt;Saved Content&lt;/h3&gt;
                   &lt;div className="content-details"&gt;
                     &lt;div className="content-meta"&gt;
-                      {contentResult.content_type &amp;&amp; &lt;p&gt;&lt;strong&gt;Type:&lt;/strong&gt; {contentResult.content_type}&lt;/p&gt;}
-                      {contentResult.platform &amp;&amp; &lt;p&gt;&lt;strong&gt;Platform:&lt;/strong&gt; {contentResult.platform}&lt;/p&gt;}
-                      {contentResult.created_at &amp;&amp; &lt;p&gt;&lt;strong&gt;Created:&lt;/strong&gt; {new Date(contentResult.created_at).toLocaleString()}&lt;/p&gt;}
+                      {contentResult.content_type && <p><strong>Type:</strong> {contentResult.content_type}</p>}
+                      {contentResult.platform && <p><strong>Platform:</strong> {contentResult.platform}</p>}
+                      {contentResult.created_at && <p><strong>Created:</strong> {new Date(contentResult.created_at).toLocaleString()}</p>}
                     </div>
                     &lt;div className="ai-content"&gt;
                       &lt;pre&gt;{contentResult.ai_content || '(AI pending)'}&lt;/pre&gt;
