@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class NotificationsWebhookTester:
-    def __init__(self, base_url="https://dmm-platform.preview.emergentagent.com"):
+    def __init__(self, base_url="https://campaign-central-6.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
