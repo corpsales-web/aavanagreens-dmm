@@ -88,7 +88,7 @@ export default function Strategy() {
       <div className="page-header">
         <h1>AI Marketing Strategy Generator</h1>
         <p>Get comprehensive marketing strategies powered by GPT-5 beta</p>
-      &lt;/div&gt;
+      </div>
 
       &lt;div className="strategy-form"&gt;
         &lt;div className="form-grid"&gt;
@@ -100,7 +100,7 @@ export default function Strategy() {
               onChange={(e) =&gt; setFormData({...formData, company_name: e.target.value})}
               placeholder="Enter company name"
             /&gt;
-          &lt;/div&gt;
+          </div>
 
           &lt;div className="form-group"&gt;
             &lt;label&gt;Industry *&lt;/label&gt;
@@ -110,7 +110,7 @@ export default function Strategy() {
               onChange={(e) =&gt; setFormData({...formData, industry: e.target.value})}
               placeholder="e.g., Real Estate, Technology, Healthcare"
             /&gt;
-          &lt;/div&gt;
+          </div>
 
           &lt;div className="form-group"&gt;
             &lt;label&gt;Target Audience *&lt;/label&gt;
@@ -120,7 +120,7 @@ export default function Strategy() {
               onChange={(e) =&gt; setFormData({...formData, target_audience: e.target.value})}
               placeholder="Describe your target audience"
             /&gt;
-          &lt;/div&gt;
+          </div>
 
           &lt;div className="form-group"&gt;
             &lt;label&gt;Monthly Budget&lt;/label&gt;
@@ -130,7 +130,7 @@ export default function Strategy() {
               onChange={(e) =&gt; setFormData({...formData, budget: e.target.value})}
               placeholder="e.g., $5,000 - $10,000"
             /&gt;
-          &lt;/div&gt;
+          </div>
 
           &lt;div className="form-group"&gt;
             &lt;label&gt;Website URL&lt;/label&gt;
@@ -140,8 +140,8 @@ export default function Strategy() {
               onChange={(e) =&gt; setFormData({...formData, website_url: e.target.value})}
               placeholder="https://yourwebsite.com"
             /&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
+          </div>
+        </div>
 
         &lt;div className="form-group"&gt;
           &lt;label&gt;Marketing Goals&lt;/label&gt;
@@ -156,8 +156,8 @@ export default function Strategy() {
                 &lt;span&gt;{goal}&lt;/span&gt;
               &lt;/label&gt;
             ))}
-          &lt;/div&gt;
-        &lt;/div&gt;
+          </div>
+        </div>
 
         {error &amp;&amp; &lt;div className="error-message"&gt;{error}&lt;/div&gt;}
         {success &amp;&amp; &lt;div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}&gt;{success}&lt;/div&gt;}
@@ -179,8 +179,8 @@ export default function Strategy() {
           &gt;
             Save Strategy for Approval (No AI)
           &lt;/button&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+        </div>
+      </div>
 
       {strategy &amp;&amp; (
         &lt;div className="strategy-result"&gt;
@@ -190,12 +190,12 @@ export default function Strategy() {
               &lt;p&gt;&lt;strong&gt;Company:&lt;/strong&gt; {strategy.company_name}&lt;/p&gt;
               &lt;p&gt;&lt;strong&gt;Industry:&lt;/strong&gt; {strategy.industry}&lt;/p&gt;
               {strategy.created_at &amp;&amp; &lt;p&gt;&lt;strong&gt;Created:&lt;/strong&gt; {new Date(strategy.created_at).toLocaleString()}&lt;/p&gt;}
-            &lt;/div&gt;
+            </div>
             &lt;div className="strategy-details"&gt;
               &lt;pre&gt;{strategy.strategy_content || '(AI pending)'}&lt;/pre&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
+            </div>
+          </div>
+        </div>
       )}
     &lt;/div&gt;
   )
