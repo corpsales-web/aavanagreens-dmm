@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dmm-frontend
+  namespace: dmm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dmm-frontend
+  template:
+    metadata:
+      labels:
+        app: dmm-frontend
+    spec:
+      containers:
+      - name: dmm-frontend
+        image: your-registry/dmm-frontend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "300m"
+            memory: "256Mi"

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dmm-config
+  namespace: dmm
+data:
+  DB_NAME_DMM: "aavana_dmm"
+  DMM_CORS_ORIGINS: "https://dmm.aavanagreens.in,https://crm-whatsapp-hub.preview.emergentagent.com"
