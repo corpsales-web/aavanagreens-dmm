@@ -87,7 +87,7 @@ export default function Campaigns() {
     }
   }
 
-  const saveManual = async () =&gt; {
+  const saveManual = async () => {
     if (!formData.campaign_name || !formData.objective || !formData.target_audience || !formData.budget || formData.channels.length === 0) {
       setError('Please fill in all required fields and select at least one channel')
       return
