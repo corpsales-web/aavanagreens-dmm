@@ -4,6 +4,7 @@ import Content from './pages/Content'
 import Campaigns from './pages/Campaigns'
 import Approvals from './pages/Approvals'
 import TopNav from './components/TopNav'
+import './App.css'
 
 const TABS = [
   { id: 'strategy', label: 'AI Strategy' },
