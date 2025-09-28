@@ -92,7 +92,7 @@ export default function Strategy() {
 
       <div className="strategy-form">
         <div className="form-grid">
-          &lt;div className="form-group"&gt;
+          <div className="form-group">
             &lt;label&gt;Company Name *&lt;/label&gt;
             &lt;input
               type="text"
@@ -102,7 +102,7 @@ export default function Strategy() {
             /&gt;
           </div>
 
-          &lt;div className="form-group"&gt;
+          <div className="form-group">
             &lt;label&gt;Industry *&lt;/label&gt;
             &lt;input
               type="text"
@@ -112,7 +112,7 @@ export default function Strategy() {
             /&gt;
           </div>
 
-          &lt;div className="form-group"&gt;
+          <div className="form-group">
             &lt;label&gt;Target Audience *&lt;/label&gt;
             &lt;input
               type="text"
@@ -122,7 +122,7 @@ export default function Strategy() {
             /&gt;
           </div>
 
-          &lt;div className="form-group"&gt;
+          <div className="form-group">
             &lt;label&gt;Monthly Budget&lt;/label&gt;
             &lt;input
               type="text"
@@ -132,7 +132,7 @@ export default function Strategy() {
             /&gt;
           </div>
 
-          &lt;div className="form-group"&gt;
+          <div className="form-group">
             &lt;label&gt;Website URL&lt;/label&gt;
             &lt;input
               type="url"
