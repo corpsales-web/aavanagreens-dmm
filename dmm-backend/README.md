@@ -1,25 +1,28 @@
-# DMM Backend (FastAPI)
+# dmm-backend (FastAPI)
 
-Production-ready scaffold for Digital Marketing Manager, isolated from CRM.
+Run locally
+- python -m pip install -r requirements.txt
+- uvicorn server:app --host 0.0.0.0 --port 8000
 
-## Features
-- /api/health
-- /api/auth/sso/consume (JWT deep-link)
-- /api/marketing/save, /api/marketing/list, /api/marketing/approve
-- Reuses marketing_* Mongo collections (no migration)
+Env vars
+- MONGO_URL_DMM: Mongo connection string
+- DB_NAME_DMM: default aavana_dmm
+- DMM_JWT_SECRET: HS256 secret for SSO deep-link (consumer)
+- DMM_CORS_ORIGINS: comma-separated list of allowed origins (include https://dmm.aavanagreens.in and your CRM origin)
 
-## Env Vars
-- MONGO_URL_DMM: mongodb connection string
-- DB_NAME_DMM: database name (default aavana_dmm)
-- DMM_JWT_SECRET: HS256 secret for SSO token validation
-- DMM_CORS_ORIGINS: comma-separated list of allowed origins
+Endpoints
+- GET /api/health
+- POST /api/auth/sso/consume
+- POST /api/marketing/save
+- GET /api/marketing/list?type=&status=
+- POST /api/marketing/approve
 
-## Run (local)
-```
-uvicorn server:app --host 0.0.0.0 --port 8002 --reload
-```
+Deploy via GitHub on Emergent
+- Create a Backend service → Source: GitHub → Repo: corpsales-web/aavana-dmm → Subpath: dmm-backend
+- Dockerfile: dmm-backend/Dockerfile
+- Runtime port: 8000; Health path: /api/health
+- Add env vars above in the service settings
+- Do not assign a public domain directly; UI is served by the frontend and will call /api via the shared domain
 
-## Notes
-- All IDs are strings (uuid4). No ObjectId leaks.
-- Timestamps are ISO strings (UTC).
-- Extend with AI endpoints later; keep approval-gated.
+Expected repo link after Save to GitHub
+- https://github.com/corpsales-web/aavana-dmm/tree/main/dmm-backend
