@@ -136,58 +136,58 @@ export default function Content() {
                 />
               </div>
 
-              &lt;div className="form-grid"&gt;
-                &lt;div className="form-group"&gt;
-                  &lt;label&gt;Target Audience *&lt;/label&gt;
-                  &lt;input
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Target Audience *</label>
+                  <input
                     type="text"
                     value={formData.target_audience}
-                    onChange={(e) =&gt; setFormData({...formData, target_audience: e.target.value})}
+                    onChange={(e) => setFormData({...formData, target_audience: e.target.value})}
                     placeholder="Who is this content for?"
-                  /&gt;
+                  />
                 </div>
 
-                &lt;div className="form-group"&gt;
-                  &lt;label&gt;Platform *&lt;/label&gt;
-                  &lt;select
+                <div className="form-group">
+                  <label>Platform *</label>
+                  <select
                     value={formData.platform}
-                    onChange={(e) =&gt; setFormData({...formData, platform: e.target.value})}
-                  &gt;
-                    &lt;option value=""&gt;Select Platform&lt;/option&gt;
-                    {PLATFORMS.map(platform =&gt; (
-                      &lt;option key={platform} value={platform}&gt;{platform}&lt;/option&gt;
+                    onChange={(e) => setFormData({...formData, platform: e.target.value})}
+                  >
+                    <option value="">Select Platform</option>
+                    {PLATFORMS.map(platform => (
+                      <option key={platform} value={platform}>{platform}</option>
                     ))}
-                  &lt;/select&gt;
+                  </select>
                 </div>
 
-                &lt;div className="form-group"&gt;
-                  &lt;label&gt;Budget Range&lt;/label&gt;
-                  &lt;input
+                <div className="form-group">
+                  <label>Budget Range</label>
+                  <input
                     type="text"
                     value={formData.budget}
-                    onChange={(e) =&gt; setFormData({...formData, budget: e.target.value})}
+                    onChange={(e) => setFormData({...formData, budget: e.target.value})}
                     placeholder="e.g., $500 - $2,000"
-                  /&gt;
+                  />
                 </div>
 
-                &lt;div className="form-group"&gt;
-                  &lt;label&gt;Festival/Theme&lt;/label&gt;
-                  &lt;select
+                <div className="form-group">
+                  <label>Festival/Theme</label>
+                  <select
                     value={formData.festival}
-                    onChange={(e) =&gt; setFormData({...formData, festival: e.target.value})}
-                  &gt;
-                    &lt;option value=""&gt;No specific theme&lt;/option&gt;
-                    {FESTIVALS.map(festival =&gt; (
-                      &lt;option key={festival} value={festival}&gt;{festival}&lt;/option&gt;
+                    onChange={(e) => setFormData({...formData, festival: e.target.value})}
+                  >
+                    <option value="">No specific theme</option>
+                    {FESTIVALS.map(festival => (
+                      <option key={festival} value={festival}>{festival}</option>
                     ))}
-                  &lt;/select&gt;
+                  </select>
                 </div>
               </div>
 
-              {error &amp;&amp; &lt;div className="error-message"&gt;{error}&lt;/div&gt;}
-              {success &amp;&amp; &lt;div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}&gt;{success}&lt;/div&gt;}
+              {error && <div className="error-message">{error}</div>}
+              {success && <div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}>{success}</div>}
 
-              &lt;div className="modal-actions" style={{display:'flex', gap:8, flexWrap:'wrap'}}&gt;
+              <div className="modal-actions" style={{display:'flex', gap:8, flexWrap:'wrap'}}>
                 <button 
                   onClick={generateContent}
                   disabled={!AI_ENABLED || isLoading}
@@ -206,10 +206,10 @@ export default function Content() {
               </div>
 
               {contentResult && (
-                &lt;div className="content-result"&gt;
-                  &lt;h3&gt;Saved Content&lt;/h3&gt;
-                  &lt;div className="content-details"&gt;
-                    &lt;div className="content-meta"&gt;
+                <div className="content-result">
+                  <h3>Saved Content</h3>
+                  <div className="content-details">
+                    <div className="content-meta">
                       {contentResult.content_type && <p><strong>Type:</strong> {contentResult.content_type}</p>}
                       {contentResult.platform && <p><strong>Platform:</strong> {contentResult.platform}</p>}
                       {contentResult.created_at && <p><strong>Created:</strong> {new Date(contentResult.created_at).toLocaleString()}</p>}
@@ -224,6 +224,6 @@ export default function Content() {
           </div>
         </div>
       )}
-    &lt;/div&gt;
+    </div>
   )
 }
