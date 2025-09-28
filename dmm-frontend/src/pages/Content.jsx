@@ -99,7 +99,7 @@ export default function Content() {
       <div className="page-header">
         <h1>AI Content Creation</h1>
         <p>Generate creative content ideas with GPT-5 beta</p>
-      &lt;/div&gt;
+      </div>
 
       &lt;div className="content-types-grid"&gt;
         {CONTENT_TYPES.map(type =&gt; (
@@ -112,9 +112,9 @@ export default function Content() {
             &lt;h3&gt;{type.label}&lt;/h3&gt;
             &lt;p&gt;AI-powered content generation&lt;/p&gt;
             &lt;button className="create-btn"&gt;Create Content&lt;/button&gt;
-          &lt;/div&gt;
+          </div>
         ))}
-      &lt;/div&gt;
+      </div>
 
       {/* Modal */}
       {activeModal &amp;&amp; (
@@ -123,7 +123,7 @@ export default function Content() {
             &lt;div className="modal-header"&gt;
               &lt;h2&gt;{CONTENT_TYPES.find(t =&gt; t.id === activeModal)?.label}&lt;/h2&gt;
               &lt;button className="close-btn" onClick={closeModal}&gt;×&lt;/button&gt;
-            &lt;/div&gt;
+            </div>
 
             &lt;div className="modal-body"&gt;
               &lt;div className="form-group"&gt;
@@ -134,7 +134,7 @@ export default function Content() {
                   placeholder="Describe what kind of content you want to create..."
                   rows={4}
                 /&gt;
-              &lt;/div&gt;
+              </div>
 
               &lt;div className="form-grid"&gt;
                 &lt;div className="form-group"&gt;
@@ -145,7 +145,7 @@ export default function Content() {
                     onChange={(e) =&gt; setFormData({...formData, target_audience: e.target.value})}
                     placeholder="Who is this content for?"
                   /&gt;
-                &lt;/div&gt;
+                </div>
 
                 &lt;div className="form-group"&gt;
                   &lt;label&gt;Platform *&lt;/label&gt;
@@ -158,7 +158,7 @@ export default function Content() {
                       &lt;option key={platform} value={platform}&gt;{platform}&lt;/option&gt;
                     ))}
                   &lt;/select&gt;
-                &lt;/div&gt;
+                </div>
 
                 &lt;div className="form-group"&gt;
                   &lt;label&gt;Budget Range&lt;/label&gt;
@@ -168,7 +168,7 @@ export default function Content() {
                     onChange={(e) =&gt; setFormData({...formData, budget: e.target.value})}
                     placeholder="e.g., $500 - $2,000"
                   /&gt;
-                &lt;/div&gt;
+                </div>
 
                 &lt;div className="form-group"&gt;
                   &lt;label&gt;Festival/Theme&lt;/label&gt;
@@ -181,8 +181,8 @@ export default function Content() {
                       &lt;option key={festival} value={festival}&gt;{festival}&lt;/option&gt;
                     ))}
                   &lt;/select&gt;
-                &lt;/div&gt;
-              &lt;/div&gt;
+                </div>
+              </div>
 
               {error &amp;&amp; &lt;div className="error-message"&gt;{error}&lt;/div&gt;}
               {success &amp;&amp; &lt;div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}&gt;{success}&lt;/div&gt;}
@@ -203,7 +203,7 @@ export default function Content() {
                 &gt;
                   Save for Approval (No AI)
                 &lt;/button&gt;
-              &lt;/div&gt;
+              </div>
 
               {contentResult &amp;&amp; (
                 &lt;div className="content-result"&gt;
@@ -213,16 +213,16 @@ export default function Content() {
                       {contentResult.content_type &amp;&amp; &lt;p&gt;&lt;strong&gt;Type:&lt;/strong&gt; {contentResult.content_type}&lt;/p&gt;}
                       {contentResult.platform &amp;&amp; &lt;p&gt;&lt;strong&gt;Platform:&lt;/strong&gt; {contentResult.platform}&lt;/p&gt;}
                       {contentResult.created_at &amp;&amp; &lt;p&gt;&lt;strong&gt;Created:&lt;/strong&gt; {new Date(contentResult.created_at).toLocaleString()}&lt;/p&gt;}
-                    &lt;/div&gt;
+                    </div>
                     &lt;div className="ai-content"&gt;
                       &lt;pre&gt;{contentResult.ai_content || '(AI pending)'}&lt;/pre&gt;
-                    &lt;/div&gt;
-                  &lt;/div&gt;
-                &lt;/div&gt;
+                    </div>
+                  </div>
+                </div>
               )}
-            &lt;/div&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
+            </div>
+          </div>
+        </div>
       )}
     &lt;/div&gt;
   )
