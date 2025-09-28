@@ -91,7 +91,7 @@ export default function Strategy() {
       </div>
 
       <div className="strategy-form">
-        &lt;div className="form-grid"&gt;
+        <div className="form-grid">
           &lt;div className="form-group"&gt;
             &lt;label&gt;Company Name *&lt;/label&gt;
             &lt;input
