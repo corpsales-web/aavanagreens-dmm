@@ -124,12 +124,12 @@ export default function Strategy() {
 
           <div className="form-group">
             <label>Monthly Budget</label>
-            &lt;input
+            <input
               type="text"
               value={formData.budget}
-              onChange={(e) =&gt; setFormData({...formData, budget: e.target.value})}
+              onChange={(e) => setFormData({...formData, budget: e.target.value})}
               placeholder="e.g., $5,000 - $10,000"
-            /&gt;
+            />
           </div>
 
           <div className="form-group">
