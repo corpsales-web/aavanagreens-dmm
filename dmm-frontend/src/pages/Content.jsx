@@ -118,14 +118,14 @@ export default function Content() {
 
       {/* Modal */}
       {activeModal && (
-        &lt;div className="modal-overlay" onClick={closeModal}&gt;
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            &lt;div className="modal-header"&gt;
-              &lt;h2&gt;{CONTENT_TYPES.find(t =&gt; t.id === activeModal)?.label}&lt;/h2&gt;
-              &lt;button className="close-btn" onClick={closeModal}&gt;×&lt;/button&gt;
+            <div className="modal-header">
+              <h2>{CONTENT_TYPES.find(t => t.id === activeModal)?.label}</h2>
+              <button className="close-btn" onClick={closeModal}>×</button>
             </div>
 
-            &lt;div className="modal-body"&gt;
+            <div className="modal-body">
               &lt;div className="form-group"&gt;
                 &lt;label&gt;Content Brief *&lt;/label&gt;
                 &lt;textarea
