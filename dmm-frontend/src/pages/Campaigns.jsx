@@ -50,7 +50,7 @@ export default function Campaigns() {
     setBudgetSplits({...budgetSplits, [channelId]: amount})
   }
 
-  const getTotalAllocated = () =&gt; {
+  const getTotalAllocated = () => {
     return Object.values(budgetSplits).reduce((sum, amount) =&gt; sum + parseFloat(amount || 0), 0)
   }
 
