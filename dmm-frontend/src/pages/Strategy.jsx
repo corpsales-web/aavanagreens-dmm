@@ -33,7 +33,7 @@ export default function Strategy() {
     }))
   }
 
-  const validate = () =&gt; {
+  const validate = () => {
     if (!formData.company_name || !formData.industry || !formData.target_audience) {
       setError('Please fill in company name, industry, and target audience')
       return false
@@ -42,7 +42,7 @@ export default function Strategy() {
     return true
   }
 
-  const generateStrategy = async () =&gt; {
+  const generateStrategy = async () => {
     if (!validate()) return
     setIsLoading(true)
     setSuccess('')
@@ -56,7 +56,7 @@ export default function Strategy() {
     }
   }
 
-  const saveManual = async () =&gt; {
+  const saveManual = async () => {
     if (!validate()) return
     setIsLoading(true)
     setSuccess('')
@@ -64,7 +64,6 @@ export default function Strategy() {
       const payload = {
         item_type: 'strategy',
         data: {
-          id: undefined, // backend will set
           company_name: formData.company_name,
           industry: formData.industry,
           target_audience: formData.target_audience,
