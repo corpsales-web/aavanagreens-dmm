@@ -90,7 +90,7 @@ export default function Strategy() {
         <p>Get comprehensive marketing strategies powered by GPT-5 beta</p>
       </div>
 
-      &lt;div className="strategy-form"&gt;
+      <div className="strategy-form">
         &lt;div className="form-grid"&gt;
           &lt;div className="form-group"&gt;
             &lt;label&gt;Company Name *&lt;/label&gt;
