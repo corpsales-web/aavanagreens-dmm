@@ -145,7 +145,7 @@ export default function Strategy() {
 
         &lt;div className="form-group"&gt;
           <label>Marketing Goals</label>
-          &lt;div className="goals-grid"&gt;
+          <div className="goals-grid">
             {goalOptions.map(goal =&gt; (
               &lt;label key={goal} className="goal-checkbox"&gt;
                 &lt;input
