@@ -162,23 +162,23 @@ export default function Strategy() {
         {error && <div className="error-message">{error}</div>}
         {success && <div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}>{success}</div>}
 
-        &lt;div style={{display:'flex', gap:8, flexWrap:'wrap'}}&gt;
-          &lt;button 
+        <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+          <button 
             onClick={generateStrategy}
             disabled={!AI_ENABLED || isLoading}
             className="generate-btn"
             title={!AI_ENABLED ? 'AI is disabled until top-up' : ''}
-          &gt;
+          >
             {AI_ENABLED ? (isLoading ? 'Generating Strategy...' : 'Generate AI Strategy') : 'Generate AI Strategy (disabled)'}
-          &lt;/button&gt;
+          </button>
 
-          &lt;button 
+          <button 
             onClick={saveManual}
             disabled={isLoading}
             className="optimize-btn"
-          &gt;
+          >
             Save Strategy for Approval (No AI)
-          &lt;/button&gt;
+          </button>
         </div>
       </div>
 
