@@ -84,7 +84,7 @@ export default function Strategy() {
   }
 
   return (
-    &lt;div className="strategy-page"&gt;
+    <div className="strategy-page">
       &lt;div className="page-header"&gt;
         &lt;h1&gt;AI Marketing Strategy Generator&lt;/h1&gt;
         &lt;p&gt;Get comprehensive marketing strategies powered by GPT-5 beta&lt;/p&gt;
