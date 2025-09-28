@@ -27,7 +27,7 @@ export default function Campaigns() {
   })
   const [budgetSplits, setBudgetSplits] = useState({})
 
-  const handleChannelToggle = (channelId) =&gt; {
+  const handleChannelToggle = (channelId) => {
     const isSelected = formData.channels.includes(channelId)
     const newChannels = isSelected
       ? formData.channels.filter(c =&gt; c !== channelId)
