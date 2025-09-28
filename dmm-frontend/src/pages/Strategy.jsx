@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { api } from '../api'
+import { api, AI_ENABLED } from '../api'
 
 export default function Strategy() {
   const [isLoading, setIsLoading] = useState(false)
   const [strategy, setStrategy] = useState(null)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
     company_name: '',
     industry: '',
@@ -32,15 +33,19 @@ export default function Strategy() {
     }))
   }
 
-  const generateStrategy = async () => {
+  const validate = () =&gt; {
     if (!formData.company_name || !formData.industry || !formData.target_audience) {
       setError('Please fill in company name, industry, and target audience')
-      return
+      return false
     }
-
-    setIsLoading(true)
     setError('')
-    
+    return true
+  }
+
+  const generateStrategy = async () =&gt; {
+    if (!validate()) return
+    setIsLoading(true)
+    setSuccess('')
     try {
       const response = await api.post('/api/ai/generate-strategy', formData)
       setStrategy(response.data.strategy)
@@ -51,108 +56,148 @@ export default function Strategy() {
     }
   }
 
-  return (
-    <div className="strategy-page">
-      <div className="page-header">
-        <h1>AI Marketing Strategy Generator</h1>
-        <p>Get comprehensive marketing strategies powered by GPT-5 beta</p>
-      </div>
+  const saveManual = async () =&gt; {
+    if (!validate()) return
+    setIsLoading(true)
+    setSuccess('')
+    try {
+      const payload = {
+        item_type: 'strategy',
+        data: {
+          id: undefined, // backend will set
+          company_name: formData.company_name,
+          industry: formData.industry,
+          target_audience: formData.target_audience,
+          budget: formData.budget,
+          goals: formData.goals,
+          website_url: formData.website_url,
+          strategy_content: '(AI pending — created manually)'
+        }
+      }
+      const res = await api.post('/api/marketing/save', payload)
+      setSuccess('Strategy saved for approval successfully.')
+      setStrategy(res.data.item)
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to save strategy')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-      <div className="strategy-form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Company Name *</label>
-            <input
+  return (
+    &lt;div className="strategy-page"&gt;
+      &lt;div className="page-header"&gt;
+        &lt;h1&gt;AI Marketing Strategy Generator&lt;/h1&gt;
+        &lt;p&gt;Get comprehensive marketing strategies powered by GPT-5 beta&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div className="strategy-form"&gt;
+        &lt;div className="form-grid"&gt;
+          &lt;div className="form-group"&gt;
+            &lt;label&gt;Company Name *&lt;/label&gt;
+            &lt;input
               type="text"
               value={formData.company_name}
-              onChange={(e) => setFormData({...formData, company_name: e.target.value})}
+              onChange={(e) =&gt; setFormData({...formData, company_name: e.target.value})}
               placeholder="Enter company name"
-            />
-          </div>
+            /&gt;
+          &lt;/div&gt;
 
-          <div className="form-group">
-            <label>Industry *</label>
-            <input
+          &lt;div className="form-group"&gt;
+            &lt;label&gt;Industry *&lt;/label&gt;
+            &lt;input
               type="text"
               value={formData.industry}
-              onChange={(e) => setFormData({...formData, industry: e.target.value})}
+              onChange={(e) =&gt; setFormData({...formData, industry: e.target.value})}
               placeholder="e.g., Real Estate, Technology, Healthcare"
-            />
-          </div>
+            /&gt;
+          &lt;/div&gt;
 
-          <div className="form-group">
-            <label>Target Audience *</label>
-            <input
+          &lt;div className="form-group"&gt;
+            &lt;label&gt;Target Audience *&lt;/label&gt;
+            &lt;input
               type="text"
               value={formData.target_audience}
-              onChange={(e) => setFormData({...formData, target_audience: e.target.value})}
+              onChange={(e) =&gt; setFormData({...formData, target_audience: e.target.value})}
               placeholder="Describe your target audience"
-            />
-          </div>
+            /&gt;
+          &lt;/div&gt;
 
-          <div className="form-group">
-            <label>Monthly Budget</label>
-            <input
+          &lt;div className="form-group"&gt;
+            &lt;label&gt;Monthly Budget&lt;/label&gt;
+            &lt;input
               type="text"
               value={formData.budget}
-              onChange={(e) => setFormData({...formData, budget: e.target.value})}
+              onChange={(e) =&gt; setFormData({...formData, budget: e.target.value})}
               placeholder="e.g., $5,000 - $10,000"
-            />
-          </div>
+            /&gt;
+          &lt;/div&gt;
 
-          <div className="form-group">
-            <label>Website URL</label>
-            <input
+          &lt;div className="form-group"&gt;
+            &lt;label&gt;Website URL&lt;/label&gt;
+            &lt;input
               type="url"
               value={formData.website_url}
-              onChange={(e) => setFormData({...formData, website_url: e.target.value})}
+              onChange={(e) =&gt; setFormData({...formData, website_url: e.target.value})}
               placeholder="https://yourwebsite.com"
-            />
-          </div>
-        </div>
+            /&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
 
-        <div className="form-group">
-          <label>Marketing Goals</label>
-          <div className="goals-grid">
-            {goalOptions.map(goal => (
-              <label key={goal} className="goal-checkbox">
-                <input
+        &lt;div className="form-group"&gt;
+          &lt;label&gt;Marketing Goals&lt;/label&gt;
+          &lt;div className="goals-grid"&gt;
+            {goalOptions.map(goal =&gt; (
+              &lt;label key={goal} className="goal-checkbox"&gt;
+                &lt;input
                   type="checkbox"
                   checked={formData.goals.includes(goal)}
-                  onChange={() => handleGoalToggle(goal)}
-                />
-                <span>{goal}</span>
-              </label>
+                  onChange={() =&gt; handleGoalToggle(goal)}
+                /&gt;
+                &lt;span&gt;{goal}&lt;/span&gt;
+              &lt;/label&gt;
             ))}
-          </div>
-        </div>
+          &lt;/div&gt;
+        &lt;/div&gt;
 
-        {error && <div className="error-message">{error}</div>}
+        {error &amp;&amp; &lt;div className="error-message"&gt;{error}&lt;/div&gt;}
+        {success &amp;&amp; &lt;div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}&gt;{success}&lt;/div&gt;}
 
-        <button 
-          onClick={generateStrategy}
-          disabled={isLoading}
-          className="generate-btn"
-        >
-          {isLoading ? 'Generating Strategy...' : 'Generate AI Strategy'}
-        </button>
-      </div>
+        &lt;div style={{display:'flex', gap:8, flexWrap:'wrap'}}&gt;
+          &lt;button 
+            onClick={generateStrategy}
+            disabled={!AI_ENABLED || isLoading}
+            className="generate-btn"
+            title={!AI_ENABLED ? 'AI is disabled until top-up' : ''}
+          &gt;
+            {AI_ENABLED ? (isLoading ? 'Generating Strategy...' : 'Generate AI Strategy') : 'Generate AI Strategy (disabled)'}
+          &lt;/button&gt;
 
-      {strategy && (
-        <div className="strategy-result">
-          <h2>Generated Strategy</h2>
-          <div className="strategy-content">
-            <div className="strategy-meta">
-              <p><strong>Company:</strong> {strategy.company_name}</p>
-              <p><strong>Industry:</strong> {strategy.industry}</p>
-              <p><strong>Generated:</strong> {new Date(strategy.created_at).toLocaleString()}</p>
-            </div>
-            <div className="strategy-details">
-              <pre>{strategy.strategy_content}</pre>
-            </div>
-          </div>
-        </div>
+          &lt;button 
+            onClick={saveManual}
+            disabled={isLoading}
+            className="optimize-btn"
+          &gt;
+            Save Strategy for Approval (No AI)
+          &lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      {strategy &amp;&amp; (
+        &lt;div className="strategy-result"&gt;
+          &lt;h2&gt;Strategy Item&lt;/h2&gt;
+          &lt;div className="strategy-content"&gt;
+            &lt;div className="strategy-meta"&gt;
+              &lt;p&gt;&lt;strong&gt;Company:&lt;/strong&gt; {strategy.company_name}&lt;/p&gt;
+              &lt;p&gt;&lt;strong&gt;Industry:&lt;/strong&gt; {strategy.industry}&lt;/p&gt;
+              {strategy.created_at &amp;&amp; &lt;p&gt;&lt;strong&gt;Created:&lt;/strong&gt; {new Date(strategy.created_at).toLocaleString()}&lt;/p&gt;}
+            &lt;/div&gt;
+            &lt;div className="strategy-details"&gt;
+              &lt;pre&gt;{strategy.strategy_content || '(AI pending)'}&lt;/pre&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
       )}
-    </div>
+    &lt;/div&gt;
   )
 }

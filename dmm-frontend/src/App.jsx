@@ -4,6 +4,7 @@ import Content from './pages/Content'
 import Campaigns from './pages/Campaigns'
 import Approvals from './pages/Approvals'
 import TopNav from './components/TopNav'
+import { AI_ENABLED } from './api'
 import './App.css'
 
 const TABS = [
@@ -18,6 +19,11 @@ export default function App() {
   return (
     <div className="app">
       <TopNav />
+      {!AI_ENABLED && (
+        <div className="error-message" style={{background:'rgba(124,92,255,0.12)', border:'1px solid #4c3bcc', color:'#d7c9ff'}}>
+          AI is temporarily disabled. You can still create items manually and send them for approval. Once you top-up your Universal Key, AI features will automatically enable.
+        </div>
+      )}
       <div className="tabs">
         {TABS.map(t => (
           <button
@@ -29,10 +35,10 @@ export default function App() {
         ))}
       </div>
       <div className="page">
-        {tab==='strategy' && <Strategy />}
-        {tab==='content' && <Content />}
-        {tab==='campaigns' && <Campaigns />}
-        {tab==='approvals' && <Approvals />}
+        {tab==='strategy' &amp;&amp; &lt;Strategy /&gt;}
+        {tab==='content' &amp;&amp; &lt;Content /&gt;}
+        {tab==='campaigns' &amp;&amp; &lt;Campaigns /&gt;}
+        {tab==='approvals' &amp;&amp; &lt;Approvals /&gt;}
       </div>
     </div>
   )

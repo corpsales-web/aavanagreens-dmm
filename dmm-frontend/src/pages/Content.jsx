@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { api } from '../api'
+import { api, AI_ENABLED } from '../api'
 
 const CONTENT_TYPES = [
   { id: 'reel', label: 'Instagram Reels', icon: '🎬' },
@@ -16,6 +16,7 @@ export default function Content() {
   const [isLoading, setIsLoading] = useState(false)
   const [contentResult, setContentResult] = useState(null)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
     content_type: '',
     brief: '',
@@ -25,14 +26,15 @@ export default function Content() {
     festival: ''
   })
 
-  const openModal = (contentType) => {
+  const openModal = (contentType) =&gt; {
     setFormData({...formData, content_type: contentType})
     setActiveModal(contentType)
     setContentResult(null)
     setError('')
+    setSuccess('')
   }
 
-  const closeModal = () => {
+  const closeModal = () =&gt; {
     setActiveModal(null)
     setFormData({
       content_type: '',
@@ -44,15 +46,18 @@ export default function Content() {
     })
   }
 
-  const generateContent = async () => {
+  const validate = () =&gt; {
     if (!formData.brief || !formData.target_audience || !formData.platform) {
       setError('Please fill in brief, target audience, and platform')
-      return
+      return false
     }
-
-    setIsLoading(true)
     setError('')
-    
+    return true
+  }
+
+  const generateContent = async () =&gt; {
+    if (!validate()) return
+    setIsLoading(true)
     try {
       const response = await api.post('/api/ai/generate-content', formData)
       setContentResult(response.data.content)
@@ -63,127 +68,162 @@ export default function Content() {
     }
   }
 
-  return (
-    <div className="content-page">
-      <div className="page-header">
-        <h1>AI Content Creation</h1>
-        <p>Generate creative content ideas with GPT-5 beta</p>
-      </div>
+  const saveManual = async () =&gt; {
+    if (!validate()) return
+    setIsLoading(true)
+    setSuccess('')
+    try {
+      const payload = {
+        item_type: formData.content_type || 'reel',
+        data: {
+          brief: formData.brief,
+          target_audience: formData.target_audience,
+          platform: formData.platform,
+          budget: formData.budget,
+          festival: formData.festival,
+          ai_content: '(AI pending — created manually)'
+        }
+      }
+      const res = await api.post('/api/marketing/save', payload)
+      setSuccess('Content saved for approval successfully.')
+      setContentResult(res.data.content || res.data.item)
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to save content')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-      <div className="content-types-grid">
-        {CONTENT_TYPES.map(type => (
-          <div 
+  return (
+    &lt;div className="content-page"&gt;
+      &lt;div className="page-header"&gt;
+        &lt;h1&gt;AI Content Creation&lt;/h1&gt;
+        &lt;p&gt;Generate creative content ideas with GPT-5 beta&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div className="content-types-grid"&gt;
+        {CONTENT_TYPES.map(type =&gt; (
+          &lt;div 
             key={type.id}
             className="content-type-card"
-            onClick={() => openModal(type.id)}
-          >
-            <div className="content-icon">{type.icon}</div>
-            <h3>{type.label}</h3>
-            <p>AI-powered content generation</p>
-            <button className="create-btn">Create Content</button>
-          </div>
+            onClick={() =&gt; openModal(type.id)}
+          &gt;
+            &lt;div className="content-icon"&gt;{type.icon}&lt;/div&gt;
+            &lt;h3&gt;{type.label}&lt;/h3&gt;
+            &lt;p&gt;AI-powered content generation&lt;/p&gt;
+            &lt;button className="create-btn"&gt;Create Content&lt;/button&gt;
+          &lt;/div&gt;
         ))}
-      </div>
+      &lt;/div&gt;
 
       {/* Modal */}
-      {activeModal && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{CONTENT_TYPES.find(t => t.id === activeModal)?.label}</h2>
-              <button className="close-btn" onClick={closeModal}>×</button>
-            </div>
+      {activeModal &amp;&amp; (
+        &lt;div className="modal-overlay" onClick={closeModal}&gt;
+          &lt;div className="modal-content" onClick={(e) =&gt; e.stopPropagation()}&gt;
+            &lt;div className="modal-header"&gt;
+              &lt;h2&gt;{CONTENT_TYPES.find(t =&gt; t.id === activeModal)?.label}&lt;/h2&gt;
+              &lt;button className="close-btn" onClick={closeModal}&gt;×&lt;/button&gt;
+            &lt;/div&gt;
 
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Content Brief *</label>
-                <textarea
+            &lt;div className="modal-body"&gt;
+              &lt;div className="form-group"&gt;
+                &lt;label&gt;Content Brief *&lt;/label&gt;
+                &lt;textarea
                   value={formData.brief}
-                  onChange={(e) => setFormData({...formData, brief: e.target.value})}
+                  onChange={(e) =&gt; setFormData({...formData, brief: e.target.value})}
                   placeholder="Describe what kind of content you want to create..."
                   rows={4}
-                />
-              </div>
+                /&gt;
+              &lt;/div&gt;
 
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Target Audience *</label>
-                  <input
+              &lt;div className="form-grid"&gt;
+                &lt;div className="form-group"&gt;
+                  &lt;label&gt;Target Audience *&lt;/label&gt;
+                  &lt;input
                     type="text"
                     value={formData.target_audience}
-                    onChange={(e) => setFormData({...formData, target_audience: e.target.value})}
+                    onChange={(e) =&gt; setFormData({...formData, target_audience: e.target.value})}
                     placeholder="Who is this content for?"
-                  />
-                </div>
+                  /&gt;
+                &lt;/div&gt;
 
-                <div className="form-group">
-                  <label>Platform *</label>
-                  <select
+                &lt;div className="form-group"&gt;
+                  &lt;label&gt;Platform *&lt;/label&gt;
+                  &lt;select
                     value={formData.platform}
-                    onChange={(e) => setFormData({...formData, platform: e.target.value})}
-                  >
-                    <option value="">Select Platform</option>
-                    {PLATFORMS.map(platform => (
-                      <option key={platform} value={platform}>{platform}</option>
+                    onChange={(e) =&gt; setFormData({...formData, platform: e.target.value})}
+                  &gt;
+                    &lt;option value=""&gt;Select Platform&lt;/option&gt;
+                    {PLATFORMS.map(platform =&gt; (
+                      &lt;option key={platform} value={platform}&gt;{platform}&lt;/option&gt;
                     ))}
-                  </select>
-                </div>
+                  &lt;/select&gt;
+                &lt;/div&gt;
 
-                <div className="form-group">
-                  <label>Budget Range</label>
-                  <input
+                &lt;div className="form-group"&gt;
+                  &lt;label&gt;Budget Range&lt;/label&gt;
+                  &lt;input
                     type="text"
                     value={formData.budget}
-                    onChange={(e) => setFormData({...formData, budget: e.target.value})}
+                    onChange={(e) =&gt; setFormData({...formData, budget: e.target.value})}
                     placeholder="e.g., $500 - $2,000"
-                  />
-                </div>
+                  /&gt;
+                &lt;/div&gt;
 
-                <div className="form-group">
-                  <label>Festival/Theme</label>
-                  <select
+                &lt;div className="form-group"&gt;
+                  &lt;label&gt;Festival/Theme&lt;/label&gt;
+                  &lt;select
                     value={formData.festival}
-                    onChange={(e) => setFormData({...formData, festival: e.target.value})}
-                  >
-                    <option value="">No specific theme</option>
-                    {FESTIVALS.map(festival => (
-                      <option key={festival} value={festival}>{festival}</option>
+                    onChange={(e) =&gt; setFormData({...formData, festival: e.target.value})}
+                  &gt;
+                    &lt;option value=""&gt;No specific theme&lt;/option&gt;
+                    {FESTIVALS.map(festival =&gt; (
+                      &lt;option key={festival} value={festival}&gt;{festival}&lt;/option&gt;
                     ))}
-                  </select>
-                </div>
-              </div>
+                  &lt;/select&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
 
-              {error && <div className="error-message">{error}</div>}
+              {error &amp;&amp; &lt;div className="error-message"&gt;{error}&lt;/div&gt;}
+              {success &amp;&amp; &lt;div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}&gt;{success}&lt;/div&gt;}
 
-              <div className="modal-actions">
-                <button 
+              &lt;div className="modal-actions" style={{display:'flex', gap:8, flexWrap:'wrap'}}&gt;
+                &lt;button 
                   onClick={generateContent}
-                  disabled={isLoading}
+                  disabled={!AI_ENABLED || isLoading}
                   className="generate-btn"
-                >
-                  {isLoading ? 'Generating...' : 'Generate Content Ideas'}
-                </button>
-              </div>
+                  title={!AI_ENABLED ? 'AI is disabled until top-up' : ''}
+                &gt;
+                  {AI_ENABLED ? (isLoading ? 'Generating...' : 'Generate Content Ideas') : 'Generate Content (disabled)'}
+                &lt;/button&gt;
+                &lt;button 
+                  onClick={saveManual}
+                  disabled={isLoading}
+                  className="optimize-btn"
+                &gt;
+                  Save for Approval (No AI)
+                &lt;/button&gt;
+              &lt;/div&gt;
 
-              {contentResult && (
-                <div className="content-result">
-                  <h3>Generated Content Ideas</h3>
-                  <div className="content-details">
-                    <div className="content-meta">
-                      <p><strong>Type:</strong> {contentResult.content_type}</p>
-                      <p><strong>Platform:</strong> {contentResult.platform}</p>
-                      <p><strong>Generated:</strong> {new Date(contentResult.created_at).toLocaleString()}</p>
-                    </div>
-                    <div className="ai-content">
-                      <pre>{contentResult.ai_content}</pre>
-                    </div>
-                  </div>
-                </div>
+              {contentResult &amp;&amp; (
+                &lt;div className="content-result"&gt;
+                  &lt;h3&gt;Saved Content&lt;/h3&gt;
+                  &lt;div className="content-details"&gt;
+                    &lt;div className="content-meta"&gt;
+                      {contentResult.content_type &amp;&amp; &lt;p&gt;&lt;strong&gt;Type:&lt;/strong&gt; {contentResult.content_type}&lt;/p&gt;}
+                      {contentResult.platform &amp;&amp; &lt;p&gt;&lt;strong&gt;Platform:&lt;/strong&gt; {contentResult.platform}&lt;/p&gt;}
+                      {contentResult.created_at &amp;&amp; &lt;p&gt;&lt;strong&gt;Created:&lt;/strong&gt; {new Date(contentResult.created_at).toLocaleString()}&lt;/p&gt;}
+                    &lt;/div&gt;
+                    &lt;div className="ai-content"&gt;
+                      &lt;pre&gt;{contentResult.ai_content || '(AI pending)'}&lt;/pre&gt;
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
               )}
-            </div>
-          </div>
-        </div>
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
       )}
-    </div>
+    &lt;/div&gt;
   )
 }
