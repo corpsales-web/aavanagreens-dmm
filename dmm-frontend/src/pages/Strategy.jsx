@@ -113,7 +113,7 @@ export default function Strategy() {
           </div>
 
           <div className="form-group">
-            &lt;label&gt;Target Audience *&lt;/label&gt;
+            <label>Target Audience *</label>
             &lt;input
               type="text"
               value={formData.target_audience}
