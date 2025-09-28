@@ -205,7 +205,7 @@ export default function Content() {
                 </button>
               </div>
 
-              {contentResult &amp;&amp; (
+              {contentResult && (
                 &lt;div className="content-result"&gt;
                   &lt;h3&gt;Saved Content&lt;/h3&gt;
                   &lt;div className="content-details"&gt;
