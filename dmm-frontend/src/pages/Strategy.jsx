@@ -123,7 +123,7 @@ export default function Strategy() {
           </div>
 
           <div className="form-group">
-            &lt;label&gt;Monthly Budget&lt;/label&gt;
+            <label>Monthly Budget</label>
             &lt;input
               type="text"
               value={formData.budget}
