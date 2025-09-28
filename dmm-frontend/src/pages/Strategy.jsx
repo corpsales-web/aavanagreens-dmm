@@ -114,12 +114,12 @@ export default function Strategy() {
 
           <div className="form-group">
             <label>Target Audience *</label>
-            &lt;input
+            <input
               type="text"
               value={formData.target_audience}
-              onChange={(e) =&gt; setFormData({...formData, target_audience: e.target.value})}
+              onChange={(e) => setFormData({...formData, target_audience: e.target.value})}
               placeholder="Describe your target audience"
-            /&gt;
+            />
           </div>
 
           <div className="form-group">
