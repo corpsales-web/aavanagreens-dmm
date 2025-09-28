@@ -36,7 +36,7 @@ export default function Campaigns() {
     setFormData({...formData, channels: newChannels})
     
     // Auto-distribute budget equally among selected channels
-    if (formData.budget &amp;&amp; newChannels.length &gt; 0) {
+    if (formData.budget && newChannels.length > 0) {
       const budgetPerChannel = parseFloat(formData.budget) / newChannels.length
       const newSplits = {}
       newChannels.forEach(channel =&gt; {
