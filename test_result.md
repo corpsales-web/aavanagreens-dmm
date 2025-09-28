@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: PROJECT HANDOFF - AAVANA GREENS CRM
+## user_problem_statement: DMM APP COMPLETION & DEPLOYMENT - Build and deploy isolated Digital Marketing Manager app with GPT-5 beta AI orchestration
 
 ## backend:
 ##   - task: "Health endpoint and gallery seed + lead qualification fallback"
