@@ -117,7 +117,7 @@ export default function Content() {
       </div>
 
       {/* Modal */}
-      {activeModal &amp;&amp; (
+      {activeModal && (
         &lt;div className="modal-overlay" onClick={closeModal}&gt;
           &lt;div className="modal-content" onClick={(e) =&gt; e.stopPropagation()}&gt;
             &lt;div className="modal-header"&gt;
