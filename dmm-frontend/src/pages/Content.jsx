@@ -103,15 +103,15 @@ export default function Content() {
 
       <div className="content-types-grid">
         {CONTENT_TYPES.map(type => (
-          &lt;div 
+          <div 
             key={type.id}
             className="content-type-card"
-            onClick={() =&gt; openModal(type.id)}
-          &gt;
-            &lt;div className="content-icon"&gt;{type.icon}&lt;/div&gt;
-            &lt;h3&gt;{type.label}&lt;/h3&gt;
-            &lt;p&gt;AI-powered content generation&lt;/p&gt;
-            &lt;button className="create-btn"&gt;Create Content&lt;/button&gt;
+            onClick={() => openModal(type.id)}
+          >
+            <div className="content-icon">{type.icon}</div>
+            <h3>{type.label}</h3>
+            <p>AI-powered content generation</p>
+            <button className="create-btn">Create Content</button>
           </div>
         ))}
       </div>
