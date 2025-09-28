@@ -9,7 +9,7 @@ const CONTENT_TYPES = [
 ]
 
 const PLATFORMS = ['Instagram', 'TikTok', 'YouTube', 'Facebook', 'Twitter', 'LinkedIn']
-const FESTIVALS = ['Diwali', 'Christmas', 'New Year', 'Valentine\'s Day', 'Holi', 'Eid', 'Independence Day']
+const FESTIVALS = ['Diwali', 'Christmas', 'New Year', "Valentine's Day", 'Holi', 'Eid', 'Independence Day']
 
 export default function Content() {
   const [activeModal, setActiveModal] = useState(null)
