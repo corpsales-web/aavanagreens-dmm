@@ -126,14 +126,14 @@ export default function Content() {
             </div>
 
             <div className="modal-body">
-              &lt;div className="form-group"&gt;
-                &lt;label&gt;Content Brief *&lt;/label&gt;
-                &lt;textarea
+              <div className="form-group">
+                <label>Content Brief *</label>
+                <textarea
                   value={formData.brief}
-                  onChange={(e) =&gt; setFormData({...formData, brief: e.target.value})}
+                  onChange={(e) => setFormData({...formData, brief: e.target.value})}
                   placeholder="Describe what kind of content you want to create..."
                   rows={4}
-                /&gt;
+                />
               </div>
 
               &lt;div className="form-grid"&gt;
