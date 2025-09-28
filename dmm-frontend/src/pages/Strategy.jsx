@@ -159,8 +159,8 @@ export default function Strategy() {
           </div>
         </div>
 
-        {error &amp;&amp; &lt;div className="error-message"&gt;{error}&lt;/div&gt;}
-        {success &amp;&amp; &lt;div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}&gt;{success}&lt;/div&gt;}
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}>{success}</div>}
 
         &lt;div style={{display:'flex', gap:8, flexWrap:'wrap'}}&gt;
           &lt;button 
