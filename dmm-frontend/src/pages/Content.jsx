@@ -101,8 +101,8 @@ export default function Content() {
         <p>Generate creative content ideas with GPT-5 beta</p>
       </div>
 
-      &lt;div className="content-types-grid"&gt;
-        {CONTENT_TYPES.map(type =&gt; (
+      <div className="content-types-grid">
+        {CONTENT_TYPES.map(type => (
           &lt;div 
             key={type.id}
             className="content-type-card"
