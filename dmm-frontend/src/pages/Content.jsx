@@ -95,7 +95,7 @@ export default function Content() {
   }
 
   return (
-    &lt;div className="content-page"&gt;
+    <div className="content-page">
       &lt;div className="page-header"&gt;
         &lt;h1&gt;AI Content Creation&lt;/h1&gt;
         &lt;p&gt;Generate creative content ideas with GPT-5 beta&lt;/p&gt;
