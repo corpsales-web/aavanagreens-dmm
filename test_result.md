@@ -125,6 +125,9 @@
 ##         -working: true
 ##         -agent: "testing"
 ##         -comment: "TESTED: All NON-AI endpoints working perfectly! ✅ Health endpoint (200, correct schema with status/service/time), ✅ SSO consume (valid JWT HS256 validation + user fields echoed, invalid token → 401), ✅ Marketing save (campaign with UUID, default status 'Pending Approval', ISO timestamps, invalid type → 400), ✅ Marketing list (campaigns array without _id, status filtering), ✅ Marketing approve (status update + filters, 404 for unknown items). DMM backend running on localhost:8002. All 10 tests passed (100% success rate). AI endpoints skipped per budget hold."
+##         -working: true
+##         -agent: "testing"
+##         -comment: "SMOKE TEST COMPLETED: Specific marketing approval flow tested end-to-end as requested. ✅ Save manual strategy (Aavana/Real Estate/Home buyers) → success with ID, ✅ List strategies → found saved strategy in results, ✅ Approve strategy with filters → status updated to 'Approved'. All 3 steps of the non-AI approval workflow functioning correctly. DMM backend on port 8002 fully operational for marketing operations."
 ##   - task: "DMM Backend Environment Setup"
 ##     implemented: true
 ##     working: true
