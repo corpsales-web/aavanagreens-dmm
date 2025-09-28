@@ -2,12 +2,17 @@ import os
 import uuid
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
+from dotenv import load_dotenv
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from jose import jwt, JWTError
 from motor.motor_asyncio import AsyncIOMotorClient
+from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+# Load environment variables
+load_dotenv()
 
 # ----------------------
 # Env & App Setup
