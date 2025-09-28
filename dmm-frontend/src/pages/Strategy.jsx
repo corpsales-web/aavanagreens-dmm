@@ -94,12 +94,12 @@ export default function Strategy() {
         <div className="form-grid">
           <div className="form-group">
             <label>Company Name *</label>
-            &lt;input
+            <input
               type="text"
               value={formData.company_name}
-              onChange={(e) =&gt; setFormData({...formData, company_name: e.target.value})}
+              onChange={(e) => setFormData({...formData, company_name: e.target.value})}
               placeholder="Enter company name"
-            /&gt;
+            />
           </div>
 
           <div className="form-group">
