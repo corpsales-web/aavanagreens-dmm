@@ -68,6 +68,31 @@ class ApproveRequest(BaseModel):
     filters: Optional[ApproveFilters] = None
     approved_by: str = "system"
 
+# AI Strategy Request Models
+class StrategyRequest(BaseModel):
+    company_name: str
+    industry: str
+    target_audience: str
+    budget: Optional[str] = None
+    goals: List[str] = Field(default_factory=list)
+    website_url: Optional[str] = None
+
+class ContentRequest(BaseModel):
+    content_type: str  # "reel", "ugc", "brand", "influencer"
+    brief: str
+    target_audience: str
+    platform: str
+    budget: Optional[str] = None
+    festival: Optional[str] = None
+
+class CampaignRequest(BaseModel):
+    campaign_name: str
+    objective: str
+    target_audience: str
+    budget: float
+    channels: List[str]
+    duration_days: int
+
 # JWT SSO consume
 class SSOConsumeRequest(BaseModel):
     token: str
