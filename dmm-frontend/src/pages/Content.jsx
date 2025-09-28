@@ -188,21 +188,21 @@ export default function Content() {
               {success &amp;&amp; &lt;div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}&gt;{success}&lt;/div&gt;}
 
               &lt;div className="modal-actions" style={{display:'flex', gap:8, flexWrap:'wrap'}}&gt;
-                &lt;button 
+                <button 
                   onClick={generateContent}
                   disabled={!AI_ENABLED || isLoading}
                   className="generate-btn"
                   title={!AI_ENABLED ? 'AI is disabled until top-up' : ''}
-                &gt;
+                >
                   {AI_ENABLED ? (isLoading ? 'Generating...' : 'Generate Content Ideas') : 'Generate Content (disabled)'}
-                &lt;/button&gt;
-                &lt;button 
+                </button>
+                <button 
                   onClick={saveManual}
                   disabled={isLoading}
                   className="optimize-btn"
-                &gt;
+                >
                   Save for Approval (No AI)
-                &lt;/button&gt;
+                </button>
               </div>
 
               {contentResult &amp;&amp; (
