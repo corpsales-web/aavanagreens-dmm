@@ -122,6 +122,9 @@
 ##         -working: "NA"
 ##         -agent: "main"
 ##         -comment: "Re-test requested focusing on NON-AI endpoints only: /api/health, /api/auth/sso/consume (HS256 with DMM_JWT_SECRET), /api/marketing/save, /api/marketing/list, /api/marketing/approve. Skip all /api/ai/* endpoints due to budget hold. Validate status codes, schemas, and basic RBAC where applicable."
+##         -working: true
+##         -agent: "testing"
+##         -comment: "TESTED: All NON-AI endpoints working perfectly! ✅ Health endpoint (200, correct schema with status/service/time), ✅ SSO consume (valid JWT HS256 validation + user fields echoed, invalid token → 401), ✅ Marketing save (campaign with UUID, default status 'Pending Approval', ISO timestamps, invalid type → 400), ✅ Marketing list (campaigns array without _id, status filtering), ✅ Marketing approve (status update + filters, 404 for unknown items). DMM backend running on localhost:8002. All 10 tests passed (100% success rate). AI endpoints skipped per budget hold."
 ##   - task: "DMM Backend Environment Setup"
 ##     implemented: true
 ##     working: true
