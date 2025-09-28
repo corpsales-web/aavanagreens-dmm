@@ -143,7 +143,7 @@ export default function Strategy() {
           </div>
         </div>
 
-        &lt;div className="form-group"&gt;
+        <div className="form-group">
           <label>Marketing Goals</label>
           <div className="goals-grid">
             {goalOptions.map(goal => (
