@@ -64,7 +64,7 @@ export default function Campaigns() {
     const totalBudget = parseFloat(formData.budget)
     const allocatedBudget = getTotalAllocated()
     
-    if (Math.abs(totalBudget - allocatedBudget) &gt; 1) {
+    if (Math.abs(totalBudget - allocatedBudget) > 1) {
       setError(`Budget mismatch: Total budget $${totalBudget} but allocated $${allocatedBudget.toFixed(2)}`)
       return
     }
@@ -95,7 +95,7 @@ export default function Campaigns() {
 
     const totalBudget = parseFloat(formData.budget)
     const allocatedBudget = getTotalAllocated()
-    if (Math.abs(totalBudget - allocatedBudget) &gt; 1) {
+    if (Math.abs(totalBudget - allocatedBudget) > 1) {
       setError(`Budget mismatch: Total budget $${totalBudget} but allocated $${allocatedBudget.toFixed(2)}`)
       return
     }
