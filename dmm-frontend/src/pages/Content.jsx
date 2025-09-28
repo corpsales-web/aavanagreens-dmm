@@ -26,7 +26,7 @@ export default function Content() {
     festival: ''
   })
 
-  const openModal = (contentType) =&gt; {
+  const openModal = (contentType) => {
     setFormData({...formData, content_type: contentType})
     setActiveModal(contentType)
     setContentResult(null)
@@ -34,7 +34,7 @@ export default function Content() {
     setSuccess('')
   }
 
-  const closeModal = () =&gt; {
+  const closeModal = () => {
     setActiveModal(null)
     setFormData({
       content_type: '',
@@ -46,7 +46,7 @@ export default function Content() {
     })
   }
 
-  const validate = () =&gt; {
+  const validate = () => {
     if (!formData.brief || !formData.target_audience || !formData.platform) {
       setError('Please fill in brief, target audience, and platform')
       return false
@@ -55,7 +55,7 @@ export default function Content() {
     return true
   }
 
-  const generateContent = async () =&gt; {
+  const generateContent = async () => {
     if (!validate()) return
     setIsLoading(true)
     try {
@@ -68,7 +68,7 @@ export default function Content() {
     }
   }
 
-  const saveManual = async () =&gt; {
+  const saveManual = async () => {
     if (!validate()) return
     setIsLoading(true)
     setSuccess('')
