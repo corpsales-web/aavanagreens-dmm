@@ -103,7 +103,7 @@ export default function Strategy() {
           </div>
 
           <div className="form-group">
-            &lt;label&gt;Industry *&lt;/label&gt;
+            <label>Industry *</label>
             &lt;input
               type="text"
               value={formData.industry}
