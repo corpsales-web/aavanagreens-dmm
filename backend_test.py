@@ -12,8 +12,8 @@ import jwt as pyjwt
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 
-# Configuration - Use platform URL from main frontend .env
-BASE_URL = "https://campaign-central-6.preview.emergentagent.com"
+# Configuration - DMM backend runs locally on port 8002
+BASE_URL = "http://localhost:8002"
 API_BASE = f"{BASE_URL}/api"
 
 # JWT Secret from DMM backend .env
