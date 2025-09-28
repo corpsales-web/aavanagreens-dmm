@@ -1,874 +1,515 @@
+#!/usr/bin/env python3
+"""
+DMM Backend Non-AI Endpoints Test Suite
+Tests only non-AI endpoints as requested, skipping /api/ai/* due to budget hold
+"""
+
 import requests
-import sys
 import json
-from datetime import datetime
 import time
+import uuid
+import jwt as pyjwt
+from datetime import datetime, timezone
+from typing import Dict, Any, List
 
-class AavanaCRMAPITester:
-    def __init__(self, base_url="https://campaign-central-6.preview.emergentagent.com"):
-        self.base_url = base_url
-        self.api_url = f"{base_url}/api"
-        self.tests_run = 0
-        self.tests_passed = 0
-        self.created_leads = []  # Track created leads for cleanup
+# Configuration - Use platform URL from main frontend .env
+BASE_URL = "https://campaign-central-6.preview.emergentagent.com"
+API_BASE = f"{BASE_URL}/api"
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
-        """Run a single API test"""
-        url = f"{self.api_url}/{endpoint}" if endpoint else self.api_url
-        if headers is None:
-            headers = {'Content-Type': 'application/json'}
+# JWT Secret from DMM backend .env
+JWT_SECRET = "dmm-super-secret-jwt-key-2024"
 
-        self.tests_run += 1
-        print(f"\n🔍 Testing {name}...")
-        print(f"   URL: {url}")
+class DMMNonAITester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.test_results = []
+        self.created_items = []  # Track created items for cleanup
         
+    def log_test(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
+        """Log test results"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "response_data": response_data,
+            "timestamp": time.time()
+        }
+        self.test_results.append(result)
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}: {details}")
+        if response_data and not success:
+            print(f"   Response: {json.dumps(response_data, indent=2)}")
+    
+    def generate_jwt_token(self, payload: Dict[str, Any]) -> str:
+        """Generate a valid HS256 JWT token using DMM_JWT_SECRET"""
+        return pyjwt.encode(payload, JWT_SECRET, algorithm="HS256")
+    
+    def test_health_endpoint(self):
+        """Test GET /api/health - expect 200, JSON with status: ok, service: dmm-backend, time ISO"""
         try:
-            if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=15)
-            elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=15)
+            response = self.session.get(f"{API_BASE}/health", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["status", "service", "time"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    if (data.get("status") == "ok" and 
+                        data.get("service") == "dmm-backend" and
+                        data.get("time")):  # Check time is present and ISO format
+                        try:
+                            # Validate ISO format
+                            datetime.fromisoformat(data["time"].replace('Z', '+00:00'))
+                            self.log_test("Health Check", True, "Backend healthy with correct schema")
+                            return True
+                        except ValueError:
+                            self.log_test("Health Check", False, "Invalid ISO time format", data)
+                    else:
+                        self.log_test("Health Check", False, "Invalid field values", data)
+                else:
+                    self.log_test("Health Check", False, f"Missing fields: {missing_fields}", data)
             else:
-                print(f"❌ Unsupported method: {method}")
-                return False, {}
-
-            print(f"   Status: {response.status_code}")
-            
-            success = response.status_code == expected_status
-            if success:
-                self.tests_passed += 1
-                print(f"✅ Passed - Status: {response.status_code}")
-                try:
-                    response_data = response.json()
-                    print(f"   Response keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'Array with ' + str(len(response_data)) + ' items'}")
-                    return True, response_data
-                except:
-                    print(f"   Response (text): {response.text[:200]}...")
-                    return True, {"text": response.text}
-            else:
-                print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
-                try:
-                    error_data = response.json()
-                    print(f"   Error: {json.dumps(error_data, indent=2)}")
-                except:
-                    print(f"   Error (text): {response.text[:200]}...")
-                return False, {}
-
+                self.log_test("Health Check", False, f"HTTP {response.status_code}", response.text)
         except Exception as e:
-            print(f"❌ Failed - Error: {str(e)}")
-            return False, {}
-
-    def test_root_api(self):
-        """Test GET /api/ -> expect 200 JSON with message"""
-        success, response = self.run_test(
-            "Root API",
-            "GET",
-            "",
-            200
-        )
-        
-        if success and isinstance(response, dict) and "message" in response:
-            print(f"   ✅ Root API working: {response['message']}")
-        elif success:
-            print(f"   ⚠️  Root API responded but unexpected format: {response}")
-        
-        return success
-
-    def test_dashboard_stats(self):
-        """Test GET /api/dashboard/stats -> expect 200 with keys total_leads, new_leads, qualified_leads, etc."""
-        success, response = self.run_test(
-            "Dashboard Stats",
-            "GET",
-            "dashboard/stats",
-            200
-        )
-        
-        if success:
-            expected_keys = ['total_leads', 'new_leads', 'qualified_leads', 'won_deals', 'lost_deals', 'total_revenue', 'pending_tasks', 'conversion_rate']
-            missing_keys = [key for key in expected_keys if key not in response]
+            self.log_test("Health Check", False, f"Connection error: {str(e)}")
+        return False
+    
+    def test_sso_consume_valid_token(self):
+        """Test POST /api/auth/sso/consume with valid HS256 JWT"""
+        try:
+            # Generate valid JWT payload
+            payload = {
+                "sub": "user123",
+                "email": "test@example.com", 
+                "name": "Test User",
+                "roles": ["user", "admin"]
+            }
             
-            if not missing_keys:
-                print(f"   ✅ All expected keys present")
-                print(f"   📊 Stats: {response['total_leads']} leads, {response['qualified_leads']} qualified, {response['conversion_rate']}% conversion")
+            token = self.generate_jwt_token(payload)
+            
+            response = self.session.post(
+                f"{API_BASE}/auth/sso/consume",
+                json={"token": token},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("ok") and "user" in data:
+                    user = data["user"]
+                    # Verify user fields are echoed back
+                    expected_fields = ["sub", "email", "name", "roles"]
+                    if all(field in user for field in expected_fields):
+                        if (user["sub"] == payload["sub"] and 
+                            user["email"] == payload["email"] and
+                            user["name"] == payload["name"] and
+                            user["roles"] == payload["roles"]):
+                            self.log_test("SSO Consume (Valid Token)", True, "Token validated and user fields echoed")
+                            return True
+                        else:
+                            self.log_test("SSO Consume (Valid Token)", False, "User fields don't match payload", data)
+                    else:
+                        self.log_test("SSO Consume (Valid Token)", False, "Missing user fields", data)
+                else:
+                    self.log_test("SSO Consume (Valid Token)", False, "Invalid response format", data)
             else:
-                print(f"   ⚠️  Missing keys: {missing_keys}")
-                print(f"   📊 Available keys: {list(response.keys())}")
-        
-        return success
-
-    def test_optimized_lead_creation(self):
-        """Test POST /api/leads/optimized-create with realistic payload"""
-        test_lead = {
-            "name": "Test Customer",
-            "email": f"test_{datetime.now().strftime('%Y%m%d_%H%M%S')}@example.com",
-            "phone": "9876543210",
-            "qualification_score": 85,
-            "status": "Qualified",
-            "project_type": "Residential",
-            "budget_range": "50k_100k",
-            "timeline": "3_months",
-            "location": "Mumbai",
-            "city": "Mumbai",
-            "state": "Maharashtra",
-            "requirements": "Looking for sustainable balcony garden design",
-            "decision_maker": "Self",
-            "urgency": "high"
-        }
-        
-        success, response = self.run_test(
-            "Optimized Lead Creation",
-            "POST",
-            "leads/optimized-create",
-            201,
-            data=test_lead
-        )
-        
-        if success:
-            if "success" in response and response["success"]:
-                print(f"   ✅ Lead created successfully")
-                if "lead" in response and "id" in response["lead"]:
-                    print(f"   📝 Lead ID: {response['lead']['id']}")
-                if "auto_converted_to_deal" in response:
-                    print(f"   🔄 Auto-converted to deal: {response['auto_converted_to_deal']}")
-                if "qualification_summary" in response:
-                    qual = response["qualification_summary"]
-                    print(f"   🎯 Qualification: {qual.get('score', 'N/A')}/100, Level: {qual.get('level', 'N/A')}")
-            else:
-                print(f"   ❌ Unexpected response format: {response}")
-                success = False
-        
-        return success
-
-    def test_auth_seed_admin(self):
-        """Test POST /api/auth/seed-admin -> expect 200 with user data"""
-        admin_data = {
-            "email": "admin@aavanagreens.com",
-            "password": "Admin@12345"
-        }
-        
-        success, response = self.run_test(
-            "Seed Admin User",
-            "POST",
-            "auth/seed-admin",
-            200,
-            data=admin_data
-        )
-        
-        if success:
-            if "user" in response:
-                print(f"   ✅ Admin user seeded successfully")
-                print(f"   👤 User: {response['user'].get('email', 'N/A')} ({response['user'].get('role', 'N/A')})")
-                return True, response
-            else:
-                print(f"   ❌ Unexpected response format: {response}")
-                return False, {}
-        
-        return False, {}
-
-    def test_auth_login(self):
-        """Test POST /api/auth/login -> expect 200 with token"""
-        login_data = {
-            "identifier": "admin@aavanagreens.com",
-            "password": "Admin@12345"
-        }
-        
-        success, response = self.run_test(
-            "Admin Login",
-            "POST",
-            "auth/login",
-            200,
-            data=login_data
-        )
-        
-        if success:
-            if "access_token" in response:
-                print(f"   ✅ Login successful")
-                print(f"   🔑 Token received: {response['access_token'][:20]}...")
-                return True, response['access_token']
-            else:
-                print(f"   ❌ No access token in response: {response}")
-                return False, None
-        
-        return False, None
-
-    def test_ai_chat_quick_response(self):
-        """Test POST /api/ai/chat with quick_response task_type -> expect 200 with response string"""
-        chat_data = {
-            "message": "Generate 3 taglines for Aavana Greens",
-            "task_type": "quick_response"
-        }
-        
-        success, response = self.run_test(
-            "AI Chat Quick Response",
-            "POST",
-            "ai/chat",
-            200,
-            data=chat_data
-        )
-        
-        if success:
-            if response.get("status_code") != 502:
-                print(f"   ✅ AI Chat working (no 502 error)")
-                if "response" in response:
-                    print(f"   🤖 AI Response: {response['response'][:100]}...")
+                self.log_test("SSO Consume (Valid Token)", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("SSO Consume (Valid Token)", False, f"Error: {str(e)}")
+        return False
+    
+    def test_sso_consume_invalid_token(self):
+        """Test POST /api/auth/sso/consume with invalid token - expect 401"""
+        try:
+            response = self.session.post(
+                f"{API_BASE}/auth/sso/consume",
+                json={"token": "invalid.jwt.token"},
+                timeout=10
+            )
+            
+            if response.status_code == 401:
+                self.log_test("SSO Consume (Invalid Token)", True, "Correctly rejected invalid token with 401")
                 return True
             else:
-                print(f"   ❌ Got 502 error - AI service unavailable")
-                return False
-        else:
-            print(f"   ⚠️  AI Chat endpoint not responding properly")
-            return False
-
-    def test_ai_specialized_chat(self):
-        """Test POST /api/ai/specialized-chat -> expect 200 with EnhancedChatResponse"""
-        chat_data = {
-            "message": "Create a UGC campaign idea",
-            "session_id": "test",
-            "language": "en",
-            "context": {}
-        }
-        
-        success, response = self.run_test(
-            "AI Specialized Chat",
-            "POST",
-            "ai/specialized-chat",
-            200,
-            data=chat_data
-        )
-        
-        if success:
-            print(f"   ✅ Specialized Chat working")
-            if "response" in response or "message" in response:
-                print(f"   🎯 Specialized response received")
-            return True
-        else:
-            print(f"   ⚠️  Specialized Chat endpoint not available")
-            return False
-
-    def test_aavana2_enhanced_chat(self):
-        """Test POST /api/aavana2/enhanced-chat -> expect 200 with EnhancedChatResponse"""
-        chat_data = {
-            "message": "Summarize sales goals",
-            "session_id": "test",
-            "language": "en",
-            "context": {}
-        }
-        
-        success, response = self.run_test(
-            "Aavana 2.0 Enhanced Chat",
-            "POST",
-            "aavana2/enhanced-chat",
-            200,
-            data=chat_data
-        )
-        
-        if success:
-            print(f"   ✅ Aavana 2.0 Enhanced Chat working")
-            if "response" in response or "message" in response:
-                print(f"   🚀 Enhanced response received")
-            return True
-        else:
-            print(f"   ⚠️  Aavana 2.0 Enhanced Chat endpoint not available")
-            return False
-
-    def test_aavana_health(self):
-        """Test GET /api/aavana/health -> expect 200 with healthy status"""
-        success, response = self.run_test(
-            "Aavana Health Check",
-            "GET",
-            "aavana/health",
-            200
-        )
-        
-        if success:
-            print(f"   ✅ Health endpoint working")
-            if "status" in response:
-                print(f"   💚 Health Status: {response['status']}")
-            return True
-        else:
-            print(f"   ⚠️  Health endpoint not available")
-            return False
-
-    def test_ai_chat(self):
-        """Test POST /api/ai/chat with messages -> expect 200 or graceful fallback"""
-        test_messages = [{"role": "user", "content": "Hello"}]
-        
-        success, response = self.run_test(
-            "AI Chat",
-            "POST",
-            "ai/chat",
-            200,
-            data={"messages": test_messages}
-        )
-        
-        if success:
-            print(f"   ✅ AI Chat working")
-            if "response" in response:
-                print(f"   🤖 AI Response: {response['response'][:100]}...")
-            elif "fallback" in response:
-                print(f"   🔄 Graceful fallback: {response['fallback']}")
-        else:
-            # Try alternative endpoint structure
-            print(f"   ℹ️  Trying alternative AI endpoint...")
-            success_alt, response_alt = self.run_test(
-                "AI Chat Alternative",
-                "POST", 
-                "ai/generate-content",
-                200,
-                data={"type": "chat", "content": "Hello", "context": "test"}
-            )
-            if success_alt:
-                print(f"   ✅ Alternative AI endpoint working")
-                success = True
-            else:
-                print(f"   ⚠️  AI endpoints not available - this is acceptable at this stage")
-        
-        return success
-
-    def create_realistic_lead(self, index):
-        """Create a realistic lead with unique data"""
-        leads_data = [
-            {
-                "name": "Rajesh Kumar",
-                "email": f"rajesh.kumar.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
-                "phone": f"987654321{index}",
-                "qualification_score": 85,
-                "status": "Qualified",
-                "project_type": "Residential Villa",
-                "budget_range": "500k_1M",
-                "timeline": "6_months",
-                "location": "Bandra West",
-                "city": "Mumbai",
-                "state": "Maharashtra",
-                "requirements": "Luxury villa with rooftop garden and sustainable landscaping",
-                "urgency": "high"
-            },
-            {
-                "name": "Priya Sharma",
-                "email": f"priya.sharma.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
-                "phone": f"987654322{index}",
-                "qualification_score": 75,
-                "status": "Qualified",
-                "project_type": "Apartment Balcony",
-                "budget_range": "25k_50k",
-                "timeline": "1_month",
-                "location": "Koramangala",
-                "city": "Bangalore",
-                "state": "Karnataka",
-                "requirements": "Modern balcony garden with automated irrigation system",
-                "urgency": "medium"
-            },
-            {
-                "name": "Amit Patel",
-                "email": f"amit.patel.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
-                "phone": f"987654323{index}",
-                "qualification_score": 90,
-                "status": "Qualified",
-                "project_type": "Commercial Office",
-                "budget_range": "250k_500k",
-                "timeline": "3_months",
-                "location": "Cyber City",
-                "city": "Gurgaon",
-                "state": "Haryana",
-                "requirements": "Corporate office green spaces and indoor plant installations",
-                "urgency": "high"
-            },
-            {
-                "name": "Sunita Reddy",
-                "email": f"sunita.reddy.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
-                "phone": f"987654324{index}",
-                "qualification_score": 70,
-                "status": "New",
-                "project_type": "Residential Apartment",
-                "budget_range": "100k_250k",
-                "timeline": "flexible",
-                "location": "Hitech City",
-                "city": "Hyderabad",
-                "state": "Telangana",
-                "requirements": "Complete home interior landscaping with low maintenance plants",
-                "urgency": "low"
-            },
-            {
-                "name": "Vikram Singh",
-                "email": f"vikram.singh.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
-                "phone": f"987654325{index}",
-                "qualification_score": 80,
-                "status": "Qualified",
-                "project_type": "Farmhouse",
-                "budget_range": "above_1M",
-                "timeline": "6_months",
-                "location": "Lonavala",
-                "city": "Pune",
-                "state": "Maharashtra",
-                "requirements": "Extensive farmhouse landscaping with organic vegetable garden",
-                "urgency": "medium"
-            },
-            {
-                "name": "Meera Joshi",
-                "email": f"meera.joshi.{datetime.now().strftime('%Y%m%d_%H%M%S')}_{index}@example.com",
-                "phone": f"987654326{index}",
-                "qualification_score": 65,
-                "status": "New",
-                "project_type": "Terrace Garden",
-                "budget_range": "50k_100k",
-                "timeline": "immediate",
-                "location": "Andheri East",
-                "city": "Mumbai",
-                "state": "Maharashtra",
-                "requirements": "Terrace garden setup with water-efficient plants and seating area",
-                "urgency": "high"
-            }
-        ]
-        
-        return leads_data[index % len(leads_data)]
-
-    def test_seed_demo_leads(self):
-        """Create 6 realistic leads via POST /api/leads/optimized-create"""
-        print(f"\n🌱 SEEDING DEMO LEADS")
-        print("-" * 40)
-        
-        success_count = 0
-        
-        for i in range(6):
-            lead_data = self.create_realistic_lead(i)
-            
-            success, response = self.run_test(
-                f"Create Lead {i+1}: {lead_data['name']}",
-                "POST",
-                "leads/optimized-create",
-                201,
-                data=lead_data
-            )
-            
-            if success:
-                success_count += 1
-                if "lead" in response and "id" in response["lead"]:
-                    lead_id = response["lead"]["id"]
-                    self.created_leads.append(lead_id)
-                    print(f"   📝 Lead ID: {lead_id}")
-                    
-                    if "auto_converted_to_deal" in response and response["auto_converted_to_deal"]:
-                        print(f"   🔄 Auto-converted to deal!")
-                        
-                    if "qualification_summary" in response:
-                        qual = response["qualification_summary"]
-                        print(f"   🎯 Score: {qual.get('score', 'N/A')}/100")
-            else:
-                print(f"   ❌ Failed to create lead: {lead_data['name']}")
-            
-            # Small delay between requests
-            time.sleep(0.5)
-        
-        print(f"\n📊 Lead Creation Summary: {success_count}/6 leads created successfully")
-        return success_count >= 4  # Consider success if at least 4/6 leads created
-
-    def test_verify_leads_list(self):
-        """Verify GET /api/leads?limit=10 shows the created leads"""
-        success, response = self.run_test(
-            "Verify Seeded Leads",
-            "GET",
-            "leads?limit=10",
-            200
-        )
-        
-        if success and isinstance(response, list):
-            print(f"   ✅ Found {len(response)} leads in database")
-            
-            # Check if our created leads are present
-            found_leads = 0
-            for lead in response:
-                if lead.get("id") in self.created_leads:
-                    found_leads += 1
-                    print(f"   ✓ Found seeded lead: {lead.get('name', 'Unknown')} (ID: {lead.get('id', 'N/A')})")
-            
-            print(f"   📋 Verified {found_leads}/{len(self.created_leads)} seeded leads")
-            return found_leads > 0
-        
-        return success
-
-    def test_create_demo_tasks(self):
-        """Create 3 tasks via POST /api/tasks"""
-        print(f"\n📋 SEEDING DEMO TASKS")
-        print("-" * 40)
-        
-        tasks_data = [
-            {
-                "title": "Follow up with Rajesh Kumar - Villa Project",
-                "description": "Schedule site visit and discuss luxury villa landscaping requirements. Prepare detailed proposal with 3D renderings.",
-                "status": "Pending"
-            },
-            {
-                "title": "Prepare Balcony Garden Proposal - Priya Sharma",
-                "description": "Create customized balcony garden design with automated irrigation system. Include plant selection and maintenance guide.",
-                "status": "Pending"
-            },
-            {
-                "title": "Corporate Office Green Space Consultation - Amit Patel",
-                "description": "Conduct office space assessment and propose indoor plant installations with air purification benefits.",
-                "status": "Pending"
-            }
-        ]
-        
-        success_count = 0
-        
-        for i, task_data in enumerate(tasks_data):
-            success, response = self.run_test(
-                f"Create Task {i+1}: {task_data['title'][:30]}...",
-                "POST",
-                "tasks",
-                200,  # Backend returns 200 instead of 201 for tasks
-                data=task_data
-            )
-            
-            if success:
-                success_count += 1
-                if "id" in response:
-                    print(f"   📝 Task ID: {response['id']}")
-                print(f"   ✅ Task created: {task_data['title']}")
-            else:
-                print(f"   ❌ Failed to create task: {task_data['title']}")
-            
-            time.sleep(0.3)
-        
-        print(f"\n📊 Task Creation Summary: {success_count}/3 tasks created successfully")
-        return success_count >= 2  # Consider success if at least 2/3 tasks created
-
-    def test_verify_tasks_list(self):
-        """Verify GET /api/tasks returns at least the 3 created tasks"""
-        success, response = self.run_test(
-            "Verify Seeded Tasks",
-            "GET",
-            "tasks",
-            200
-        )
-        
-        if success and isinstance(response, list):
-            print(f"   ✅ Found {len(response)} tasks in database")
-            
-            # Check for tasks with our specific titles
-            demo_task_keywords = ["Rajesh Kumar", "Priya Sharma", "Amit Patel"]
-            found_tasks = 0
-            
-            for task in response:
-                task_title = task.get("title", "")
-                for keyword in demo_task_keywords:
-                    if keyword in task_title:
-                        found_tasks += 1
-                        print(f"   ✓ Found seeded task: {task_title[:50]}...")
-                        break
-            
-            print(f"   📋 Verified {found_tasks}/3 seeded tasks")
-            return found_tasks > 0
-        
-        return success
-
-    def test_seed_gallery_images(self):
-        """Seed gallery images with POST /api/batch-send/gallery"""
-        gallery_data = {
-            "project_id": "demo-seeding",
-            "sender": "system",
-            "images": [
-                {
-                    "url": "https://picsum.photos/seed/aavana1/800/600",
-                    "title": "Demo Image 1"
-                },
-                {
-                    "url": "https://picsum.photos/seed/aavana2/800/600", 
-                    "title": "Demo Image 2"
-                },
-                {
-                    "url": "https://picsum.photos/seed/aavana3/800/600",
-                    "title": "Demo Image 3"
-                },
-                {
-                    "url": "https://picsum.photos/seed/aavana4/800/600",
-                    "title": "Demo Image 4"
-                },
-                {
-                    "url": "https://picsum.photos/seed/aavana5/800/600",
-                    "title": "Demo Image 5"
-                },
-                {
-                    "url": "https://picsum.photos/seed/aavana6/800/600",
-                    "title": "Demo Image 6"
-                }
-            ]
-        }
-        
-        success, response = self.run_test(
-            "Seed Gallery Images",
-            "POST",
-            "batch-send/gallery",
-            200,
-            data=gallery_data
-        )
-        
-        if success:
-            print(f"   ✅ Gallery images seeded successfully")
-            if "success" in response and response["success"]:
-                print(f"   🖼️  Gallery response indicates success")
-            elif response.get("status_code") == 200:
-                print(f"   🖼️  Gallery endpoint returned 200 OK")
-        else:
-            print(f"   ⚠️  Gallery endpoint not available or rejected - skipping gracefully")
-            # This is acceptable as mentioned in the requirements
-            success = True
-        
-        return success
-
-    def test_marketing_endpoints(self):
-        """Test new marketing endpoints as specified in review request"""
-        print(f"\n🎯 TESTING MARKETING ENDPOINTS")
-        print("-" * 50)
-        
-        # Step 1: POST /api/marketing/save
-        campaign_data = {
-            "item_type": "campaign",
-            "data": {
-                "name": "Demo Campaign",
-                "description": "Test",
-                "platforms": ["Google Ads"],
-                "status": "Pending Approval"
-            },
-            "default_filters": {
-                "geo": "India (all)",
-                "language": ["English", "Hinglish", "Hindi"],
-                "device": ["mobile", "desktop", "iPad", "Tablets"],
-                "time": "9am–9pm",
-                "behavior": ["engaged-with-green-content"]
-            }
-        }
-        
-        success_save, response_save = self.run_test(
-            "Marketing Save Campaign",
-            "POST",
-            "marketing/save",
-            200,
-            data=campaign_data
-        )
-        
-        campaign_id = None
-        if success_save:
-            if "success" in response_save and response_save["success"]:
-                if "item" in response_save and "id" in response_save["item"]:
-                    campaign_id = response_save["item"]["id"]
-                    print(f"   ✅ Campaign saved with ID: {campaign_id}")
-                else:
-                    print(f"   ❌ No item.id in response: {response_save}")
-                    return False
-            else:
-                print(f"   ❌ Save not successful: {response_save}")
-                return False
-        else:
-            print(f"   ❌ Marketing save failed")
-            return False
-        
-        # Step 2: GET /api/marketing/list?type=campaign&status=Pending%20Approval
-        success_list_pending, response_list_pending = self.run_test(
-            "Marketing List Pending Campaigns",
-            "GET",
-            "marketing/list?type=campaign&status=Pending%20Approval",
-            200
-        )
-        
-        if success_list_pending:
-            if isinstance(response_list_pending, list) and len(response_list_pending) >= 1:
-                print(f"   ✅ Found {len(response_list_pending)} pending campaigns")
-                # Verify our campaign is in the list
-                found_campaign = any(item.get("id") == campaign_id for item in response_list_pending)
-                if found_campaign:
-                    print(f"   ✅ Our campaign found in pending list")
-                else:
-                    print(f"   ⚠️  Our campaign not found in pending list")
-            else:
-                print(f"   ❌ Expected array with length >= 1, got: {response_list_pending}")
-                return False
-        else:
-            print(f"   ❌ Marketing list pending failed")
-            return False
-        
-        # Step 3: POST /api/marketing/approve
-        if campaign_id:
-            approve_data = {
+                self.log_test("SSO Consume (Invalid Token)", False, 
+                            f"Expected 401 but got {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("SSO Consume (Invalid Token)", False, f"Error: {str(e)}")
+        return False
+    
+    def test_marketing_save_campaign(self):
+        """Test POST /api/marketing/save with campaign data"""
+        try:
+            save_request = {
                 "item_type": "campaign",
-                "item_id": campaign_id,
+                "data": {
+                    "name": "Test Marketing Campaign",
+                    "description": "A comprehensive test campaign",
+                    "budget": 15000,
+                    "channels": ["email", "social", "search"]
+                },
+                "default_filters": {
+                    "geo": "US",
+                    "language": ["en", "es"],
+                    "device": ["mobile", "desktop"],
+                    "time": "peak_hours",
+                    "behavior": ["engaged_users", "lookalike"]
+                }
+            }
+            
+            response = self.session.post(
+                f"{API_BASE}/marketing/save",
+                json=save_request,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and "item" in data:
+                    item = data["item"]
+                    # Verify required fields
+                    required_fields = ["id", "status", "created_at", "updated_at"]
+                    missing_fields = [field for field in required_fields if field not in item]
+                    
+                    if not missing_fields:
+                        # Verify UUID format for id
+                        try:
+                            uuid.UUID(item["id"])
+                            uuid_valid = True
+                        except ValueError:
+                            uuid_valid = False
+                        
+                        # Verify default status
+                        status_correct = item.get("status") == "Pending Approval"
+                        
+                        # Verify ISO timestamps
+                        try:
+                            datetime.fromisoformat(item["created_at"].replace('Z', '+00:00'))
+                            datetime.fromisoformat(item["updated_at"].replace('Z', '+00:00'))
+                            timestamps_valid = True
+                        except ValueError:
+                            timestamps_valid = False
+                        
+                        if uuid_valid and status_correct and timestamps_valid:
+                            self.created_items.append(("campaign", item["id"]))
+                            self.log_test("Marketing Save (Campaign)", True, 
+                                        f"Saved campaign with ID: {item['id']}")
+                            return True
+                        else:
+                            issues = []
+                            if not uuid_valid: issues.append("invalid UUID")
+                            if not status_correct: issues.append("wrong status")
+                            if not timestamps_valid: issues.append("invalid timestamps")
+                            self.log_test("Marketing Save (Campaign)", False, 
+                                        f"Validation issues: {', '.join(issues)}", data)
+                    else:
+                        self.log_test("Marketing Save (Campaign)", False, 
+                                    f"Missing fields: {missing_fields}", data)
+                else:
+                    self.log_test("Marketing Save (Campaign)", False, "Invalid response format", data)
+            else:
+                self.log_test("Marketing Save (Campaign)", False, 
+                            f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Marketing Save (Campaign)", False, f"Error: {str(e)}")
+        return False
+    
+    def test_marketing_save_with_default_status(self):
+        """Test POST /api/marketing/save without status - should default to 'Pending Approval'"""
+        try:
+            save_request = {
+                "item_type": "campaign",
+                "data": {
+                    "name": "Default Status Test Campaign"
+                }
+            }
+            
+            response = self.session.post(
+                f"{API_BASE}/marketing/save",
+                json=save_request,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and "item" in data:
+                    item = data["item"]
+                    if item.get("status") == "Pending Approval":
+                        self.created_items.append(("campaign", item["id"]))
+                        self.log_test("Marketing Save (Default Status)", True, 
+                                    "Status correctly defaults to 'Pending Approval'")
+                        return True
+                    else:
+                        self.log_test("Marketing Save (Default Status)", False, 
+                                    f"Status is '{item.get('status')}', expected 'Pending Approval'", data)
+                else:
+                    self.log_test("Marketing Save (Default Status)", False, "Invalid response format", data)
+            else:
+                self.log_test("Marketing Save (Default Status)", False, 
+                            f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Marketing Save (Default Status)", False, f"Error: {str(e)}")
+        return False
+    
+    def test_marketing_save_invalid_type(self):
+        """Test POST /api/marketing/save with invalid item_type - expect 400"""
+        try:
+            save_request = {
+                "item_type": "invalid_type",
+                "data": {"name": "Test"}
+            }
+            
+            response = self.session.post(
+                f"{API_BASE}/marketing/save",
+                json=save_request,
+                timeout=30
+            )
+            
+            if response.status_code == 400:
+                self.log_test("Marketing Save (Invalid Type)", True, 
+                            "Correctly rejected invalid item_type with 400")
+                return True
+            else:
+                self.log_test("Marketing Save (Invalid Type)", False, 
+                            f"Expected 400 but got {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Marketing Save (Invalid Type)", False, f"Error: {str(e)}")
+        return False
+    
+    def test_marketing_list_campaigns(self):
+        """Test GET /api/marketing/list with type=campaign"""
+        try:
+            response = self.session.get(f"{API_BASE}/marketing/list?type=campaign", timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    # Verify items don't include _id field
+                    has_mongo_id = any("_id" in item for item in data if isinstance(item, dict))
+                    if not has_mongo_id:
+                        self.log_test("Marketing List (Campaigns)", True, 
+                                    f"Retrieved {len(data)} campaigns without _id fields")
+                        return True
+                    else:
+                        self.log_test("Marketing List (Campaigns)", False, 
+                                    "Response contains _id fields", data[:2])  # Show first 2 items
+                else:
+                    self.log_test("Marketing List (Campaigns)", False, "Response is not a list", data)
+            else:
+                self.log_test("Marketing List (Campaigns)", False, 
+                            f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Marketing List (Campaigns)", False, f"Error: {str(e)}")
+        return False
+    
+    def test_marketing_list_with_status(self):
+        """Test GET /api/marketing/list with status filter"""
+        try:
+            response = self.session.get(
+                f"{API_BASE}/marketing/list?type=campaign&status=Pending Approval", 
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    # Verify all items have the requested status
+                    wrong_status = [item for item in data 
+                                  if isinstance(item, dict) and item.get("status") != "Pending Approval"]
+                    if not wrong_status:
+                        self.log_test("Marketing List (With Status)", True, 
+                                    f"Retrieved {len(data)} campaigns with correct status filter")
+                        return True
+                    else:
+                        self.log_test("Marketing List (With Status)", False, 
+                                    f"Found {len(wrong_status)} items with wrong status", wrong_status[:2])
+                else:
+                    self.log_test("Marketing List (With Status)", False, "Response is not a list", data)
+            else:
+                self.log_test("Marketing List (With Status)", False, 
+                            f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Marketing List (With Status)", False, f"Error: {str(e)}")
+        return False
+    
+    def test_marketing_approve_success(self):
+        """Test POST /api/marketing/approve with valid item"""
+        # Need an item to approve
+        if not self.created_items:
+            self.log_test("Marketing Approve (Success)", False, "No items available to approve")
+            return False
+        
+        try:
+            item_type, item_id = self.created_items[0]
+            
+            approve_request = {
+                "item_type": item_type,
+                "item_id": item_id,
                 "status": "Approved",
                 "filters": {
-                    "geo": "India (all)"
+                    "geo": "US",
+                    "language": ["en"],
+                    "device": ["mobile"],
+                    "time": "business_hours",
+                    "behavior": ["high_intent"]
                 },
-                "approved_by": "admin"
+                "approved_by": "test_system"
             }
             
-            success_approve, response_approve = self.run_test(
-                "Marketing Approve Campaign",
-                "POST",
-                "marketing/approve",
-                200,
-                data=approve_data
+            response = self.session.post(
+                f"{API_BASE}/marketing/approve",
+                json=approve_request,
+                timeout=30
             )
             
-            if success_approve:
-                if "success" in response_approve and response_approve["success"]:
-                    print(f"   ✅ Campaign approved successfully")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and "item" in data:
+                    item = data["item"]
+                    # Verify status updated and filters applied
+                    if (item.get("status") == "Approved" and 
+                        "approval_filters" in item and
+                        "updated_at" in item):
+                        self.log_test("Marketing Approve (Success)", True, 
+                                    f"Successfully approved {item_type} with ID: {item_id}")
+                        return True
+                    else:
+                        self.log_test("Marketing Approve (Success)", False, 
+                                    "Item not properly updated", data)
                 else:
-                    print(f"   ❌ Approval not successful: {response_approve}")
-                    return False
+                    self.log_test("Marketing Approve (Success)", False, "Invalid response format", data)
             else:
-                print(f"   ❌ Marketing approve failed")
-                return False
-        else:
-            print(f"   ❌ Cannot approve - no campaign ID")
+                self.log_test("Marketing Approve (Success)", False, 
+                            f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Marketing Approve (Success)", False, f"Error: {str(e)}")
+        return False
+    
+    def test_marketing_approve_not_found(self):
+        """Test POST /api/marketing/approve with unknown item - expect 404"""
+        try:
+            approve_request = {
+                "item_type": "campaign",
+                "item_id": str(uuid.uuid4()),  # Random UUID that doesn't exist
+                "status": "Approved",
+                "approved_by": "test_system"
+            }
+            
+            response = self.session.post(
+                f"{API_BASE}/marketing/approve",
+                json=approve_request,
+                timeout=30
+            )
+            
+            if response.status_code == 404:
+                self.log_test("Marketing Approve (Not Found)", True, 
+                            "Correctly returned 404 for unknown item")
+                return True
+            else:
+                self.log_test("Marketing Approve (Not Found)", False, 
+                            f"Expected 404 but got {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Marketing Approve (Not Found)", False, f"Error: {str(e)}")
+        return False
+    
+    def run_all_tests(self):
+        """Run all non-AI tests in sequence"""
+        print("🚀 Starting DMM Backend Non-AI Test Suite")
+        print("=" * 60)
+        print("⚠️  Skipping /api/ai/* endpoints due to budget hold")
+        print("=" * 60)
+        
+        # Test 1: Health endpoint
+        print("\n1️⃣ Testing Health Endpoint...")
+        if not self.test_health_endpoint():
+            print("❌ Health check failed - aborting tests")
             return False
         
-        # Step 4: GET /api/marketing/list?type=campaign&status=Approved
-        success_list_approved, response_list_approved = self.run_test(
-            "Marketing List Approved Campaigns",
-            "GET",
-            "marketing/list?type=campaign&status=Approved",
-            200
+        # Test 2: SSO endpoints
+        print("\n2️⃣ Testing SSO Authentication...")
+        self.test_sso_consume_valid_token()
+        self.test_sso_consume_invalid_token()
+        
+        # Test 3: Marketing save endpoints
+        print("\n3️⃣ Testing Marketing Save...")
+        self.test_marketing_save_campaign()
+        self.test_marketing_save_with_default_status()
+        self.test_marketing_save_invalid_type()
+        
+        # Test 4: Marketing list endpoints
+        print("\n4️⃣ Testing Marketing List...")
+        self.test_marketing_list_campaigns()
+        self.test_marketing_list_with_status()
+        
+        # Test 5: Marketing approve endpoints
+        print("\n5️⃣ Testing Marketing Approve...")
+        self.test_marketing_approve_success()
+        self.test_marketing_approve_not_found()
+        
+        # Summary
+        self.print_summary()
+        
+        return self.get_overall_success()
+    
+    def print_summary(self):
+        """Print test summary"""
+        print("\n" + "=" * 60)
+        print("📊 NON-AI TEST SUMMARY")
+        print("=" * 60)
+        
+        passed = sum(1 for result in self.test_results if result["success"])
+        total = len(self.test_results)
+        
+        print(f"Total Tests: {total}")
+        print(f"Passed: {passed}")
+        print(f"Failed: {total - passed}")
+        print(f"Success Rate: {(passed/total)*100:.1f}%")
+        
+        # Show failed tests
+        failed_tests = [result for result in self.test_results if not result["success"]]
+        if failed_tests:
+            print("\n❌ FAILED TESTS:")
+            for test in failed_tests:
+                print(f"  • {test['test']}: {test['details']}")
+        
+        # Show created items
+        if self.created_items:
+            print(f"\n📝 Created {len(self.created_items)} test items in database")
+        
+        print("\n⚠️  AI endpoints (/api/ai/*) were SKIPPED due to budget hold")
+    
+    def get_overall_success(self):
+        """Get overall test success status"""
+        if not self.test_results:
+            return False
+        
+        # Critical tests that must pass for non-AI functionality
+        critical_tests = [
+            "Health Check",
+            "SSO Consume (Valid Token)",
+            "Marketing Save (Campaign)",
+            "Marketing List (Campaigns)",
+            "Marketing Approve (Success)"
+        ]
+        
+        critical_passed = all(
+            any(result["test"] == test and result["success"] for result in self.test_results)
+            for test in critical_tests
         )
         
-        if success_list_approved:
-            if isinstance(response_list_approved, list):
-                print(f"   ✅ Found {len(response_list_approved)} approved campaigns")
-                # Verify our campaign is in the approved list
-                found_approved = any(item.get("id") == campaign_id for item in response_list_approved)
-                if found_approved:
-                    print(f"   ✅ Our campaign found in approved list")
-                    # Print summary of the approved campaign
-                    approved_campaign = next((item for item in response_list_approved if item.get("id") == campaign_id), None)
-                    if approved_campaign:
-                        print(f"   📋 Campaign Status: {approved_campaign.get('status', 'N/A')}")
-                        print(f"   📋 Approved By: {approved_campaign.get('approved_by', 'N/A')}")
-                else:
-                    print(f"   ❌ Our campaign not found in approved list")
-                    return False
-            else:
-                print(f"   ❌ Expected array, got: {response_list_approved}")
-                return False
-        else:
-            print(f"   ❌ Marketing list approved failed")
-            return False
-        
-        print(f"\n🎉 All marketing endpoint tests passed!")
-        print(f"   📊 Campaign ID: {campaign_id}")
-        print(f"   📊 Status Flow: Pending Approval → Approved")
-        print(f"   📊 All endpoints working correctly")
-        
-        return True
+        return critical_passed
 
 def main():
-    print("🚀 Starting Aavana CRM Backend API Tests")
-    print("🎯 Testing Goals: Authentication, AI Integration, Health Checks")
-    print("=" * 80)
+    """Main test execution"""
+    tester = DMMNonAITester()
+    success = tester.run_all_tests()
     
-    tester = AavanaCRMAPITester()
-    
-    # PRIORITY TESTS: As specified in review request
-    print("\n🔐 PRIORITY TESTS: Authentication & AI Integration")
-    print("=" * 60)
-    
-    priority_tests = [
-        ("Seed Admin User", tester.test_auth_seed_admin),
-        ("Admin Login", tester.test_auth_login),
-        ("AI Chat Quick Response", tester.test_ai_chat_quick_response),
-        ("AI Specialized Chat", tester.test_ai_specialized_chat),
-        ("Aavana 2.0 Enhanced Chat", tester.test_aavana2_enhanced_chat),
-        ("Aavana Health Check", tester.test_aavana_health),
-    ]
-    
-    # ADDITIONAL TESTS: Original functionality
-    print("\n📊 ADDITIONAL TESTS: Core API Functionality")
-    print("=" * 60)
-    
-    additional_tests = [
-        ("Root API Message", tester.test_root_api),
-        ("Dashboard Stats", tester.test_dashboard_stats),
-        ("Marketing Endpoints", tester.test_marketing_endpoints),
-    ]
-    
-    # Run priority tests first
-    results = {}
-    auth_token = None
-    
-    for test_name, test_func in priority_tests:
-        try:
-            print(f"\n" + "-" * 60)
-            if test_name == "Admin Login":
-                # Special handling for login test to capture token
-                success, token = test_func()
-                results[test_name] = success
-                if success and token:
-                    auth_token = token
-                    print(f"   🔑 Authentication token captured for future requests")
-            elif test_name == "Seed Admin User":
-                # Special handling for seed admin test
-                success, response = test_func()
-                results[test_name] = success
-            else:
-                results[test_name] = test_func()
-        except Exception as e:
-            print(f"❌ {test_name} failed with exception: {str(e)}")
-            results[test_name] = False
-            tester.tests_run += 1
-    
-    # Run additional tests
-    for test_name, test_func in additional_tests:
-        try:
-            print(f"\n" + "-" * 60)
-            results[test_name] = test_func()
-        except Exception as e:
-            print(f"❌ {test_name} failed with exception: {str(e)}")
-            results[test_name] = False
-            tester.tests_run += 1
-    
-    # Print comprehensive summary
-    print("\n" + "=" * 80)
-    print("📊 BACKEND API TEST SUMMARY")
-    print("=" * 80)
-    
-    # Group results by category
-    priority_results = {k: v for k, v in results.items() if k in [t[0] for t in priority_tests]}
-    additional_results = {k: v for k, v in results.items() if k in [t[0] for t in additional_tests]}
-    
-    print("\n🔐 PRIORITY TEST RESULTS:")
-    for test_name, passed in priority_results.items():
-        status = "✅ PASSED" if passed else "❌ FAILED"
-        print(f"  {test_name}: {status}")
-    
-    print("\n📊 ADDITIONAL TEST RESULTS:")
-    for test_name, passed in additional_results.items():
-        status = "✅ PASSED" if passed else "❌ FAILED"
-        print(f"  {test_name}: {status}")
-    
-    # Overall summary
-    total_passed = sum(results.values())
-    total_tests = len(results)
-    priority_passed = sum(priority_results.values())
-    priority_total = len(priority_results)
-    
-    print(f"\n🎯 OVERALL RESULTS:")
-    print(f"   Priority Tests: {priority_passed}/{priority_total}")
-    print(f"   Total Tests Passed: {total_passed}/{total_tests}")
-    print(f"   Success Rate: {(total_passed/total_tests)*100:.1f}%")
-    
-    # Critical assessment
-    critical_tests = ["Seed Admin User", "Admin Login", "Aavana Health Check"]
-    critical_passed = sum(1 for test in critical_tests if results.get(test, False))
-    
-    print(f"   Critical Tests: {critical_passed}/{len(critical_tests)}")
-    
-    if auth_token:
-        print(f"   🔑 Authentication: Working")
-    
-    # Determine exit code based on priority tests
-    if priority_passed >= priority_total * 0.7:  # 70% of priority tests must pass
-        print("\n🎉 Backend API testing completed successfully!")
-        print("✅ Core authentication and AI endpoints are functional")
-        return 0
+    if success:
+        print("\n✅ DMM Backend non-AI tests completed successfully!")
+        exit(0)
     else:
-        print("\n⚠️  Critical backend API tests failed!")
-        print("❌ Authentication or AI integration issues detected")
-        return 1
+        print("\n❌ DMM Backend non-AI tests had critical failures!")
+        exit(1)
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
