@@ -105,7 +105,104 @@ async def collections_map(db):
         "brand": db["marketing_brand_assets"],
         "influencer": db["marketing_influencers"],
         "approvals": db["marketing_approvals"],
+        "strategy": db["marketing_strategies"],
     }
+
+# AI Orchestration Helpers
+async def get_ai_chat():
+    """Initialize AI chat with GPT-5 beta"""
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"dmm-{str(uuid.uuid4())[:8]}",
+        system_message="You are an expert Digital Marketing Manager AI. You specialize in creating comprehensive marketing strategies, content creation, and campaign optimization. Always provide detailed, actionable insights."
+    ).with_model("openai", "gpt-5")
+    return chat
+
+async def generate_marketing_strategy(request: StrategyRequest):
+    """Generate comprehensive marketing strategy using GPT-5 beta"""
+    chat = await get_ai_chat()
+    
+    prompt = f"""
+    Create a comprehensive digital marketing strategy for:
+    Company: {request.company_name}
+    Industry: {request.industry}
+    Target Audience: {request.target_audience}
+    Budget: {request.budget or 'Not specified'}
+    Goals: {', '.join(request.goals) if request.goals else 'General growth'}
+    Website: {request.website_url or 'Not provided'}
+    
+    Please provide:
+    1. Market Analysis & Positioning
+    2. Content Strategy (types, frequency, platforms)
+    3. Channel Mix Recommendations
+    4. Budget Allocation Suggestions
+    5. KPI & Success Metrics
+    6. Timeline & Milestones
+    7. Potential Challenges & Solutions
+    
+    Format as detailed JSON with clear sections.
+    """
+    
+    user_message = UserMessage(text=prompt)
+    response = await chat.send_message(user_message)
+    return response
+
+async def generate_content_ideas(request: ContentRequest):
+    """Generate content ideas using GPT-5 beta"""
+    chat = await get_ai_chat()
+    
+    prompt = f"""
+    Generate creative content ideas for:
+    Content Type: {request.content_type}
+    Brief: {request.brief}
+    Target Audience: {request.target_audience}
+    Platform: {request.platform}
+    Budget: {request.budget or 'Flexible'}
+    Festival/Theme: {request.festival or 'None'}
+    
+    Please provide:
+    1. 5 creative concepts with detailed descriptions
+    2. Visual style recommendations
+    3. Messaging & tone suggestions
+    4. Hashtag recommendations
+    5. Estimated production costs
+    6. Performance predictions
+    
+    Format as detailed JSON with clear structure.
+    """
+    
+    user_message = UserMessage(text=prompt)
+    response = await chat.send_message(user_message)
+    return response
+
+async def optimize_campaign(request: CampaignRequest):
+    """Optimize campaign strategy using GPT-5 beta"""
+    chat = await get_ai_chat()
+    
+    prompt = f"""
+    Optimize this marketing campaign:
+    Campaign: {request.campaign_name}
+    Objective: {request.objective}
+    Target Audience: {request.target_audience}
+    Budget: ${request.budget}
+    Channels: {', '.join(request.channels)}
+    Duration: {request.duration_days} days
+    
+    Please provide:
+    1. Channel-specific budget allocation
+    2. Timeline optimization
+    3. Creative requirements per channel
+    4. Targeting parameters
+    5. Expected ROI & KPIs
+    6. Risk assessment & mitigation
+    7. A/B testing recommendations
+    
+    Format as detailed JSON with clear sections.
+    """
+    
+    user_message = UserMessage(text=prompt)
+    response = await chat.send_message(user_message)
+    return response
 
 @app.get("/api/health")
 async def health():
