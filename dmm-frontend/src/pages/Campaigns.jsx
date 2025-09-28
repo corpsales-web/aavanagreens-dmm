@@ -46,7 +46,7 @@ export default function Campaigns() {
     }
   }
 
-  const updateBudgetSplit = (channelId, amount) =&gt; {
+  const updateBudgetSplit = (channelId, amount) => {
     setBudgetSplits({...budgetSplits, [channelId]: amount})
   }
 
