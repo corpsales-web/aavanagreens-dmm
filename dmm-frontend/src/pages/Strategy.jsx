@@ -87,7 +87,7 @@ export default function Strategy() {
     <div className="strategy-page">
       <div className="page-header">
         <h1>AI Marketing Strategy Generator</h1>
-        &lt;p&gt;Get comprehensive marketing strategies powered by GPT-5 beta&lt;/p&gt;
+        <p>Get comprehensive marketing strategies powered by GPT-5 beta</p>
       &lt;/div&gt;
 
       &lt;div className="strategy-form"&gt;
