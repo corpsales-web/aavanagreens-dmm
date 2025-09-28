@@ -30,7 +30,7 @@ export default function Campaigns() {
   const handleChannelToggle = (channelId) => {
     const isSelected = formData.channels.includes(channelId)
     const newChannels = isSelected
-      ? formData.channels.filter(c =&gt; c !== channelId)
+      ? formData.channels.filter(c => c !== channelId)
       : [...formData.channels, channelId]
     
     setFormData({...formData, channels: newChannels})
