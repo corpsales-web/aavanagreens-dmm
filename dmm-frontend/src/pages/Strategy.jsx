@@ -104,12 +104,12 @@ export default function Strategy() {
 
           <div className="form-group">
             <label>Industry *</label>
-            &lt;input
+            <input
               type="text"
               value={formData.industry}
-              onChange={(e) =&gt; setFormData({...formData, industry: e.target.value})}
+              onChange={(e) => setFormData({...formData, industry: e.target.value})}
               placeholder="e.g., Real Estate, Technology, Healthcare"
-            /&gt;
+            />
           </div>
 
           <div className="form-group">
