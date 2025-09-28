@@ -111,7 +111,7 @@
 ##     file: "/app/dmm-backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
@@ -119,6 +119,9 @@
 ##         -working: "partial"
 ##         -agent: "testing"
 ##         -comment: "Marketing CRUD working perfectly (save/list/approve all functional). AI endpoints properly implemented but hitting budget limitation on EMERGENT_LLM_KEY. Code implementation is correct - issue is API key budget. All marketing workflows tested successfully: save → list → approve. Backend running on port 8002 as configured."
+##         -working: "NA"
+##         -agent: "main"
+##         -comment: "Re-test requested focusing on NON-AI endpoints only: /api/health, /api/auth/sso/consume (HS256 with DMM_JWT_SECRET), /api/marketing/save, /api/marketing/list, /api/marketing/approve. Skip all /api/ai/* endpoints due to budget hold. Validate status codes, schemas, and basic RBAC where applicable."
 ##   - task: "DMM Backend Environment Setup"
 ##     implemented: true
 ##     working: true
