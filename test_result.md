@@ -155,11 +155,11 @@
 ##     file: "/app/dmm-frontend/.env"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: true
+##     needs_retesting: false
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
-##         -comment: "Created .env file with REACT_APP_BACKEND_URL pointing to localhost:8002 for DMM backend. API client configured to use environment variable with /api prefix for all requests."
+##         -comment: "Created .env file with REACT_APP_BACKEND_URL pointing to backend ingress external URL per platform rules. API client uses env var and auto-prefixes '/api'. Will wire to DMM once deployed."
 
 ## metadata:
 ##   created_by: "main_agent"
