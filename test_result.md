@@ -166,7 +166,6 @@
 
 ## test_plan:
 ##   current_focus:
-##     - "DMM Backend with GPT-5 beta AI orchestration"
 ##     - "DMM Frontend UI with Strategy, Content, Campaigns, Approvals"
 ##   stuck_tasks: []
 ##   test_all: false
