@@ -146,15 +146,15 @@ export default function Strategy() {
         &lt;div className="form-group"&gt;
           <label>Marketing Goals</label>
           <div className="goals-grid">
-            {goalOptions.map(goal =&gt; (
-              &lt;label key={goal} className="goal-checkbox"&gt;
-                &lt;input
+            {goalOptions.map(goal => (
+              <label key={goal} className="goal-checkbox">
+                <input
                   type="checkbox"
                   checked={formData.goals.includes(goal)}
-                  onChange={() =&gt; handleGoalToggle(goal)}
-                /&gt;
-                &lt;span&gt;{goal}&lt;/span&gt;
-              &lt;/label&gt;
+                  onChange={() => handleGoalToggle(goal)}
+                />
+                <span>{goal}</span>
+              </label>
             ))}
           </div>
         </div>
