@@ -182,3 +182,5 @@
 ##     -message: "Please run backend automated tests for DMM now focusing ONLY on non-AI routes: /api/health, /api/auth/sso/consume (validate HS256 using DMM_JWT_SECRET with a generated token), /api/marketing/save, /api/marketing/list, /api/marketing/approve. Skip /api/ai/* due to key budget hold. Confirm all responses, schema constraints, status codes, and basic error cases (invalid item_type, missing fields)."
 ##     -agent: "testing"
 ##     -message: "ACK: Will run non-AI backend tests for DMM as requested and report results here."
+##     -agent: "testing"
+##     -message: "COMPLETED: All DMM backend non-AI endpoints tested successfully! ✅ Health (200 + correct schema), ✅ SSO auth (JWT HS256 validation), ✅ Marketing CRUD (save/list/approve all functional with proper validation). 10/10 tests passed. DMM backend running on localhost:8002. AI endpoints skipped per budget hold. Backend is fully functional for non-AI operations."
