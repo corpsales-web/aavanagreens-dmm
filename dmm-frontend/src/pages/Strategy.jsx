@@ -134,12 +134,12 @@ export default function Strategy() {
 
           <div className="form-group">
             <label>Website URL</label>
-            &lt;input
+            <input
               type="url"
               value={formData.website_url}
-              onChange={(e) =&gt; setFormData({...formData, website_url: e.target.value})}
+              onChange={(e) => setFormData({...formData, website_url: e.target.value})}
               placeholder="https://yourwebsite.com"
-            /&gt;
+            />
           </div>
         </div>
 
