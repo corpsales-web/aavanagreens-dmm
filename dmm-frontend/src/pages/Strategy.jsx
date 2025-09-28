@@ -182,17 +182,17 @@ export default function Strategy() {
         </div>
       </div>
 
-      {strategy &amp;&amp; (
-        &lt;div className="strategy-result"&gt;
-          &lt;h2&gt;Strategy Item&lt;/h2&gt;
-          &lt;div className="strategy-content"&gt;
-            &lt;div className="strategy-meta"&gt;
-              &lt;p&gt;&lt;strong&gt;Company:&lt;/strong&gt; {strategy.company_name}&lt;/p&gt;
-              &lt;p&gt;&lt;strong&gt;Industry:&lt;/strong&gt; {strategy.industry}&lt;/p&gt;
-              {strategy.created_at &amp;&amp; &lt;p&gt;&lt;strong&gt;Created:&lt;/strong&gt; {new Date(strategy.created_at).toLocaleString()}&lt;/p&gt;}
+      {strategy && (
+        <div className="strategy-result">
+          <h2>Strategy Item</h2>
+          <div className="strategy-content">
+            <div className="strategy-meta">
+              <p><strong>Company:</strong> {strategy.company_name}</p>
+              <p><strong>Industry:</strong> {strategy.industry}</p>
+              {strategy.created_at && <p><strong>Created:</strong> {new Date(strategy.created_at).toLocaleString()}</p>}
             </div>
-            &lt;div className="strategy-details"&gt;
-              &lt;pre&gt;{strategy.strategy_content || '(AI pending)'}&lt;/pre&gt;
+            <div className="strategy-details">
+              <pre>{strategy.strategy_content || '(AI pending)'}</pre>
             </div>
           </div>
         </div>
