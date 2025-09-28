@@ -133,7 +133,7 @@ export default function Strategy() {
           </div>
 
           <div className="form-group">
-            &lt;label&gt;Website URL&lt;/label&gt;
+            <label>Website URL</label>
             &lt;input
               type="url"
               value={formData.website_url}
