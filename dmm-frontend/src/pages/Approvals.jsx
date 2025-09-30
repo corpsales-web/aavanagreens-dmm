@@ -102,7 +102,7 @@ export default function Approvals() {
     return (
       <div className="item-preview">
         <div className="item-header">
-          <h3>{item.campaign_name || item.company_name || item.brief || item.id}</h3>
+          <h3>{item.name || item.campaign_name || item.company_name || item.brief || item.id}</h3>
           <span 
             className="status-badge"
             style={{ backgroundColor: STATUS_COLORS[item.status] }}
