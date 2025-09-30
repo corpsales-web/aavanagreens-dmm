@@ -112,6 +112,7 @@ export default function Approvals() {
         </div>
         
         <div className="item-details">
+          {item.description && <p><strong>Description:</strong> {item.description}</p>}
           {item.target_audience && <p><strong>Target:</strong> {item.target_audience}</p>}
           {item.budget && <p><strong>Budget:</strong> ${item.budget}</p>}
           {item.platform && <p><strong>Platform:</strong> {item.platform}</p>}
