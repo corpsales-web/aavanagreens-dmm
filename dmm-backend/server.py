@@ -208,6 +208,13 @@ async def optimize_campaign(request: CampaignRequest):
 async def health():
     return {"status": "ok", "service": "dmm-backend", "time": now_iso()}
 
+@app.get("/api/debug/env")
+async def debug_env():
+    return {
+        "emergent_llm_key_present": bool(EMERGENT_LLM_KEY),
+        "emergent_llm_key_length": len(EMERGENT_LLM_KEY) if EMERGENT_LLM_KEY else 0
+    }
+
 @app.post("/api/auth/sso/consume")
 async def sso_consume(req: SSOConsumeRequest):
     try:
