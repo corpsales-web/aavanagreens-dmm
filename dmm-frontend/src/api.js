@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Feature flags
-export const AI_ENABLED = false // Soft-disable AI until LLM balance is topped up
+export const AI_ENABLED = true // AI now enabled with Emergent LLM key
 
 // Vite-safe env resolution (no direct process reference)
 const ENV = (typeof import.meta !== 'undefined' ? import.meta.env : {}) || {}
