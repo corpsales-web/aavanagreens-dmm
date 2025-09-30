@@ -193,7 +193,7 @@ export default function Approvals() {
 
             <div className="modal-body">
               <div className="item-full-details">
-                <h3>{selectedItem.campaign_name || selectedItem.company_name || selectedItem.brief || selectedItem.id}</h3>
+                <h3>{selectedItem.name || selectedItem.campaign_name || selectedItem.company_name || selectedItem.brief || selectedItem.id}</h3>
                 
                 {selectedItem.strategy_content && (
                   <div className="content-section">
