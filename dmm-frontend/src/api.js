@@ -5,7 +5,7 @@ export const AI_ENABLED = false // Soft-disable AI until LLM balance is topped u
 
 // Vite-safe env resolution (no direct process reference)
 const ENV = (typeof import.meta !== 'undefined' ? import.meta.env : {}) || {}
-const BASE = String(ENV.REACT_APP_BACKEND_URL || '').replace(/\/$/, '')
+const BASE = String(ENV.VITE_BACKEND_URL || ENV.REACT_APP_BACKEND_URL || 'http://localhost:8002').replace(/\/$/, '')
 
 export const api = axios.create({
   baseURL: BASE,
