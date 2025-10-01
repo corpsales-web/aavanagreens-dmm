@@ -1,55 +1,83 @@
 <analysis>
-The previous AI engineer initiated a complex transition for the Aavana Greens CRM. Initially, the CRM focused on core features with AI integration, but persistent UI regressions and API errors, particularly 502s from AI, led to a strategic pivot. The user explicitly requested the Digital Marketing Manager (DMM) module be extracted into a separate, autonomous application. The engineer is currently focused on building and deploying this new DMM microservice on the Emergent platform, including separate backend and frontend services, MongoDB Atlas, and SSO configuration. A critical setback is the corrupted  in the main CRM backend, which remains unaddressed. Latest efforts involved scaffolding DMM backend AI orchestration using GPT-5 beta, creating DMM frontend page shells, and confirming DMM backend functionality, though AI calls face budget limitations, prompting a query to the user.
+The trajectory details the deployment of a full-stack Digital Marketing Manager (DMM) application from a user-provided GitHub repository onto the Emergent platform. The process began with cloning the repository, which initially failed due to the directory not being empty and the repository being private. Once cloned, the AI engineer proceeded to set up the backend and frontend environments.
+
+Significant challenges arose during the setup. The AI encountered numerous port conflicts, forcing it to manually run services on non-standard ports before correcting them to align with Emergent's requirements (backend on 8000, frontend on 3000). The  service manager consistently failed to start the services correctly, leading the AI to run them manually for most of the session.
+
+After successfully running the services manually and verifying the core save-list-approve workflow, the user requested the integration of AI features. The AI enabled this by setting the .
+
+The most substantial part of the work involved troubleshooting why the application was not visible in Emergent's Preview feature, which repeatedly showed a blank screen. This debugging process involved fixing deployment blockers identified by a deployment agent (removing a PyTorch dependency, correcting the backend port in the Dockerfile) and culminated in identifying a network configuration mismatch. The root cause was the frontend's  file pointing to , which is inaccessible from the preview's external network context. The final action was changing this URL to use  to resolve the issue.
 </analysis>
+
 <product_requirements>
-The Aavana Greens CRM, a React, FastAPI, MongoDB application, required AI orchestration, a comprehensive Marketing Manager, upgraded Task Management, enhanced CRM features, and notifications with UI consistency and RBAC. The Marketing Manager was to offer autonomous analysis, approval-gated campaigns for various media (Reels, UGC, Influencers, Brand Content, Google Ads, Social, Email, WhatsApp), persistence, and continuous optimization. Explicitly, the Digital Marketing Manager (DMM) was requested as a 100% autonomous app, capable of independent data analysis for marketing strategies (AI influencer, UGC, brand promotion, media content, ads, social, email, WhatsApp) with user approval and customizable targeting. The AI must continuously optimize performance, always seeking approval.
+The primary goal is to deploy the user's existing full-stack Digital Marketing Manager (DMM) application from a GitHub repository onto the Emergent platform. The application is a sophisticated marketing tool with a long-term vision that includes AI-driven strategy generation, automated content creation (via platforms like Canva), virtual influencer management, and deep analytics.
+
+**Initial MVP & Deployment:**
+The current version of the app functions as an MVP, allowing for manual creation and approval of marketing strategies. The deployment requirements are specific:
+- **Repo:** 
+- **Backend:** Located in the  subfolder, running on port 8000 with a health check at .
+- **Frontend:** A React+Vite app in the  subfolder, running on port 80 (internally 3000).
+- **Routing:**  routes to the backend, and  routes to the frontend, with TLS enabled.
+
+**Feature Enhancement (Phase 1):**
+After deployment, the next phase is to begin realizing the user's broader vision. The first step, which has been initiated, is to enable the dormant AI strategy generation feature by configuring the . The next agreed-upon step is to integrate the Canva API for automated visual content creation based on these strategies.
 </product_requirements>
+
 <key_technical_concepts>
-- **Full-stack Architecture:** React frontend, FastAPI backend, MongoDB database.
-- **AI Orchestration:** Centralized  (CRM) and new DMM backend AI integration using .
-- **Persistence:** MongoDB collections (e.g., ), UUIDs for IDs.
-- **Deployment:** Docker, Kubernetes (manifests), Emergent platform, GitHub integration.
-- **Authentication:** JWT (HS256) for SSO deep-link.
-- **Speech-to-Text (STT):** Google Cloud Speech-to-Text v2 (planned for CRM).
+- **Full-Stack Application:** FastAPI (Python) backend and React (Vite) frontend.
+- **Database:** MongoDB Atlas for data persistence.
+- **Containerization:** Dockerfiles are provided for both frontend and backend services.
+- **Process Management:**  is used to manage background services, although it proved problematic and was often bypassed.
+- **Deployment Environment:** Emergent platform with specific constraints, including port expectations (8000 for backend) and a sandboxed Preview feature.
+- **AI Integration:** Utilizes an  to enable GPT-5 powered features.
 </key_technical_concepts>
+
 <code_architecture>
-The application uses a mono-repository structure, moving towards decoupled microservices for the Digital Marketing Manager (DMM).
+The application is a monorepo with separate directories for the frontend and backend services.
+
+**Directory Structure:**
 
 
+**Key Files and Modifications:**
 
-**Key Files & Changes Summaries:**
+- ****
+  - **Importance:** The main FastAPI application file, containing all API endpoints for strategy creation, listing, approval, and AI generation.
+  - **Changes:** The port binding was edited multiple times to troubleshoot conflicts and finally set to  to align with Emergent's deployment requirements. A temporary debug endpoint () was added to verify environment variable loading.
 
-*   **/app/backend/server.py**: CRM backend, currently corrupted and unfunctional.
-*   **/app/dmm-backend/server.py**: DMM backend.
-    *   **Summary**: Handles health, SSO consume, core marketing endpoints (, , ).
-    *   **Changes**: Modified to integrate AI orchestration using  and GPT-5 beta. Includes a  class, new endpoints for AI strategy generation.
-*   **/app/dmm-backend/requirements.txt**: Python dependencies for DMM backend.
-    *   **Changes**: Updated to include  and latest Pydantic.
-*   **/app/dmm-backend/.env**: New environment file created to hold DMM backend-specific environment variables.
-*   **/app/dmm-frontend/src/App.jsx**: Main React component for the DMM frontend.
-    *   **Changes**: Updated to import .
-*   **/app/dmm-frontend/src/App.css**: New styling file for DMM frontend.
-    *   **Summary**: Contains basic CSS styling.
-*   **/app/dmm-frontend/src/api.js**: New API client configuration for DMM frontend.
-    *   **Summary**: Configures Axios to use  and prefixes API paths with .
-*   **/app/dmm-frontend/src/pages/ (various .jsx files)**: New directory and files for DMM frontend pages.
-    *   **Summary**: , , ,  were created as shells for the DMM's main UI sections.
-*   **/app/dmm-frontend/.env**: New environment file created for DMM frontend.
+- ****
+  - **Importance:** Lists all Python dependencies for the backend.
+  - **Changes:** The  dependency was identified as a deployment blocker and was removed from this file to ensure compatibility with the deployment environment.
+
+- ****
+  - **Importance:** Contains environment variables for the backend, including database connection strings and API keys.
+  - **Changes:** This file was created from scratch. The , , and  were added as per the user's request. Later, the  was added to enable AI features.
+
+- ****
+  - **Importance:** The React component responsible for displaying the list of strategies pending approval.
+  - **Changes:** This file was edited to fix a bug where strategies were not appearing. The fix involved modifying the  function to correctly display item details by checking for both  and , and also adding the .
+
+- ****
+  - **Importance:** Contains environment variables for the frontend, primarily the backend URL.
+  - **Changes:** This file was created and modified multiple times. The  was initially set to , then updated to . The final and most critical change was updating it to  to fix the blank preview screen by allowing the preview environment to access the backend service.
+
+- ****
+  - **Importance:** Configuration file for the Vite build tool.
+  - **Changes:** This file was created because it was missing, which caused an initial failure when trying to run the frontend development server. A basic configuration was added.
 </code_architecture>
-<pending_tasks>
-- **CRM App Stability:** Restore  to a stable state.
-- **CRM App Features:** Implement reliable Voice-to-Task (cloud STT) and build .
-- **DMM App Deployment:** Complete Emergent deployment process (GitHub access, DNS, TLS setup).
-- **DMM App Frontend:** Finalize UI shells with all widgets and ensure full backend wiring.
-- **DMM App Backend:** Implement AI orchestrator, strategy persistence, server-side RBAC, and notifications.
-- **DMM App Integrations:** Implement SSO deep-link, external data sources, and real ad execution.
-- **DMM App Infrastructure:** Provide Docker/K8s manifests and apply branding.
-</pending_tasks>
-<current_work>
-The immediate focus is on the new, isolated Digital Marketing Manager (DMM) application. The AI engineer has successfully scaffolded the DMM backend () by integrating AI orchestration with GPT-5 beta using the  library. Essential marketing CRUD endpoints are functional. Corresponding  files for both DMM backend and frontend have been created. On the frontend (), placeholder page components (, , , ) have been created under , along with a new  for API configuration and  for basic styling.
 
-Backend testing confirmed that the marketing CRUD operations are working correctly. However, calls to the newly integrated AI endpoints are encountering a budget limitation with the Emergent LLM key. This issue is currently blocking further progress on AI-driven features. The CRM application's  remains corrupted, rendering its backend non-functional and is an outstanding critical issue.
+<pending_tasks>
+- **Canva Integration:** Implement the Canva API to automatically generate visual content based on the marketing strategies created in the app. This is the immediate next development task for Phase 1.
+- **Further AI Integrations:** Integrate other specified platforms like SuperAGI, Influencer AI, and Metricool in subsequent phases to fully realize the user's product vision.
+- **Full Product Vision:** Long-term development to build out advanced features like automated posting, AI-generated influencers, and deep cross-platform analytics.
+</pending_tasks>
+
+<current_work>
+Immediately before this summary, the core focus was resolving a persistent and critical issue where the user could not see the application in Emergent's Preview feature, which consistently displayed a blank screen. After numerous failed troubleshooting attempts—including fixing deployment blockers, managing port conflicts, and restarting services—the root cause was identified by a  as a network configuration mismatch.
+
+The problem was that the frontend's  file defined  as . The  address is only accessible from within the same container, but Emergent's preview system operates from an external network context and could not resolve it.
+
+The final action taken was to edit  and change the URL to . This change binds the service to all available network interfaces, making it accessible from outside the container. Both the backend and frontend services were then verified to be running on their correct ports (8000 and 3000, respectively) with this new configuration in place, awaiting user confirmation that the preview is now working.
 </current_work>
+
 <optional_next_step>
-Wait for user input regarding the Emergent LLM key budget limitation.
+Ask the user to test the Preview button again to confirm that changing the backend URL to  has resolved the blank screen issue.
 </optional_next_step>
