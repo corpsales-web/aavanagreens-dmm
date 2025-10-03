@@ -120,15 +120,18 @@
 ## frontend:
 ##   - task: "DMM Frontend UI with Strategy, Content, Campaigns, Approvals"
 ##     implemented: true
-##     working: "NA"
+##     working: true
 ##     file: "/app/dmm-frontend/src/pages/Campaigns.jsx"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: true
+##     needs_retesting: false
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
 ##         -comment: "Added comprehensive Targeting filters UI to Campaigns page and wired to backend payload for both manual save and AI optimize. Request automated UI smoke test."
+##         -working: true
+##         -agent: "testing"
+##         -comment: "✅ SMOKE TEST PASSED: DMM app fully functional. All 4 tabs present and working. Campaign creation with targeting (age 25-45, country India, devices Mobile/Desktop) works correctly. Budget allocation (1000 total, 500 each for Google Ads and Facebook Ads) functions properly. Campaign saves successfully and appears in Approvals with 'Pending Approval' status. Approval workflow works - can review and approve campaigns. Strategy manual save also functional. Minor: Success messages use error CSS class but display correctly. Core functionality is solid."
 
 ## metadata:
 ##   created_by: "main_agent"
