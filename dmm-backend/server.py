@@ -23,7 +23,7 @@ JWT_SECRET = os.environ.get("DMM_JWT_SECRET", "change-me")
 CORS_ORIGINS = os.environ.get("DMM_CORS_ORIGINS", "*").split(",")
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
 
-app = FastAPI(title="DMM Backend", version="0.1.0")
+app = FastAPI(title="DMM Backend", version="0.1.1")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
@@ -43,6 +43,10 @@ async def get_db():
     if mongo_client is None:
         mongo_client = AsyncIOMotorClient(MONGO_URL)
     return mongo_client[DB_NAME]
+
+# ----------------------
+# Models
+# ----------------------
 
 # Serialization helpers (no ObjectId leakage)
 class ApproveFilters(BaseModel):
@@ -68,7 +72,35 @@ class ApproveRequest(BaseModel):
     filters: Optional[ApproveFilters] = None
     approved_by: str = "system"
 
-# AI Strategy Request Models
+# Targeting & Campaign models
+class TargetingSchedule(BaseModel):
+    start_date: Optional[str] = None  # ISO date string
+    end_date: Optional[str] = None    # ISO date string
+    dayparts: Optional[List[str]] = None  # e.g., ["business_hours", "evenings"]
+
+class TargetingFilters(BaseModel):
+    # Demographics
+    age_min: Optional[int] = None
+    age_max: Optional[int] = None
+    gender: Optional[List[str]] = None  # ["Male", "Female", "Other"]
+    # Geography
+    country: Optional[str] = None
+    states: Optional[List[str]] = None
+    cities: Optional[List[str]] = None
+    areas: Optional[List[str]] = None
+    # Interests/Behavior
+    interests: Optional[List[str]] = None
+    behaviors: Optional[List[str]] = None
+    # Devices/Placements
+    devices: Optional[List[str]] = None  # ["Mobile", "Desktop", "Tablet"]
+    placements: Optional[List[str]] = None  # ["Feed", "Stories", "Search", ...]
+    # Schedule
+    schedule: Optional[TargetingSchedule] = None
+    # B2B
+    industries: Optional[List[str]] = None
+    job_titles: Optional[List[str]] = None
+    company_sizes: Optional[List[str]] = None  # ["1-10", "11-50", ...]
+
 class StrategyRequest(BaseModel):
     company_name: str
     industry: str
@@ -92,6 +124,7 @@ class CampaignRequest(BaseModel):
     budget: float
     channels: List[str]
     duration_days: int
+    targeting: Optional[TargetingFilters] = None
 
 # JWT SSO consume
 class SSOConsumeRequest(BaseModel):
@@ -108,20 +141,26 @@ async def collections_map(db):
         "strategy": db["marketing_strategies"],
     }
 
+# ----------------------
 # AI Orchestration Helpers
+# ----------------------
 async def get_ai_chat():
     """Initialize AI chat with GPT-5 beta"""
     chat = LlmChat(
         api_key=EMERGENT_LLM_KEY,
         session_id=f"dmm-{str(uuid.uuid4())[:8]}",
-        system_message="You are an expert Digital Marketing Manager AI. You specialize in creating comprehensive marketing strategies, content creation, and campaign optimization. Always provide detailed, actionable insights."
+        system_message=(
+            "You are an expert Digital Marketing Manager AI. You specialize in creating comprehensive "
+            "marketing strategies, content creation, and campaign optimization. Always provide detailed, "
+            "actionable insights."
+        )
     ).with_model("openai", "gpt-5")
     return chat
 
 async def generate_marketing_strategy(request: StrategyRequest):
     """Generate comprehensive marketing strategy using GPT-5 beta"""
     chat = await get_ai_chat()
-    
+
     prompt = f"""
     Create a comprehensive digital marketing strategy for:
     Company: {request.company_name}
@@ -130,7 +169,7 @@ async def generate_marketing_strategy(request: StrategyRequest):
     Budget: {request.budget or 'Not specified'}
     Goals: {', '.join(request.goals) if request.goals else 'General growth'}
     Website: {request.website_url or 'Not provided'}
-    
+
     Please provide:
     1. Market Analysis & Positioning
     2. Content Strategy (types, frequency, platforms)
@@ -139,10 +178,10 @@ async def generate_marketing_strategy(request: StrategyRequest):
     5. KPI & Success Metrics
     6. Timeline & Milestones
     7. Potential Challenges & Solutions
-    
+
     Format as detailed JSON with clear sections.
     """
-    
+
     user_message = UserMessage(text=prompt)
     response = await chat.send_message(user_message)
     return response
@@ -150,7 +189,7 @@ async def generate_marketing_strategy(request: StrategyRequest):
 async def generate_content_ideas(request: ContentRequest):
     """Generate content ideas using GPT-5 beta"""
     chat = await get_ai_chat()
-    
+
     prompt = f"""
     Generate creative content ideas for:
     Content Type: {request.content_type}
@@ -159,7 +198,7 @@ async def generate_content_ideas(request: ContentRequest):
     Platform: {request.platform}
     Budget: {request.budget or 'Flexible'}
     Festival/Theme: {request.festival or 'None'}
-    
+
     Please provide:
     1. 5 creative concepts with detailed descriptions
     2. Visual style recommendations
@@ -167,10 +206,10 @@ async def generate_content_ideas(request: ContentRequest):
     4. Hashtag recommendations
     5. Estimated production costs
     6. Performance predictions
-    
+
     Format as detailed JSON with clear structure.
     """
-    
+
     user_message = UserMessage(text=prompt)
     response = await chat.send_message(user_message)
     return response
@@ -178,7 +217,23 @@ async def generate_content_ideas(request: ContentRequest):
 async def optimize_campaign(request: CampaignRequest):
     """Optimize campaign strategy using GPT-5 beta"""
     chat = await get_ai_chat()
-    
+
+    # Build targeting summary for the prompt
+    t = request.targeting
+    def list_or_none(v):
+        return ", ".join(v) if v else "None"
+    targeting_summary = (
+        f"Age: {t.age_min or '-'}-{t.age_max or '-'}, "
+        f"Gender: {list_or_none(t.gender) if t else 'None'}, "
+        f"Geo: country={getattr(t, 'country', None) or '-'}, states={list_or_none(getattr(t, 'states', None) or [])}, "
+        f"cities={list_or_none(getattr(t, 'cities', None) or [])}, areas={list_or_none(getattr(t, 'areas', None) or [])}, "
+        f"Interests: {list_or_none(getattr(t, 'interests', None) or [])}, Behaviors: {list_or_none(getattr(t, 'behaviors', None) or [])}, "
+        f"Devices: {list_or_none(getattr(t, 'devices', None) or [])}, Placements: {list_or_none(getattr(t, 'placements', None) or [])}, "
+        f"Schedule: {getattr(getattr(t, 'schedule', None) or TargetingSchedule(), 'start_date', None) or '-'} to "
+        f"{getattr(getattr(t, 'schedule', None) or TargetingSchedule(), 'end_date', None) or '-'}, Dayparts: {list_or_none(getattr(getattr(t, 'schedule', None) or TargetingSchedule(), 'dayparts', None) or [])}, "
+        f"B2B: industries={list_or_none(getattr(t, 'industries', None) or [])}, job_titles={list_or_none(getattr(t, 'job_titles', None) or [])}, company_sizes={list_or_none(getattr(t, 'company_sizes', None) or [])}"
+    ) if t else "None"
+
     prompt = f"""
     Optimize this marketing campaign:
     Campaign: {request.campaign_name}
@@ -187,19 +242,20 @@ async def optimize_campaign(request: CampaignRequest):
     Budget: ${request.budget}
     Channels: {', '.join(request.channels)}
     Duration: {request.duration_days} days
-    
+    Targeting: {targeting_summary}
+
     Please provide:
     1. Channel-specific budget allocation
     2. Timeline optimization
     3. Creative requirements per channel
-    4. Targeting parameters
+    4. Targeting parameters (confirm/refine provided targeting)
     5. Expected ROI & KPIs
     6. Risk assessment & mitigation
     7. A/B testing recommendations
-    
+
     Format as detailed JSON with clear sections.
     """
-    
+
     user_message = UserMessage(text=prompt)
     response = await chat.send_message(user_message)
     return response
@@ -286,9 +342,9 @@ async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
     try:
         if not EMERGENT_LLM_KEY:
             raise HTTPException(status_code=500, detail="AI service not configured")
-        
+
         strategy_content = await generate_marketing_strategy(request)
-        
+
         # Save strategy to database
         strategy_doc = {
             "id": str(uuid.uuid4()),
@@ -303,13 +359,13 @@ async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
             "created_at": now_iso(),
             "updated_at": now_iso()
         }
-        
+
         cmap = await collections_map(db)
         await cmap["strategy"].insert_one(strategy_doc)
         strategy_doc.pop("_id", None)
-        
+
         return {"success": True, "strategy": strategy_doc}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI strategy generation failed: {str(e)}")
 
@@ -319,9 +375,9 @@ async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
     try:
         if not EMERGENT_LLM_KEY:
             raise HTTPException(status_code=500, detail="AI service not configured")
-        
+
         content_ideas = await generate_content_ideas(request)
-        
+
         # Save content ideas to appropriate collection
         content_doc = {
             "id": str(uuid.uuid4()),
@@ -336,21 +392,21 @@ async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
             "created_at": now_iso(),
             "updated_at": now_iso()
         }
-        
+
         cmap = await collections_map(db)
         # Map content type to collection
         collection_map = {
             "reel": "reel",
-            "ugc": "ugc", 
+            "ugc": "ugc",
             "brand": "brand",
             "influencer": "influencer"
         }
         collection_key = collection_map.get(request.content_type, "reel")
         await cmap[collection_key].insert_one(content_doc)
         content_doc.pop("_id", None)
-        
+
         return {"success": True, "content": content_doc}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI content generation failed: {str(e)}")
 
@@ -360,9 +416,9 @@ async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
     try:
         if not EMERGENT_LLM_KEY:
             raise HTTPException(status_code=500, detail="AI service not configured")
-        
+
         optimization = await optimize_campaign(request)
-        
+
         # Save optimized campaign
         campaign_doc = {
             "id": str(uuid.uuid4()),
@@ -372,18 +428,19 @@ async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
             "budget": request.budget,
             "channels": request.channels,
             "duration_days": request.duration_days,
+            "targeting": request.targeting.dict(exclude_none=True) if request.targeting else None,
             "ai_optimization": optimization,
             "status": "Optimized",
             "created_at": now_iso(),
             "updated_at": now_iso()
         }
-        
+
         cmap = await collections_map(db)
         await cmap["campaign"].insert_one(campaign_doc)
         campaign_doc.pop("_id", None)
-        
+
         return {"success": True, "campaign": campaign_doc}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI campaign optimization failed: {str(e)}")
 
