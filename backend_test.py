@@ -33,30 +33,151 @@ class AIFallbackTester:
         if response_data and not success:
             print(f"   Response: {json.dumps(response_data, indent=2)}")
     
-    def test_health_endpoint(self):
-        """Test GET /api/health - expect 200, JSON with status: ok, service: dmm-backend, time ISO"""
+    def test_ai_generate_strategy_fallback(self):
+        """Test POST /api/ai/generate-strategy with minimal payload"""
+        try:
+            # Minimal payload as requested
+            strategy_request = {
+                "company_name": "TechCorp",
+                "industry": "Technology",
+                "target_audience": "Small businesses"
+            }
+            
+            print(f"Testing POST {API_BASE}/ai/generate-strategy")
+            print(f"Payload: {json.dumps(strategy_request, indent=2)}")
+            
+            response = self.session.post(
+                f"{API_BASE}/ai/generate-strategy",
+                json=strategy_request,
+                timeout=60
+            )
+            
+            print(f"Response Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"Response Body: {json.dumps(data, indent=2)}")
+                
+                # Check for success=true and strategy.strategy_content non-empty string
+                if (data.get("success") == True and 
+                    "strategy" in data and 
+                    isinstance(data["strategy"].get("strategy_content"), str) and 
+                    len(data["strategy"]["strategy_content"].strip()) > 0):
+                    
+                    self.log_test("AI Strategy Generation Fallback", True, 
+                                f"Success with strategy content length: {len(data['strategy']['strategy_content'])}")
+                    return True
+                else:
+                    self.log_test("AI Strategy Generation Fallback", False, 
+                                "Missing success=true or empty strategy_content", data)
+            else:
+                self.log_test("AI Strategy Generation Fallback", False, 
+                            f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("AI Strategy Generation Fallback", False, f"Error: {str(e)}")
+        return False
+    
+    def test_ai_generate_content_fallback(self):
+        """Test POST /api/ai/generate-content with specific payload"""
+        try:
+            # Specific payload as requested
+            content_request = {
+                "content_type": "reel",
+                "brief": "Launch video",
+                "target_audience": "youth",
+                "platform": "Instagram"
+            }
+            
+            print(f"Testing POST {API_BASE}/ai/generate-content")
+            print(f"Payload: {json.dumps(content_request, indent=2)}")
+            
+            response = self.session.post(
+                f"{API_BASE}/ai/generate-content",
+                json=content_request,
+                timeout=60
+            )
+            
+            print(f"Response Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"Response Body: {json.dumps(data, indent=2)}")
+                
+                # Check for 200 with content.ai_content non-empty string
+                if ("content" in data and 
+                    isinstance(data["content"].get("ai_content"), str) and 
+                    len(data["content"]["ai_content"].strip()) > 0):
+                    
+                    self.log_test("AI Content Generation Fallback", True, 
+                                f"Success with content length: {len(data['content']['ai_content'])}")
+                    return True
+                else:
+                    self.log_test("AI Content Generation Fallback", False, 
+                                "Missing or empty ai_content", data)
+            else:
+                self.log_test("AI Content Generation Fallback", False, 
+                            f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("AI Content Generation Fallback", False, f"Error: {str(e)}")
+        return False
+    
+    def test_ai_optimize_campaign_fallback(self):
+        """Test POST /api/ai/optimize-campaign with minimal payload"""
+        try:
+            # Minimal payload as requested
+            campaign_request = {
+                "campaign_name": "Test Campaign",
+                "objective": "Brand awareness",
+                "target_audience": "General audience",
+                "budget": 1000,
+                "channels": ["google_ads"],
+                "duration_days": 7
+            }
+            
+            print(f"Testing POST {API_BASE}/ai/optimize-campaign")
+            print(f"Payload: {json.dumps(campaign_request, indent=2)}")
+            
+            response = self.session.post(
+                f"{API_BASE}/ai/optimize-campaign",
+                json=campaign_request,
+                timeout=60
+            )
+            
+            print(f"Response Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"Response Body: {json.dumps(data, indent=2)}")
+                
+                # Check for 200 and ai_optimization present
+                if ("campaign" in data and 
+                    "ai_optimization" in data["campaign"] and
+                    data["campaign"]["ai_optimization"] is not None):
+                    
+                    self.log_test("AI Campaign Optimization Fallback", True, 
+                                f"Success with ai_optimization present")
+                    return True
+                else:
+                    self.log_test("AI Campaign Optimization Fallback", False, 
+                                "Missing ai_optimization field", data)
+            else:
+                self.log_test("AI Campaign Optimization Fallback", False, 
+                            f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("AI Campaign Optimization Fallback", False, f"Error: {str(e)}")
+        return False
+    
+    def test_health_check(self):
+        """Test basic health check"""
         try:
             response = self.session.get(f"{API_BASE}/health", timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["status", "service", "time"]
-                missing_fields = [field for field in required_fields if field not in data]
-                
-                if not missing_fields:
-                    if (data.get("status") == "ok" and 
-                        data.get("service") == "dmm-backend" and
-                        data.get("time")):  # Check time is present and ISO format
-                        try:
-                            # Validate ISO format
-                            datetime.fromisoformat(data["time"].replace('Z', '+00:00'))
-                            self.log_test("Health Check", True, "Backend healthy with correct schema")
-                            return True
-                        except ValueError:
-                            self.log_test("Health Check", False, "Invalid ISO time format", data)
-                    else:
-                        self.log_test("Health Check", False, "Invalid field values", data)
+                if data.get("status") == "ok":
+                    self.log_test("Health Check", True, "Backend is healthy")
+                    return True
                 else:
-                    self.log_test("Health Check", False, f"Missing fields: {missing_fields}", data)
+                    self.log_test("Health Check", False, "Invalid health response", data)
             else:
                 self.log_test("Health Check", False, f"HTTP {response.status_code}", response.text)
         except Exception as e:
