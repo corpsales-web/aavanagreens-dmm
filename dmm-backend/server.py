@@ -399,13 +399,22 @@ async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
 
 @app.post("/api/ai/generate-content")
 async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
-    """Generate content ideas using GPT-5 beta"""
+    """Generate content ideas; gracefully fallback if AI unavailable"""
+    def fallback_content(req: ContentRequest) -> str:
+        return (
+            f"Content ideas (fallback) for {req.content_type} on {req.platform}.\n"
+            f"Brief: {req.brief}\nTarget: {req.target_audience}\nBudget: {req.budget or 'Flexible'}\n"
+            "Ideas: 1) Hook, 2) Value, 3) CTA, 4) Hashtags, 5) Visual style."
+        )
     try:
-        if not EMERGENT_LLM_KEY:
-            raise HTTPException(status_code=500, detail="AI service not configured")
-
-        content_ideas = await generate_content_ideas(request)
-
+        content_ideas: str
+        if EMERGENT_LLM_KEY:
+            try:
+                content_ideas = await generate_content_ideas(request)
+            except Exception:
+                content_ideas = fallback_content(request)
+        else:
+            content_ideas = fallback_content(request)
         # Save content ideas to appropriate collection
         content_doc = {
             "id": str(uuid.uuid4()),
@@ -420,23 +429,20 @@ async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
             "created_at": now_iso(),
             "updated_at": now_iso()
         }
-
         cmap = await collections_map(db)
         # Map content type to collection
         collection_map = {
             "reel": "reel",
-            "ugc": "ugc",
+            "ugc": "ugc", 
             "brand": "brand",
             "influencer": "influencer"
         }
         collection_key = collection_map.get(request.content_type, "reel")
         await cmap[collection_key].insert_one(content_doc)
         content_doc.pop("_id", None)
-
         return {"success": True, "content": content_doc}
-
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI content generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Content generation failed: {str(e)}")
 
 @app.post("/api/ai/optimize-campaign")
 async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
