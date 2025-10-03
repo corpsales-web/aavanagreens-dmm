@@ -105,49 +105,45 @@
 ## user_problem_statement: DMM APP COMPLETION & DEPLOYMENT - Build and deploy isolated Digital Marketing Manager app with GPT-5 beta AI orchestration
 
 ## backend:
-##   - task: "DMM Backend with GPT-5 beta AI orchestration"
+##   - task: "AI endpoints fallback (strategy/content/optimize)"
 ##     implemented: true
-##     working: true
+##     working: "NA"
 ##     file: "/app/dmm-backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
-##     status_history:
-##         -working: true
-##         -agent: "testing"
-##         -comment: "Targeting persistence for campaigns verified: save → list → approve works and preserves targeting."
-
-## frontend:
-##   - task: "DMM Frontend UI with Strategy, Content, Campaigns, Approvals"
-##     implemented: true
-##     working: true
-##     file: "/app/dmm-frontend/src/pages/Campaigns.jsx"
-##     stuck_count: 0
-##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
-##         -comment: "Added comprehensive Targeting filters UI to Campaigns page and wired to backend payload for both manual save and AI optimize. Request automated UI smoke test."
-##         -working: true
-##         -agent: "testing"
-##         -comment: "✅ SMOKE TEST PASSED: DMM app fully functional. All 4 tabs present and working. Campaign creation with targeting (age 25-45, country India, devices Mobile/Desktop) works correctly. Budget allocation (1000 total, 500 each for Google Ads and Facebook Ads) functions properly. Campaign saves successfully and appears in Approvals with 'Pending Approval' status. Approval workflow works - can review and approve campaigns. Strategy manual save also functional. Minor: Success messages use error CSS class but display correctly. Core functionality is solid."
-
+##         -comment: "Added graceful fallback for /api/ai/generate-strategy, /api/ai/generate-content, /api/ai/optimize-campaign to avoid 500s when AI key is missing/limited."
+##
+## frontend:
+##   - task: "Campaigns budget manual allocation (no auto-split)"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/dmm-frontend/src/pages/Campaigns.jsx"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##         -working: "NA"
+##         -agent: "main"
+##         -comment: "Removed auto-split logic; user can set custom per-channel budgets. Prune deselected channels. Added hint message." 
+##
 ## metadata:
 ##   created_by: "main_agent"
-##   version: "1.3"
-##   test_sequence: 5
-##   run_ui: true
-
+##   version: "1.4"
+##   test_sequence: 6
+##   run_ui: false
+##
 ## test_plan:
 ##   current_focus:
-##     - "Frontend smoke: Strategy save (manual), Campaigns save with targeting (manual), Approvals review & approve"
+##     - "Backend: Verify AI endpoints now return success with fallback content/strategy/optimization"
+##     - "Frontend: Confirm manual allocation fields control budget without auto-changes (smoke only)"
 ##   stuck_tasks: []
 ##   test_all: false
 ##   test_priority: "high_first"
-
+##
 ## agent_communication:
 ##     -agent: "main"
-##     -message: "Please run frontend smoke on the Preview domain to validate new targeting UI and flows: 1) Open app, 2) Go to Campaigns, fill minimal required fields + targeting (age 25-45, country India, devices Mobile/Desktop), choose any 2 channels, set budget 1000 and allocate evenly, Save Campaign for Approval (No AI). Expect success toast. 3) Navigate to Approvals, verify campaign appears with 'Pending Approval', open modal and Approve. 4) Optional: Verify Strategy page manual save also still works. Use default flows, no auth."
-##     -agent: "testing"
-##     -message: "✅ FRONTEND SMOKE TEST COMPLETED SUCCESSFULLY: DMM app is fully functional at https://dmm-deploy.preview.emergentagent.com. All requested flows tested and working: 1) App loads with all 4 tabs (AI Strategy, Content Creation, Campaign Manager, Approvals), 2) Campaign creation with targeting works perfectly - filled Test Campaign with Brand Awareness objective, Young professionals audience, $1000 budget split evenly between Google Ads ($500) and Facebook Ads ($500), targeting age 25-45, country India, devices Mobile/Desktop, 3) Campaign saved successfully and appeared in Approvals with 'Pending Approval' status, 4) Approval workflow functional - opened modal and approved campaign, 5) Strategy manual save also works. Minor UI note: Success messages use error CSS class but display correctly. Ready for production use."
+##     -message: "Please run backend tests for AI endpoints to confirm fallbacks: POST /api/ai/generate-strategy (basic payload), POST /api/ai/generate-content (content_type=reel), POST /api/ai/optimize-campaign (minimal campaign with one channel). Expect 200 with 'success':true and strings present. Then do a light UI smoke to ensure budget does not auto-split after selecting channels (optional)."
