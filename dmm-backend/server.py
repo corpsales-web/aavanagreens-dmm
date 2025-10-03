@@ -359,14 +359,24 @@ async def marketing_approve(body: ApproveRequest, db=Depends(get_db)):
 
 @app.post("/api/ai/generate-strategy")
 async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
-    """Generate marketing strategy using GPT-5 beta"""
+    """Generate marketing strategy; gracefully fallback if AI unavailable"""
+    def fallback_strategy(req: StrategyRequest) -> str:
+        return (
+            f"Strategy (fallback) for {req.company_name} in {req.industry}.\n"
+            f"Target: {req.target_audience}. Budget: {req.budget or 'N/A'}.\n"
+            f"Goals: {', '.join(req.goals) if req.goals else 'General growth'}.\n"
+            f"Website: {req.website_url or '-'}\n"
+            "Sections: Market Analysis, Content Plan, Channel Mix, Budget Tips, KPIs, Timeline."
+        )
     try:
-        if not EMERGENT_LLM_KEY:
-            raise HTTPException(status_code=500, detail="AI service not configured")
-
-        strategy_content = await generate_marketing_strategy(request)
-
-        # Save strategy to database
+        strategy_content: str
+        if EMERGENT_LLM_KEY:
+            try:
+                strategy_content = await generate_marketing_strategy(request)
+            except Exception:
+                strategy_content = fallback_strategy(request)
+        else:
+            strategy_content = fallback_strategy(request)
         strategy_doc = {
             "id": str(uuid.uuid4()),
             "company_name": request.company_name,
@@ -380,15 +390,12 @@ async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
             "created_at": now_iso(),
             "updated_at": now_iso()
         }
-
         cmap = await collections_map(db)
         await cmap["strategy"].insert_one(strategy_doc)
         strategy_doc.pop("_id", None)
-
         return {"success": True, "strategy": strategy_doc}
-
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI strategy generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Strategy generation failed: {str(e)}")
 
 @app.post("/api/ai/generate-content")
 async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
