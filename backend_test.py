@@ -13,11 +13,10 @@ from typing import Dict, Any
 BASE_URL = "https://dmm-deploy.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
-class DMMNonAITester:
+class AIFallbackTester:
     def __init__(self):
         self.session = requests.Session()
         self.test_results = []
-        self.created_items = []  # Track created items for cleanup
         
     def log_test(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
         """Log test results"""
@@ -33,10 +32,6 @@ class DMMNonAITester:
         print(f"{status} {test_name}: {details}")
         if response_data and not success:
             print(f"   Response: {json.dumps(response_data, indent=2)}")
-    
-    def generate_jwt_token(self, payload: Dict[str, Any]) -> str:
-        """Generate a valid HS256 JWT token using DMM_JWT_SECRET"""
-        return pyjwt.encode(payload, JWT_SECRET, algorithm="HS256")
     
     def test_health_endpoint(self):
         """Test GET /api/health - expect 200, JSON with status: ok, service: dmm-backend, time ISO"""
