@@ -23,7 +23,24 @@ export default function Campaigns() {
     target_audience: '',
     budget: '',
     channels: [],
-    duration_days: 30
+    duration_days: 30,
+    targeting: {
+      age_min: '',
+      age_max: '',
+      gender: [],
+      country: '',
+      states: [],
+      cities: [],
+      areas: [],
+      interests: [],
+      behaviors: [],
+      devices: [],
+      placements: [],
+      schedule: { start_date: '', end_date: '', dayparts: [] },
+      industries: [],
+      job_titles: [],
+      company_sizes: []
+    }
   })
   const [budgetSplits, setBudgetSplits] = useState({})
 
