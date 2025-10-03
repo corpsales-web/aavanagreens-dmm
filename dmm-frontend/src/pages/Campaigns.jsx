@@ -53,14 +53,15 @@ export default function Campaigns() {
     setFormData({...formData, channels: newChannels})
     
     // Auto-distribute budget equally among selected channels
-    if (formData.budget && newChannels.length > 0) {
-      const budgetPerChannel = parseFloat(formData.budget) / newChannels.length
-      const newSplits = {}
-      newChannels.forEach(channel => {
-        newSplits[channel] = budgetPerChannel.toFixed(2)
+    // Keep existing manual allocations; do NOT auto-split
+    // If a channel is deselected, remove its split
+    setBudgetSplits(prev => {
+      const next = { ...prev }
+      Object.keys(next).forEach(k => {
+        if (!newChannels.includes(k)) delete next[k]
       })
-      setBudgetSplits(newSplits)
-    }
+      return next
+    })
   }
 
   const updateBudgetSplit = (channelId, amount) => {
