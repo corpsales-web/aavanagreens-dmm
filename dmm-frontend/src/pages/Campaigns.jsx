@@ -192,6 +192,13 @@ export default function Campaigns() {
           <div className="form-group">
             <label>Total Budget ($) *</label>
             <input
+              type="number"
+              value={formData.budget}
+              onChange={(e) => setFormData({...formData, budget: e.target.value})}
+              placeholder="Enter total budget"
+            />
+          </div>
+
         {/* Targeting Filters */}
         <div className="form-group">
           <label>Demographics</label>
