@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
 """
-DMM Backend Non-AI Endpoints Test Suite
-Tests only non-AI endpoints as requested, skipping /api/ai/* due to budget hold
+DMM Backend AI Endpoints Fallback Test
+Tests specific AI endpoints with minimal payloads to verify fallback functionality
 """
 
 import requests
 import json
 import time
-import uuid
-import jwt as pyjwt
-from datetime import datetime, timezone
-from typing import Dict, Any, List
+from typing import Dict, Any
 
-# Configuration - DMM backend runs locally on port 8002
-BASE_URL = "http://localhost:8002"
+# Configuration - Use production URL from frontend .env
+BASE_URL = "https://dmm-deploy.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
-
-# JWT Secret from DMM backend .env
-JWT_SECRET = "dmm-super-secret-jwt-key-2024"
 
 class DMMNonAITester:
     def __init__(self):
