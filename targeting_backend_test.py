@@ -11,8 +11,8 @@ import time
 import uuid
 from typing import Dict, Any, List
 
-# Configuration - Use the ingress URL from frontend/.env
-BASE_URL = "https://dmm-deploy.preview.emergentagent.com"
+# Configuration - Use localhost since DMM backend runs on port 8002
+BASE_URL = "http://localhost:8002"
 API_BASE = f"{BASE_URL}/api"
 
 class DMMTargetingTester:
