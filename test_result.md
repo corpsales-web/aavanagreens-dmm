@@ -111,11 +111,14 @@
 ##     file: "/app/dmm-backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: true
+##     needs_retesting: false
 ##     status_history:
 ##         -working: true
 ##         -agent: "main"
 ##         -comment: "Extended CampaignRequest to include rich targeting filters (age, gender, geo, interests, devices/placements, schedule, B2B). Updated AI prompt and persistence to store targeting."
+##         -working: true
+##         -agent: "testing"
+##         -comment: "✅ VERIFIED: POST /api/marketing/save with item_type=campaign accepts comprehensive targeting object (age/gender/geo/interests/devices/placements/schedule/b2b) and persists it correctly. Response includes id, status, timestamps and targeting preserved. GET /api/marketing/list?type=campaign returns saved campaigns with targeting intact. POST /api/marketing/approve updates status without removing targeting. AI endpoint returns expected 500 due to budget limits (acceptable). Core targeting persistence working perfectly."
 ##
 ## frontend:
 ##   - task: "DMM Frontend UI with Strategy, Content, Campaigns, Approvals"
