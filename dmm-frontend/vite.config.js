@@ -6,6 +6,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
-    allowedHosts: [/\.preview\.emergentagent\.com$/, 'localhost']
+    // Allow all preview subdomains to connect to the Vite server
+    allowedHosts: true
   }
 })
