@@ -325,23 +325,6 @@ export default function Campaigns() {
           </div>
         </div>
 
-              type="number"
-              value={formData.budget}
-              onChange={(e) => setFormData({...formData, budget: e.target.value})}
-              placeholder="Enter total budget"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Duration (Days)</label>
-            <input
-              type="number"
-              value={formData.duration_days}
-              onChange={(e) => setFormData({...formData, duration_days: parseInt(e.target.value)})}
-              placeholder="Campaign duration"
-            />
-          </div>
-        </div>
 
         <div className="form-group">
           <label>Marketing Channels *</label>
