@@ -522,21 +522,6 @@ async def canva_generate(req: CanvaDesignRequest):
         return {"success": True, "design_id": f"mock_design_{uuid.uuid4().hex[:8]}", "payload": req.dict()}
     raise HTTPException(status_code=501, detail="Canva generate not configured")
 
-            "ai_optimization": optimization,
-            "status": "Optimized",
-            "created_at": now_iso(),
-            "updated_at": now_iso()
-        }
-
-        cmap = await collections_map(db)
-        await cmap["campaign"].insert_one(campaign_doc)
-        campaign_doc.pop("_id", None)
-
-        return {"success": True, "campaign": campaign_doc}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI campaign optimization failed: {str(e)}")
-
 @app.get("/api/ai/strategies")
 async def list_strategies(db=Depends(get_db)):
     """List all generated strategies"""
