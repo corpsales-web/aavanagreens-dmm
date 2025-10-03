@@ -213,7 +213,7 @@ class AIFallbackTester:
     def print_summary(self):
         """Print test summary"""
         print("\n" + "=" * 60)
-        print("📊 NON-AI TEST SUMMARY")
+        print("📊 AI FALLBACK TEST SUMMARY")
         print("=" * 60)
         
         passed = sum(1 for result in self.test_results if result["success"])
@@ -222,7 +222,7 @@ class AIFallbackTester:
         print(f"Total Tests: {total}")
         print(f"Passed: {passed}")
         print(f"Failed: {total - passed}")
-        print(f"Success Rate: {(passed/total)*100:.1f}%")
+        print(f"Success Rate: {(passed/total)*100:.1f}%" if total > 0 else "No tests run")
         
         # Show failed tests
         failed_tests = [result for result in self.test_results if not result["success"]]
@@ -230,45 +230,20 @@ class AIFallbackTester:
             print("\n❌ FAILED TESTS:")
             for test in failed_tests:
                 print(f"  • {test['test']}: {test['details']}")
-        
-        # Show created items
-        if self.created_items:
-            print(f"\n📝 Created {len(self.created_items)} test items in database")
-        
-        print("\n⚠️  AI endpoints (/api/ai/*) were SKIPPED due to budget hold")
-    
-    def get_overall_success(self):
-        """Get overall test success status"""
-        if not self.test_results:
-            return False
-        
-        # Critical tests that must pass for non-AI functionality
-        critical_tests = [
-            "Health Check",
-            "SSO Consume (Valid Token)",
-            "Marketing Save (Campaign)",
-            "Marketing List (Campaigns)",
-            "Marketing Approve (Success)"
-        ]
-        
-        critical_passed = all(
-            any(result["test"] == test and result["success"] for result in self.test_results)
-            for test in critical_tests
-        )
-        
-        return critical_passed
+        else:
+            print("\n✅ All tests passed!")
 
 def main():
     """Main test execution"""
-    tester = DMMNonAITester()
-    success = tester.run_all_tests()
+    tester = AIFallbackTester()
+    success = tester.run_fallback_tests()
     
     if success:
-        print("\n✅ DMM Backend non-AI tests completed successfully!")
-        exit(0)
+        print("\n✅ All AI fallback tests passed!")
+        return True
     else:
-        print("\n❌ DMM Backend non-AI tests had critical failures!")
-        exit(1)
+        print("\n❌ Some AI fallback tests failed!")
+        return False
 
 if __name__ == "__main__":
     main()
