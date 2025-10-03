@@ -130,6 +130,7 @@ export default function Campaigns() {
           channels: formData.channels,
           duration_days: formData.duration_days,
           budget_splits: budgetSplits,
+          targeting: formData.targeting,
           ai_optimization: '(AI pending — created manually)'
         }
       }
