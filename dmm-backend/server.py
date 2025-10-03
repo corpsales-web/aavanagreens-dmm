@@ -457,6 +457,20 @@ async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
             "channels": request.channels,
             "duration_days": request.duration_days,
             "targeting": request.targeting.dict(exclude_none=True) if request.targeting else None,
+            "ai_optimization": optimization,
+            "status": "Optimized",
+            "created_at": now_iso(),
+            "updated_at": now_iso()
+        }
+
+        cmap = await collections_map(db)
+        await cmap["campaign"].insert_one(campaign_doc)
+        campaign_doc.pop("_id", None)
+
+        return {"success": True, "campaign": campaign_doc}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI campaign optimization failed: {str(e)}")
 
 # ----------------------
 # Mock Integrations (Meta, Canva) - safe stubs for staging
