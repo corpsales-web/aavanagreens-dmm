@@ -316,6 +316,27 @@ export default function Campaigns() {
               <label>Job Titles</label>
               <input type="text" value={formData.targeting.job_titles.join(', ')}
                 onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, job_titles: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} />
+          <div className="form-group">
+            <label>Total Budget ($) *</label>
+            <input
+              type="number"
+              value={formData.budget}
+              onChange={(e) => setFormData({...formData, budget: e.target.value})}
+              placeholder="Enter total budget"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Duration (Days)</label>
+            <input
+              type="number"
+              value={formData.duration_days}
+              onChange={(e) => setFormData({...formData, duration_days: parseInt(e.target.value)})}
+              placeholder="Campaign duration"
+            />
+          </div>
+        </div>
+
             </div>
             <div className="form-group">
               <label>Company Sizes</label>
