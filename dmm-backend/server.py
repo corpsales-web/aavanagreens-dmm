@@ -446,13 +446,20 @@ async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
 
 @app.post("/api/ai/optimize-campaign")
 async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
-    """Optimize campaign using GPT-5 beta"""
+    """Optimize campaign; gracefully fallback if AI unavailable"""
+    def fallback_opt(request: CampaignRequest) -> str:
+        return (
+            "Optimization (fallback): Distribute budget across selected channels with 60/30/10 rule, "
+            "set upper frequency caps, add creative sizes, and start with broad targeting then narrow."
+        )
     try:
-        if not EMERGENT_LLM_KEY:
-            raise HTTPException(status_code=500, detail="AI service not configured")
-
-        optimization = await optimize_campaign(request)
-
+        if EMERGENT_LLM_KEY:
+            try:
+                optimization = await optimize_campaign(request)
+            except Exception:
+                optimization = fallback_opt(request)
+        else:
+            optimization = fallback_opt(request)
         # Save optimized campaign
         campaign_doc = {
             "id": str(uuid.uuid4()),
@@ -468,15 +475,12 @@ async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
             "created_at": now_iso(),
             "updated_at": now_iso()
         }
-
         cmap = await collections_map(db)
         await cmap["campaign"].insert_one(campaign_doc)
         campaign_doc.pop("_id", None)
-
         return {"success": True, "campaign": campaign_doc}
-
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI campaign optimization failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Campaign optimization failed: {str(e)}")
 
 # ----------------------
 # Mock Integrations (Meta, Canva) - safe stubs for staging
