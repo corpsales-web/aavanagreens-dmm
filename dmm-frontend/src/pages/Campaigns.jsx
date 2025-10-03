@@ -191,6 +191,132 @@ export default function Campaigns() {
           <div className="form-group">
             <label>Total Budget ($) *</label>
             <input
+        {/* Targeting Filters */}
+        <div className="form-group">
+          <label>Demographics</label>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Age Min</label>
+              <input type="number" value={formData.targeting.age_min}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, age_min: e.target.value}})} placeholder="18" />
+            </div>
+            <div className="form-group">
+              <label>Age Max</label>
+              <input type="number" value={formData.targeting.age_max}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, age_max: e.target.value}})} placeholder="65" />
+            </div>
+            <div className="form-group">
+              <label>Gender</label>
+              <select multiple value={formData.targeting.gender}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, gender:[...e.target.selectedOptions].map(o=>o.value)}})}>
+                {['Male','Female','Other'].map(g=> <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Geography</label>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Country</label>
+              <input type="text" value={formData.targeting.country}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, country: e.target.value}})} placeholder="e.g., India" />
+            </div>
+            <div className="form-group">
+              <label>States (comma separated)</label>
+              <input type="text" value={formData.targeting.states.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, states: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} />
+            </div>
+            <div className="form-group">
+              <label>Cities (comma separated)</label>
+              <input type="text" value={formData.targeting.cities.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, cities: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} />
+            </div>
+            <div className="form-group">
+              <label>Areas (comma separated)</label>
+              <input type="text" value={formData.targeting.areas.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, areas: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} />
+            </div>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Interests & Behaviors</label>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Interests (comma separated)</label>
+              <input type="text" value={formData.targeting.interests.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, interests: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} />
+            </div>
+            <div className="form-group">
+              <label>Behaviors (comma separated)</label>
+              <input type="text" value={formData.targeting.behaviors.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, behaviors: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} />
+            </div>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Devices & Placements</label>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Devices (comma separated)</label>
+              <input type="text" value={formData.targeting.devices.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, devices: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} placeholder="Mobile, Desktop, Tablet" />
+            </div>
+            <div className="form-group">
+              <label>Placements (comma separated)</label>
+              <input type="text" value={formData.targeting.placements.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, placements: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} placeholder="Feed, Stories, Search" />
+            </div>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Schedule</label>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Start Date</label>
+              <input type="date" value={formData.targeting.schedule.start_date}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, schedule:{...formData.targeting.schedule, start_date:e.target.value}}})} />
+            </div>
+            <div className="form-group">
+              <label>End Date</label>
+              <input type="date" value={formData.targeting.schedule.end_date}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, schedule:{...formData.targeting.schedule, end_date:e.target.value}}})} />
+            </div>
+            <div className="form-group">
+              <label>Dayparts</label>
+              <select multiple value={formData.targeting.schedule.dayparts}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, schedule:{...formData.targeting.schedule, dayparts:[...e.target.selectedOptions].map(o=>o.value)}}})}>
+                {['business_hours','evenings','weekends','peak_hours'].map(d=> <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>B2B (Optional)</label>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Industries</label>
+              <input type="text" value={formData.targeting.industries.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, industries: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} />
+            </div>
+            <div className="form-group">
+              <label>Job Titles</label>
+              <input type="text" value={formData.targeting.job_titles.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, job_titles: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} />
+            </div>
+            <div className="form-group">
+              <label>Company Sizes</label>
+              <input type="text" value={formData.targeting.company_sizes.join(', ')}
+                onChange={(e)=>setFormData({...formData, targeting:{...formData.targeting, company_sizes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}})} placeholder="1-10, 11-50, 51-200" />
+            </div>
+          </div>
+        </div>
+
               type="number"
               value={formData.budget}
               onChange={(e) => setFormData({...formData, budget: e.target.value})}
