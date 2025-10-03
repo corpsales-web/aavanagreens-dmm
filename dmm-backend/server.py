@@ -450,6 +450,57 @@ async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
             "channels": request.channels,
             "duration_days": request.duration_days,
             "targeting": request.targeting.dict(exclude_none=True) if request.targeting else None,
+
+# ----------------------
+# Mock Integrations (Meta, Canva) - safe stubs for staging
+# ----------------------
+MOCK_MODE = True
+
+class MetaPublishRequest(BaseModel):
+    message: str
+    image_url: Optional[str] = None
+    page_id: Optional[str] = None
+
+@app.get("/api/meta/oauth/start")
+async def meta_oauth_start():
+    if MOCK_MODE:
+        return {"redirect": "/api/meta/oauth/callback?code=mock_code"}
+    raise HTTPException(status_code=501, detail="Meta OAuth not configured")
+
+@app.get("/api/meta/oauth/callback")
+async def meta_oauth_callback(code: str = "mock_code"):
+    if MOCK_MODE:
+        return {"success": True, "access_token": "mock_page_token", "page_id": "1234567890"}
+    raise HTTPException(status_code=501, detail="Meta OAuth not configured")
+
+@app.post("/api/meta/posts/publish")
+async def meta_publish(req: MetaPublishRequest):
+    if MOCK_MODE:
+        return {"success": True, "id": f"mock_post_{uuid.uuid4().hex[:8]}", "request": req.dict()}
+    raise HTTPException(status_code=501, detail="Meta publish not configured")
+
+class CanvaDesignRequest(BaseModel):
+    template_id: str
+    variables: Dict[str, Any] = Field(default_factory=dict)
+
+@app.get("/api/canva/auth/start")
+async def canva_auth_start():
+    if MOCK_MODE:
+        return {"redirect": "/api/canva/auth/callback?code=mock_code"}
+    raise HTTPException(status_code=501, detail="Canva OAuth not configured")
+
+@app.get("/api/canva/auth/callback")
+async def canva_auth_callback(code: str = "mock_code"):
+    if MOCK_MODE:
+        return {"success": True, "token": "mock_canva_token"}
+    raise HTTPException(status_code=501, detail="Canva OAuth not configured")
+
+@app.post("/api/canva/designs/generate")
+async def canva_generate(req: CanvaDesignRequest):
+    if MOCK_MODE:
+        return {"success": True, "design_id": f"mock_design_{uuid.uuid4().hex[:8]}", "payload": req.dict()}
+    raise HTTPException(status_code=501, detail="Canva generate not configured")
+
             "ai_optimization": optimization,
             "status": "Optimized",
             "created_at": now_iso(),
