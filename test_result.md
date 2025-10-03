@@ -14,51 +14,51 @@
 # Main and testing agents must follow this exact format to maintain testing data. 
 # The testing data must be entered in yaml format Below is the data structure:
 # 
-## user_problem_statement: {problem_statement}
-## backend:
-##   - task: "Task name"
-##     implemented: true
-##     working: true  # or false or "NA"
-##     file: "file_path.py"
-##     stuck_count: 0
-##     priority: "high"  # or "medium" or "low"
-##     needs_retesting: false
-##     status_history:
-##         -working: true  # or false or "NA"
-##         -agent: "main"  # or "testing" or "user"
-##         -comment: "Detailed comment about status"
-##
-## frontend:
-##   - task: "Task name"
-##     implemented: true
-##     working: true  # or false or "NA"
-##     file: "file_path.js"
-##     stuck_count: 0
-##     priority: "high"  # or "medium" or "low"
-##     needs_retesting: false
-##     status_history:
-##         -working: true  # or false or "NA"
-##         -agent: "main"  # or "testing" or "user"
-##         -comment: "Detailed comment about status"
-##
-## metadata:
-##   created_by: "main_agent"
-##   version: "1.0"
-##   test_sequence: 0
-##   run_ui: false
-##
-## test_plan:
-##   current_focus:
-##     - "Task name 1"
-##     - "Task name 2"
-##   stuck_tasks:
-##     - "Task name with persistent issues"
-##   test_all: false
-##   test_priority: "high_first"  # or "sequential" or "stuck_first"
-##
-## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+# ## user_problem_statement: {problem_statement}
+# ## backend:
+# ##   - task: "Task name"
+# ##     implemented: true
+# ##     working: true  # or false or "NA"
+# ##     file: "file_path.py"
+# ##     stuck_count: 0
+# ##     priority: "high"  # or "medium" or "low"
+# ##     needs_retesting: false
+# ##     status_history:
+# ##         -working: true  # or false or "NA"
+# ##         -agent: "main"  # or "testing" or "user"
+# ##         -comment: "Detailed comment about status"
+# ##
+# ## frontend:
+# ##   - task: "Task name"
+# ##     implemented: true
+# ##     working: true  # or false or "NA"
+# ##     file: "file_path.js"
+# ##     stuck_count: 0
+# ##     priority: "high"  # or "medium" or "low"
+# ##     needs_retesting: false
+# ##     status_history:
+# ##         -working: true  # or false or "NA"
+# ##         -agent: "main"  # or "testing" or "user"
+# ##         -comment: "Detailed comment about status"
+# ##
+# ## metadata:
+# ##   created_by: "main_agent"
+# ##   version: "1.0"
+# ##   test_sequence: 0
+# ##   run_ui: false
+# ##
+# ## test_plan:
+# ##   current_focus:
+# ##     - "Task name 1"
+# ##     - "Task name 2"
+# ##   stuck_tasks:
+# ##     - "Task name with persistent issues"
+# ##   test_all: false
+# ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
+# ##
+# ## agent_communication:
+# ##     -agent: "main"  # or "testing" or "user"
+# ##     -message: "Communication message between agents"
 
 # Protocol Guidelines for Main agent
 #
@@ -111,81 +111,40 @@
 ##     file: "/app/dmm-backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
-##         -working: "NA"
-##         -agent: "main"
-##         -comment: "Completed DMM backend with AI orchestration endpoints using GPT-5 beta via Emergent LLM key. Added /api/ai/generate-strategy, /api/ai/generate-content, /api/ai/optimize-campaign endpoints. Existing marketing CRUD endpoints preserved. Added emergentintegrations library for GPT-5 beta integration."
-##         -working: "partial"
-##         -agent: "testing"
-##         -comment: "Marketing CRUD working perfectly (save/list/approve all functional). AI endpoints properly implemented but hitting budget limitation on EMERGENT_LLM_KEY. Code implementation is correct - issue is API key budget. All marketing workflows tested successfully: save → list → approve. Backend running on port 8002 as configured."
-##         -working: "NA"
-##         -agent: "main"
-##         -comment: "Re-test requested focusing on NON-AI endpoints only: /api/health, /api/auth/sso/consume (HS256 with DMM_JWT_SECRET), /api/marketing/save, /api/marketing/list, /api/marketing/approve. Skip all /api/ai/* endpoints due to budget hold. Validate status codes, schemas, and basic RBAC where applicable."
 ##         -working: true
-##         -agent: "testing"
-##         -comment: "TESTED: All NON-AI endpoints working perfectly! ✅ Health endpoint (200, correct schema with status/service/time), ✅ SSO consume (valid JWT HS256 validation + user fields echoed, invalid token → 401), ✅ Marketing save (campaign with UUID, default status 'Pending Approval', ISO timestamps, invalid type → 400), ✅ Marketing list (campaigns array without _id, status filtering), ✅ Marketing approve (status update + filters, 404 for unknown items). DMM backend running on localhost:8002. All 10 tests passed (100% success rate). AI endpoints skipped per budget hold."
-##         -working: true
-##         -agent: "testing"
-##         -comment: "SMOKE TEST COMPLETED: Specific marketing approval flow tested end-to-end as requested. ✅ Save manual strategy (Aavana/Real Estate/Home buyers) → success with ID, ✅ List strategies → found saved strategy in results, ✅ Approve strategy with filters → status updated to 'Approved'. All 3 steps of the non-AI approval workflow functioning correctly. DMM backend on port 8002 fully operational for marketing operations."
-##   - task: "DMM Backend Environment Setup"
-##     implemented: true
-##     working: true
-##     file: "/app/dmm-backend/.env"
-##     stuck_count: 0
-##     priority: "high"
-##     needs_retesting: false
-##     status_history:
-##         -working: "NA"
 ##         -agent: "main"
-##         -comment: "Created .env file with MONGO_URL_DMM, DB_NAME_DMM, DMM_JWT_SECRET, DMM_CORS_ORIGINS, and EMERGENT_LLM_KEY configuration. Updated requirements.txt with emergentintegrations library."
-##         -working: true
-##         -agent: "testing"
-##         -comment: "TESTED: Environment configuration working correctly. MongoDB connection, JWT secret, CORS origins, and EMERGENT_LLM_KEY all properly configured. Backend starts successfully on port 8002. All environment variables loaded correctly."
-
+##         -comment: "Extended CampaignRequest to include rich targeting filters (age, gender, geo, interests, devices/placements, schedule, B2B). Updated AI prompt and persistence to store targeting."
+##
 ## frontend:
 ##   - task: "DMM Frontend UI with Strategy, Content, Campaigns, Approvals"
 ##     implemented: true
 ##     working: "NA"
-##     file: "/app/dmm-frontend/src/App.jsx"
+##     file: "/app/dmm-frontend/src/pages/Campaigns.jsx"
 ##     stuck_count: 0
 ##     priority: "high"
 ##     needs_retesting: true
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
-##         -comment: "Built complete DMM frontend with 4 pages: Strategy (AI strategy generation), Content (Reels/UGC/Brand/Influencer content creation), Campaigns (budget optimization), Approvals (review & approve with targeting filters). All components wired to DMM backend APIs with comprehensive styling."
-##   - task: "DMM Frontend Environment Setup"
-##     implemented: true
-##     working: "NA"
-##     file: "/app/dmm-frontend/.env"
-##     stuck_count: 0
-##     priority: "high"
-##     needs_retesting: false
-##     status_history:
-##         -working: "NA"
-##         -agent: "main"
-##         -comment: "Created .env file with REACT_APP_BACKEND_URL pointing to backend ingress external URL per platform rules. API client uses env var and auto-prefixes '/api'. Will wire to DMM once deployed."
-
+##         -comment: "Added comprehensive Targeting filters UI to Campaigns page and wired to backend payload for both manual save and AI optimize."
+##
 ## metadata:
 ##   created_by: "main_agent"
-##   version: "1.1"
-##   test_sequence: 3
+##   version: "1.2"
+##   test_sequence: 4
 ##   run_ui: false
-
+##
 ## test_plan:
 ##   current_focus:
-##     - "DMM Backend with GPT-5 beta AI orchestration"
+##     - "Backend: verify /api/marketing/save handles targeting field for campaigns and persists it"
+##     - "Backend: verify /api/ai/optimize-campaign accepts targeting and returns 200 when AI key is active (skip heavy AI validation)"
+##     - "Frontend: basic smoke on Campaigns form with targeting fields and manual save flow"
 ##   stuck_tasks: []
 ##   test_all: false
 ##   test_priority: "high_first"
-
+##
 ## agent_communication:
 ##     -agent: "main"
-##     -message: "Please run backend automated tests for DMM now focusing ONLY on non-AI routes: /api/health, /api/auth/sso/consume (validate HS256 using DMM_JWT_SECRET with a generated token), /api/marketing/save, /api/marketing/list, /api/marketing/approve. Skip /api/ai/* due to key budget hold. Confirm all responses, schema constraints, status codes, and basic error cases (invalid item_type, missing fields)."
-##     -agent: "testing"
-##     -message: "ACK: Will run non-AI backend tests for DMM as requested and report results here."
-##     -agent: "testing"
-##     -message: "COMPLETED: All DMM backend non-AI endpoints tested successfully! ✅ Health (200 + correct schema), ✅ SSO auth (JWT HS256 validation), ✅ Marketing CRUD (save/list/approve all functional with proper validation). 10/10 tests passed. DMM backend running on localhost:8002. AI endpoints skipped per budget hold. Backend is fully functional for non-AI operations."
-##     -agent: "testing"
-##     -message: "SMOKE TEST COMPLETED: Executed specific marketing approval flow as requested in review. All 3 steps working: 1) Save manual strategy via POST /api/marketing/save ✅, 2) List strategies via GET /api/marketing/list?type=strategy ✅, 3) Approve strategy via POST /api/marketing/approve ✅. End-to-end non-AI approval workflow fully functional. DMM backend ready for production use."
+##     -message: "Please run backend tests focused on campaign save/list with targeting and approvals. Then do a light frontend smoke for Campaigns page if feasible."
