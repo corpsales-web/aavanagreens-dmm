@@ -44,6 +44,27 @@ async def get_db():
         mongo_client = AsyncIOMotorClient(MONGO_URL)
     return mongo_client[DB_NAME]
 
+# Create helpful indexes for performance
+async def ensure_indexes():
+    db = await get_db()
+    try:
+        await db["marketing_campaigns"].create_index("id", unique=True)
+        await db["marketing_campaigns"].create_index([("status", 1)])
+        await db["marketing_campaigns"].create_index([("created_at", -1)])
+        await db["marketing_strategies"].create_index("id", unique=True)
+        await db["marketing_strategies"].create_index([("status", 1)])
+        await db["marketing_strategies"].create_index([("created_at", -1)])
+        await db["marketing_approvals"].create_index([("item_id", 1)])
+        await db["marketing_approvals"].create_index([("created_at", -1)])
+    except Exception:
+        # Index creation problems should not block app start
+        pass
+
+@app.on_event("startup")
+async def on_startup():
+    await ensure_indexes()
+
+
 # ----------------------
 # Models
 # ----------------------
