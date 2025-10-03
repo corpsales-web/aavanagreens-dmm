@@ -138,6 +138,40 @@ export default function Approvals() {
             Review & Approve
           </button>
         </div>
+          {item.status === 'Approved' && (
+            <div style={{display:'flex', gap:8, marginTop:8}}>
+              <button
+                className="approve-btn"
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  try {
+                    const payload = { message: `Publishing: ${item.campaign_name || item.name || 'Approved Item'}`, image_url: undefined, page_id: undefined }
+                    const res = await api.post('/api/meta/posts/publish', payload)
+                    alert(`Meta mock published: ${res.data.id}`)
+                  } catch (err) {
+                    alert('Failed to mock publish to Meta')
+                  }
+                }}
+              >
+                Publish to Meta (mock)
+              </button>
+              <button
+                className="preview-btn"
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  try {
+                    const res = await api.post('/api/canva/designs/generate', { template_id: 'demo_template', variables: { title: item.campaign_name || item.name || 'Aavana', budget: item.budget || '' } })
+                    alert(`Canva mock design: ${res.data.design_id}`)
+                  } catch (err) {
+                    alert('Failed to mock generate Canva design')
+                  }
+                }}
+              >
+                Generate Canva Design (mock)
+              </button>
+            </div>
+          )}
+
       </div>
     )
   }
