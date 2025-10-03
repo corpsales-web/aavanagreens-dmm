@@ -199,7 +199,7 @@ export default function Campaigns() {
             />
           </div>
 
-        {/* Targeting Filters */}
+          {/* Targeting Filters */}
         <div className="form-group">
           <label>Demographics</label>
           <div className="form-grid">
