@@ -362,7 +362,12 @@ export default function Campaigns() {
                 {formData.channels.includes(channel.id) && (
                   <div className="budget-input" onClick={(e) => e.stopPropagation()}>
                     <input
-        {/* Budget validation note */}
+                      type="number"
+                      placeholder="Budget"
+                      value={formData.channelBudgets[channel.id] || ''}
+                      onChange={(e) => setFormData({...formData, channelBudgets: {...formData.channelBudgets, [channel.id]: e.target.value}})}
+                    />
+                  </div>
         {formData.channels.length > 0 && (
           <div className="error-message" style={{background:'#ECFDF5', border:'1px solid #10b98122', color:'#065F46'}}>
             Tip: You can allocate custom amounts per selected channel below each chip (no auto-split).
