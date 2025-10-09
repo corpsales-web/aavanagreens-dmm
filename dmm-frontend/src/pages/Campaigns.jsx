@@ -367,6 +367,8 @@ export default function Campaigns() {
                       value={formData.channelBudgets[channel.id] || ''}
                       onChange={(e) => setFormData({...formData, channelBudgets: {...formData.channelBudgets, [channel.id]: e.target.value}})}
                     />
+                  </div>
+                )}
               </div>
             ))}
           </div>
