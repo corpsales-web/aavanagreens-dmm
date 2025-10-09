@@ -368,16 +368,7 @@ export default function Campaigns() {
                       onChange={(e) => setFormData({...formData, channelBudgets: {...formData.channelBudgets, [channel.id]: e.target.value}})}
                     />
                   </div>
-        {formData.channels.length > 0 && (
-          <div className="error-message" style={{background:'#ECFDF5', border:'1px solid #10b98122', color:'#065F46'}}>
-            Tip: You can allocate custom amounts per selected channel below each chip (no auto-split).
-          </div>
-        )}
-
-                      type="number"
-                      value={budgetSplits[channel.id] || ''}
-                      onChange={(e) => updateBudgetSplit(channel.id, e.target.value)}
-                      placeholder="Budget"
+                )}
                     />
                   </div>
                 )}
