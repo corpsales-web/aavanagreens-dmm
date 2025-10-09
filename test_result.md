@@ -144,9 +144,11 @@
 ##
 ## test_plan:
 ##   current_focus:
-##     - "Frontend smoke: verify Connect Meta button redirects to mock callback and returns success"
-##     - "Approvals: verify Publish to Meta (mock) & Canva design (mock) buttons still work"
-##   stuck_tasks: []
+##     - "Fix frontend environment variable issue - REACT_APP_BACKEND_URL not being used"
+##     - "Test Connect Meta button after frontend fix"
+##     - "Create sample approved items to test mock buttons"
+##   stuck_tasks: 
+##     - "Connect Meta button in TopNav"
 ##   test_all: false
 ##   test_priority: "high_first"
 ##
