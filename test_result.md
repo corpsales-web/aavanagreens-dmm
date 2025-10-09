@@ -107,15 +107,18 @@
 ## backend:
 ##   - task: "Meta OAuth + publish (stub currently, wiring UI button)"
 ##     implemented: true
-##     working: "NA"
+##     working: true
 ##     file: "/app/dmm-backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: true
+##     needs_retesting: false
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
 ##         -comment: "Exposed GET /api/meta/oauth/start for Connect Meta button; callback and publish mock are live. Live Graph integration pending Page ID + app mode."
+##         -working: true
+##         -agent: "testing"
+##         -comment: "TESTED: Backend endpoints working correctly. /api/meta/oauth/start returns proper mock redirect response. /api/marketing/list returns empty array as expected. DMM backend successfully deployed and accessible via preview URL."
 ##
 ## frontend:
 ##   - task: "Connect Meta button in TopNav"
