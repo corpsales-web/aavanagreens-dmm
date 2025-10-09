@@ -105,7 +105,7 @@
 ## user_problem_statement: DMM APP COMPLETION & DEPLOYMENT - Build and deploy isolated Digital Marketing Manager app with GPT-5 beta AI orchestration
 
 ## backend:
-##   - task: "AI endpoints fallback (strategy/content/optimize)"
+##   - task: "Meta OAuth + publish (stub currently, wiring UI button)"
 ##     implemented: true
 ##     working: "NA"
 ##     file: "/app/dmm-backend/server.py"
@@ -115,35 +115,35 @@
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
-##         -comment: "Added graceful fallback for /api/ai/generate-strategy, /api/ai/generate-content, /api/ai/optimize-campaign to avoid 500s when AI key is missing/limited."
+##         -comment: "Exposed GET /api/meta/oauth/start for Connect Meta button; callback and publish mock are live. Live Graph integration pending Page ID + app mode."
 ##
 ## frontend:
-##   - task: "Campaigns budget manual allocation (no auto-split)"
+##   - task: "Connect Meta button in TopNav"
 ##     implemented: true
 ##     working: "NA"
-##     file: "/app/dmm-frontend/src/pages/Campaigns.jsx"
+##     file: "/app/dmm-frontend/src/components/TopNav.jsx"
 ##     stuck_count: 0
 ##     priority: "high"
 ##     needs_retesting: true
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
-##         -comment: "Removed auto-split logic; user can set custom per-channel budgets. Prune deselected channels. Added hint message." 
+##         -comment: "Added Connect Meta button; currently hits /api/meta/oauth/start and follows redirect (mock until live creds)."
 ##
 ## metadata:
 ##   created_by: "main_agent"
-##   version: "1.4"
-##   test_sequence: 6
-##   run_ui: false
+##   version: "1.5"
+##   test_sequence: 7
+##   run_ui: true
 ##
 ## test_plan:
 ##   current_focus:
-##     - "Backend: Verify AI endpoints now return success with fallback content/strategy/optimization"
-##     - "Frontend: Confirm manual allocation fields control budget without auto-changes (smoke only)"
+##     - "Frontend smoke: verify Connect Meta button redirects to mock callback and returns success"
+##     - "Approvals: verify Publish to Meta (mock) & Canva design (mock) buttons still work"
 ##   stuck_tasks: []
 ##   test_all: false
 ##   test_priority: "high_first"
 ##
 ## agent_communication:
 ##     -agent: "main"
-##     -message: "Please run backend tests for AI endpoints to confirm fallbacks: POST /api/ai/generate-strategy (basic payload), POST /api/ai/generate-content (content_type=reel), POST /api/ai/optimize-campaign (minimal campaign with one channel). Expect 200 with 'success':true and strings present. Then do a light UI smoke to ensure budget does not auto-split after selecting channels (optional)."
+##     -message: "Please run UI smoke on preview: click Connect Meta, follow redirect; approve an item and click Publish to Meta (mock)."
