@@ -155,3 +155,5 @@
 ## agent_communication:
 ##     -agent: "main"
 ##     -message: "Please run UI smoke on preview: click Connect Meta, follow redirect; approve an item and click Publish to Meta (mock)."
+##     -agent: "testing"
+##     -message: "UI SMOKE TEST COMPLETED. CRITICAL ISSUE FOUND: Frontend environment variable REACT_APP_BACKEND_URL not being used - frontend still connecting to localhost:8002. Connect Meta button is visible and implemented correctly but fails due to wrong backend URL. Backend is working properly. Need to fix frontend build/environment configuration."
