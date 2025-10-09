@@ -1,75 +1,540 @@
 import os
-import json
-from fastapi import FastAPI, WebSocket
+import uuid
+from datetime import datetime, timezone
+from typing import Optional, Dict, Any, List
+from dotenv import load_dotenv
+
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from jose import jwt, JWTError
+from motor.motor_asyncio import AsyncIOMotorClient
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
-# Optional import of STT scaffold (kept isolated)
-try:
-    from stt_service import STTConfig, GoogleStreamingSTT  # type: ignore
-except Exception:
-    STTConfig = None  # type: ignore
-    GoogleStreamingSTT = None  # type: ignore
+# Load environment variables
+load_dotenv()
 
-app = FastAPI(title="Aavana Temp Restore API")
+# ----------------------
+# Env & App Setup
+# ----------------------
+MONGO_URL = os.environ.get("MONGO_URL_DMM", "mongodb://localhost:27017")
+DB_NAME = os.environ.get("DB_NAME_DMM", "aavana_dmm")
+JWT_SECRET = os.environ.get("DMM_JWT_SECRET", "change-me")
+CORS_ORIGINS = os.environ.get("DMM_CORS_ORIGINS", "*").split(",")
+EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
 
-# Wide-open CORS just for temp restore; original CORS rules will come back with full server.py
+app = FastAPI(title="DMM Backend", version="0.1.1")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/api/health")
-async def health():
-    stt_ready = False
-    if STTConfig is not None:
-        try:
-            stt_ready = STTConfig().ready  # type: ignore
-        except Exception:
-            stt_ready = False
+mongo_client: Optional[AsyncIOMotorClient] = None
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+# Mongo helpers
+async def get_db():
+    global mongo_client
+    if mongo_client is None:
+        mongo_client = AsyncIOMotorClient(MONGO_URL)
+    return mongo_client[DB_NAME]
+
+# Create helpful indexes for performance
+async def ensure_indexes():
+    db = await get_db()
+    try:
+        await db["marketing_campaigns"].create_index("id", unique=True)
+        await db["marketing_campaigns"].create_index([("status", 1)])
+        await db["marketing_campaigns"].create_index([("created_at", -1)])
+        await db["marketing_strategies"].create_index("id", unique=True)
+        await db["marketing_strategies"].create_index([("status", 1)])
+        await db["marketing_strategies"].create_index([("created_at", -1)])
+        await db["marketing_approvals"].create_index([("item_id", 1)])
+        await db["marketing_approvals"].create_index([("created_at", -1)])
+    except Exception:
+        # Index creation problems should not block app start
+        pass
+
+@app.on_event("startup")
+async def on_startup():
+    await ensure_indexes()
+
+
+# ----------------------
+# Models
+# ----------------------
+
+# Serialization helpers (no ObjectId leakage)
+class ApproveFilters(BaseModel):
+    geo: Optional[str] = None
+    language: Optional[List[str]] = None
+    device: Optional[List[str]] = None
+    time: Optional[str] = None
+    behavior: Optional[List[str]] = None
+
+class SaveRequest(BaseModel):
+    item_type: str
+    data: Dict[str, Any] = Field(default_factory=dict)
+    default_filters: Optional[ApproveFilters] = None
+
+class ListQuery(BaseModel):
+    type: str
+    status: Optional[str] = None
+
+class ApproveRequest(BaseModel):
+    item_type: str
+    item_id: str
+    status: str = "Approved"
+    filters: Optional[ApproveFilters] = None
+    approved_by: str = "system"
+
+# Targeting & Campaign models
+class TargetingSchedule(BaseModel):
+    start_date: Optional[str] = None  # ISO date string
+    end_date: Optional[str] = None    # ISO date string
+    dayparts: Optional[List[str]] = None  # e.g., ["business_hours", "evenings"]
+
+class TargetingFilters(BaseModel):
+    # Demographics
+    age_min: Optional[int] = None
+    age_max: Optional[int] = None
+    gender: Optional[List[str]] = None  # ["Male", "Female", "Other"]
+    # Geography
+    country: Optional[str] = None
+    states: Optional[List[str]] = None
+    cities: Optional[List[str]] = None
+    areas: Optional[List[str]] = None
+    # Interests/Behavior
+    interests: Optional[List[str]] = None
+    behaviors: Optional[List[str]] = None
+    # Devices/Placements
+    devices: Optional[List[str]] = None  # ["Mobile", "Desktop", "Tablet"]
+    placements: Optional[List[str]] = None  # ["Feed", "Stories", "Search", ...]
+    # Schedule
+    schedule: Optional[TargetingSchedule] = None
+    # B2B
+    industries: Optional[List[str]] = None
+    job_titles: Optional[List[str]] = None
+    company_sizes: Optional[List[str]] = None  # ["1-10", "11-50", ...]
+
+class StrategyRequest(BaseModel):
+    company_name: str
+    industry: str
+    target_audience: str
+    budget: Optional[str] = None
+    goals: List[str] = Field(default_factory=list)
+    website_url: Optional[str] = None
+
+class ContentRequest(BaseModel):
+    content_type: str  # "reel", "ugc", "brand", "influencer"
+    brief: str
+    target_audience: str
+    platform: str
+    budget: Optional[str] = None
+    festival: Optional[str] = None
+
+class CampaignRequest(BaseModel):
+    campaign_name: str
+    objective: str
+    target_audience: str
+    budget: float
+    channels: List[str]
+    duration_days: int
+    targeting: Optional[TargetingFilters] = None
+
+# JWT SSO consume
+class SSOConsumeRequest(BaseModel):
+    token: str
+
+async def collections_map(db):
     return {
-        "status": "ok",
-        "service": "temp-restore",
-        "stt_ready": bool(stt_ready),
-        "version": "temp-restore-1",
+        "campaign": db["marketing_campaigns"],
+        "reel": db["marketing_reels"],
+        "ugc": db["marketing_ugc"],
+        "brand": db["marketing_brand_assets"],
+        "influencer": db["marketing_influencers"],
+        "approvals": db["marketing_approvals"],
+        "strategy": db["marketing_strategies"],
     }
 
-@app.post("/api/stt/chunk")
-async def stt_chunk(body: dict | None = None):
-    # Minimal placeholder to keep route alive without credentials
-    stt_ready = False
-    if STTConfig is not None:
-        try:
-            stt_ready = STTConfig().ready  # type: ignore
-        except Exception:
-            stt_ready = False
-    if not stt_ready:
-        return {"success": False, "message": "STT not configured", "stt_ready": False}
-    # For temp restore, we do not process audio yet
-    return {"success": False, "message": "Use WebSocket /api/stt/stream for streaming STT", "stt_ready": True}
+# ----------------------
+# AI Orchestration Helpers
+# ----------------------
+async def get_ai_chat():
+    """Initialize AI chat with GPT-5 beta"""
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"dmm-{str(uuid.uuid4())[:8]}",
+        system_message=(
+            "You are an expert Digital Marketing Manager AI. You specialize in creating comprehensive "
+            "marketing strategies, content creation, and campaign optimization. Always provide detailed, "
+            "actionable insights."
+        )
+    ).with_model("openai", "gpt-5")
+    return chat
 
-@app.websocket("/api/stt/stream")
-async def stt_stream(ws: WebSocket):
-    await ws.accept()
-    stt_ready = False
-    if STTConfig is not None:
-        try:
-            stt_ready = STTConfig().ready  # type: ignore
-        except Exception:
-            stt_ready = False
-    if not stt_ready:
-        await ws.send_text(json.dumps({
-            "type": "error",
-            "message": "STT not configured (no Google credentials present)",
-        }))
-        await ws.close()
-        return
-    # Temp restore notice; full streaming wiring will come after creds
-    await ws.send_text(json.dumps({
-        "type": "info",
-        "message": "STT stream online (temp restore). Full streaming will be enabled after credentials.",
-    }))
-    await ws.close()
+async def generate_marketing_strategy(request: StrategyRequest):
+    """Generate comprehensive marketing strategy using GPT-5 beta"""
+    chat = await get_ai_chat()
+
+    prompt = f"""
+    Create a comprehensive digital marketing strategy for:
+    Company: {request.company_name}
+    Industry: {request.industry}
+    Target Audience: {request.target_audience}
+    Budget: {request.budget or 'Not specified'}
+    Goals: {', '.join(request.goals) if request.goals else 'General growth'}
+    Website: {request.website_url or 'Not provided'}
+
+    Please provide:
+    1. Market Analysis & Positioning
+    2. Content Strategy (types, frequency, platforms)
+    3. Channel Mix Recommendations
+    4. Budget Allocation Suggestions
+    5. KPI & Success Metrics
+    6. Timeline & Milestones
+    7. Potential Challenges & Solutions
+
+    Format as detailed JSON with clear sections.
+    """
+
+    user_message = UserMessage(text=prompt)
+    response = await chat.send_message(user_message)
+    return response
+
+async def generate_content_ideas(request: ContentRequest):
+    """Generate content ideas using GPT-5 beta"""
+    chat = await get_ai_chat()
+
+    prompt = f"""
+    Generate creative content ideas for:
+    Content Type: {request.content_type}
+    Brief: {request.brief}
+    Target Audience: {request.target_audience}
+    Platform: {request.platform}
+    Budget: {request.budget or 'Flexible'}
+    Festival/Theme: {request.festival or 'None'}
+
+    Please provide:
+    1. 5 creative concepts with detailed descriptions
+    2. Visual style recommendations
+    3. Messaging & tone suggestions
+    4. Hashtag recommendations
+    5. Estimated production costs
+    6. Performance predictions
+
+    Format as detailed JSON with clear structure.
+    """
+
+    user_message = UserMessage(text=prompt)
+    response = await chat.send_message(user_message)
+    return response
+
+async def optimize_campaign(request: CampaignRequest):
+    """Optimize campaign strategy using GPT-5 beta"""
+    chat = await get_ai_chat()
+
+    # Build targeting summary for the prompt
+    t = request.targeting
+    def list_or_none(v):
+        return ", ".join(v) if v else "None"
+    targeting_summary = (
+        f"Age: {t.age_min or '-'}-{t.age_max or '-'}, "
+        f"Gender: {list_or_none(t.gender) if t else 'None'}, "
+        f"Geo: country={getattr(t, 'country', None) or '-'}, states={list_or_none(getattr(t, 'states', None) or [])}, "
+        f"cities={list_or_none(getattr(t, 'cities', None) or [])}, areas={list_or_none(getattr(t, 'areas', None) or [])}, "
+        f"Interests: {list_or_none(getattr(t, 'interests', None) or [])}, Behaviors: {list_or_none(getattr(t, 'behaviors', None) or [])}, "
+        f"Devices: {list_or_none(getattr(t, 'devices', None) or [])}, Placements: {list_or_none(getattr(t, 'placements', None) or [])}, "
+        f"Schedule: {getattr(getattr(t, 'schedule', None) or TargetingSchedule(), 'start_date', None) or '-'} to "
+        f"{getattr(getattr(t, 'schedule', None) or TargetingSchedule(), 'end_date', None) or '-'}, Dayparts: {list_or_none(getattr(getattr(t, 'schedule', None) or TargetingSchedule(), 'dayparts', None) or [])}, "
+        f"B2B: industries={list_or_none(getattr(t, 'industries', None) or [])}, job_titles={list_or_none(getattr(t, 'job_titles', None) or [])}, company_sizes={list_or_none(getattr(t, 'company_sizes', None) or [])}"
+    ) if t else "None"
+
+    prompt = f"""
+    Optimize this marketing campaign:
+    Campaign: {request.campaign_name}
+    Objective: {request.objective}
+    Target Audience: {request.target_audience}
+    Budget: ${request.budget}
+    Channels: {', '.join(request.channels)}
+    Duration: {request.duration_days} days
+    Targeting: {targeting_summary}
+
+    Please provide:
+    1. Channel-specific budget allocation
+    2. Timeline optimization
+    3. Creative requirements per channel
+    4. Targeting parameters (confirm/refine provided targeting)
+    5. Expected ROI & KPIs
+    6. Risk assessment & mitigation
+    7. A/B testing recommendations
+
+    Format as detailed JSON with clear sections.
+    """
+
+    user_message = UserMessage(text=prompt)
+    response = await chat.send_message(user_message)
+    return response
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "service": "dmm-backend", "time": now_iso()}
+
+@app.get("/api/debug/env")
+async def debug_env():
+    return {
+        "emergent_llm_key_present": bool(EMERGENT_LLM_KEY),
+        "emergent_llm_key_length": len(EMERGENT_LLM_KEY) if EMERGENT_LLM_KEY else 0
+    }
+
+@app.post("/api/auth/sso/consume")
+async def sso_consume(req: SSOConsumeRequest):
+    try:
+        payload = jwt.decode(req.token, JWT_SECRET, algorithms=["HS256"])  # type: ignore
+        return {"ok": True, "user": {k: payload.get(k) for k in ["sub", "email", "name", "roles"]}}
+    except JWTError as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+
+@app.post("/api/marketing/save")
+async def marketing_save(body: SaveRequest, db=Depends(get_db)):
+    cmap = await collections_map(db)
+    if body.item_type not in cmap:
+        raise HTTPException(status_code=400, detail="Invalid item_type")
+    doc = dict(body.data)
+    doc.setdefault("id", str(uuid.uuid4()))
+    doc.setdefault("status", "Pending Approval")
+    if body.default_filters:
+        doc["approval_filters"] = body.default_filters.dict(exclude_none=True)
+    doc["created_at"], doc["updated_at"] = now_iso(), now_iso()
+    await cmap[body.item_type].insert_one(doc)
+    doc.pop("_id", None)
+    return {"success": True, "item": doc}
+
+@app.get("/api/marketing/list")
+async def marketing_list(type: str, status: Optional[str] = None, db=Depends(get_db)):
+    cmap = await collections_map(db)
+    if type not in cmap:
+        raise HTTPException(status_code=400, detail="Invalid type")
+    q: Dict[str, Any] = {}
+    if status:
+        q["status"] = status
+    items = await cmap[type].find(q, {"_id": 0}).to_list(length=500)
+    return items
+
+@app.post("/api/marketing/approve")
+async def marketing_approve(body: ApproveRequest, db=Depends(get_db)):
+    cmap = await collections_map(db)
+    if body.item_type not in cmap:
+        raise HTTPException(status_code=400, detail="Invalid item_type")
+    updates: Dict[str, Any] = {
+        "status": body.status,
+        "updated_at": now_iso(),
+    }
+    if body.filters:
+        updates["approval_filters"] = body.filters.dict(exclude_none=True)
+    await cmap[body.item_type].update_one({"id": body.item_id}, {"$set": updates})
+    updated = await cmap[body.item_type].find_one({"id": body.item_id}, {"_id": 0})
+    if not updated:
+        raise HTTPException(status_code=404, detail="Item not found")
+    approval_log = {
+        "id": str(uuid.uuid4()),
+        "item_type": body.item_type,
+        "item_id": body.item_id,
+        "status": body.status,
+        "filters": updates.get("approval_filters"),
+        "approved_by": body.approved_by,
+        "created_at": now_iso(),
+    }
+    await (await collections_map(db))["approvals"].insert_one(approval_log)
+    return {"success": True, "item": updated}
+
+# ----------------------
+# AI Orchestration Endpoints
+# ----------------------
+
+@app.post("/api/ai/generate-strategy")
+async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
+    """Generate marketing strategy; gracefully fallback if AI unavailable"""
+    def fallback_strategy(req: StrategyRequest) -> str:
+        return (
+            f"Strategy (fallback) for {req.company_name} in {req.industry}.\n"
+            f"Target: {req.target_audience}. Budget: {req.budget or 'N/A'}.\n"
+            f"Goals: {', '.join(req.goals) if req.goals else 'General growth'}.\n"
+            f"Website: {req.website_url or '-'}\n"
+            "Sections: Market Analysis, Content Plan, Channel Mix, Budget Tips, KPIs, Timeline."
+        )
+    try:
+        strategy_content: str
+        if EMERGENT_LLM_KEY:
+            try:
+                strategy_content = await generate_marketing_strategy(request)
+            except Exception:
+                strategy_content = fallback_strategy(request)
+        else:
+            strategy_content = fallback_strategy(request)
+        strategy_doc = {
+            "id": str(uuid.uuid4()),
+            "company_name": request.company_name,
+            "industry": request.industry,
+            "target_audience": request.target_audience,
+            "budget": request.budget,
+            "goals": request.goals,
+            "website_url": request.website_url,
+            "strategy_content": strategy_content,
+            "status": "Generated",
+            "created_at": now_iso(),
+            "updated_at": now_iso()
+        }
+        cmap = await collections_map(db)
+        await cmap["strategy"].insert_one(strategy_doc)
+        strategy_doc.pop("_id", None)
+        return {"success": True, "strategy": strategy_doc}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Strategy generation failed: {str(e)}")
+
+@app.post("/api/ai/generate-content")
+async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
+    """Generate content ideas; gracefully fallback if AI unavailable"""
+    def fallback_content(req: ContentRequest) -> str:
+        return (
+            f"Content ideas (fallback) for {req.content_type} on {req.platform}.\n"
+            f"Brief: {req.brief}\nTarget: {req.target_audience}\nBudget: {req.budget or 'Flexible'}\n"
+            "Ideas: 1) Hook, 2) Value, 3) CTA, 4) Hashtags, 5) Visual style."
+        )
+    try:
+        content_ideas: str
+        if EMERGENT_LLM_KEY:
+            try:
+                content_ideas = await generate_content_ideas(request)
+            except Exception:
+                content_ideas = fallback_content(request)
+        else:
+            content_ideas = fallback_content(request)
+        # Save content ideas to appropriate collection
+        content_doc = {
+            "id": str(uuid.uuid4()),
+            "content_type": request.content_type,
+            "brief": request.brief,
+            "target_audience": request.target_audience,
+            "platform": request.platform,
+            "budget": request.budget,
+            "festival": request.festival,
+            "ai_content": content_ideas,
+            "status": "Generated",
+            "created_at": now_iso(),
+            "updated_at": now_iso()
+        }
+        cmap = await collections_map(db)
+        # Map content type to collection
+        collection_map = {
+            "reel": "reel",
+            "ugc": "ugc", 
+            "brand": "brand",
+            "influencer": "influencer"
+        }
+        collection_key = collection_map.get(request.content_type, "reel")
+        await cmap[collection_key].insert_one(content_doc)
+        content_doc.pop("_id", None)
+        return {"success": True, "content": content_doc}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Content generation failed: {str(e)}")
+
+@app.post("/api/ai/optimize-campaign")
+async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
+    """Optimize campaign; gracefully fallback if AI unavailable"""
+    def fallback_opt(request: CampaignRequest) -> str:
+        return (
+            "Optimization (fallback): Distribute budget across selected channels with 60/30/10 rule, "
+            "set upper frequency caps, add creative sizes, and start with broad targeting then narrow."
+        )
+    try:
+        if EMERGENT_LLM_KEY:
+            try:
+                optimization = await optimize_campaign(request)
+            except Exception:
+                optimization = fallback_opt(request)
+        else:
+            optimization = fallback_opt(request)
+        # Save optimized campaign
+        campaign_doc = {
+            "id": str(uuid.uuid4()),
+            "campaign_name": request.campaign_name,
+            "objective": request.objective,
+            "target_audience": request.target_audience,
+            "budget": request.budget,
+            "channels": request.channels,
+            "duration_days": request.duration_days,
+            "targeting": request.targeting.dict(exclude_none=True) if request.targeting else None,
+            "ai_optimization": optimization,
+            "status": "Optimized",
+            "created_at": now_iso(),
+            "updated_at": now_iso()
+        }
+        cmap = await collections_map(db)
+        await cmap["campaign"].insert_one(campaign_doc)
+        campaign_doc.pop("_id", None)
+        return {"success": True, "campaign": campaign_doc}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Campaign optimization failed: {str(e)}")
+
+# ----------------------
+# Mock Integrations (Meta, Canva) - safe stubs for staging
+# ----------------------
+MOCK_MODE = True
+
+class MetaPublishRequest(BaseModel):
+    message: str
+    image_url: Optional[str] = None
+    page_id: Optional[str] = None
+
+@app.get("/api/meta/oauth/start")
+async def meta_oauth_start():
+    if MOCK_MODE:
+        return {"redirect": "/api/meta/oauth/callback?code=mock_code"}
+    raise HTTPException(status_code=501, detail="Meta OAuth not configured")
+
+@app.get("/api/meta/oauth/callback")
+async def meta_oauth_callback(code: str = "mock_code"):
+    if MOCK_MODE:
+        return {"success": True, "access_token": "mock_page_token", "page_id": "1234567890"}
+    raise HTTPException(status_code=501, detail="Meta OAuth not configured")
+
+@app.post("/api/meta/posts/publish")
+async def meta_publish(req: MetaPublishRequest):
+    if MOCK_MODE:
+        return {"success": True, "id": f"mock_post_{uuid.uuid4().hex[:8]}", "request": req.dict()}
+    raise HTTPException(status_code=501, detail="Meta publish not configured")
+
+class CanvaDesignRequest(BaseModel):
+    template_id: str
+    variables: Dict[str, Any] = Field(default_factory=dict)
+
+@app.get("/api/canva/auth/start")
+async def canva_auth_start():
+    if MOCK_MODE:
+        return {"redirect": "/api/canva/auth/callback?code=mock_code"}
+    raise HTTPException(status_code=501, detail="Canva OAuth not configured")
+
+@app.get("/api/canva/auth/callback")
+async def canva_auth_callback(code: str = "mock_code"):
+    if MOCK_MODE:
+        return {"success": True, "token": "mock_canva_token"}
+    raise HTTPException(status_code=501, detail="Canva OAuth not configured")
+
+@app.post("/api/canva/designs/generate")
+async def canva_generate(req: CanvaDesignRequest):
+    if MOCK_MODE:
+        return {"success": True, "design_id": f"mock_design_{uuid.uuid4().hex[:8]}", "payload": req.dict()}
+    raise HTTPException(status_code=501, detail="Canva generate not configured")
+
+@app.get("/api/ai/strategies")
+async def list_strategies(db=Depends(get_db)):
+    """List all generated strategies"""
+    cmap = await collections_map(db)
+    strategies = await cmap["strategy"].find({}, {"_id": 0}).to_list(length=100)
+    return strategies
