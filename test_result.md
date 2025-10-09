@@ -120,15 +120,18 @@
 ## frontend:
 ##   - task: "Connect Meta button in TopNav"
 ##     implemented: true
-##     working: "NA"
+##     working: false
 ##     file: "/app/dmm-frontend/src/components/TopNav.jsx"
-##     stuck_count: 0
+##     stuck_count: 1
 ##     priority: "high"
-##     needs_retesting: true
+##     needs_retesting: false
 ##     status_history:
 ##         -working: "NA"
 ##         -agent: "main"
 ##         -comment: "Added Connect Meta button; currently hits /api/meta/oauth/start and follows redirect (mock until live creds)."
+##         -working: false
+##         -agent: "testing"
+##         -comment: "TESTED: Connect Meta button is visible in TopNav and clickable, but fails with 'Failed to start Meta connect' alert. Issue: Frontend still using localhost:8002 instead of REACT_APP_BACKEND_URL. Backend endpoints are working correctly when accessed directly."
 ##
 ## metadata:
 ##   created_by: "main_agent"
