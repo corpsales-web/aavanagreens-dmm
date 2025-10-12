@@ -8,7 +8,7 @@ export default function TopNav(){
         className="preview-btn"
         onClick={async ()=>{
           try {
-            const res = await fetch((import.meta.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_BACKEND_URL) + '/api/meta/oauth/start')
+            const res = await fetch('/api/meta/oauth/start')
             const data = await res.json()
             if (data.redirect) {
               window.location.href = data.redirect
