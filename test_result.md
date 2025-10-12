@@ -16,7 +16,7 @@
 # 
 # ## user_problem_statement: {problem_statement}
 # ## backend:
-# ##   - task: "Meta OAuth + publish (stub currently, wiring UI button)"
+# ##   - task: "Campaign UTM builder (backend persists utm_* and tracking_url)"
 # ##     implemented: true
 # ##     working: "NA"
 # ##     file: "/app/dmm-backend/server.py"
@@ -26,109 +26,35 @@
 # ##     status_history:
 # ##         -working: "NA"
 # ##         -agent: "main"
-# ##         -comment: "Exposed GET /api/meta/oauth/start for Connect Meta button; fixed frontend env usage to drop localhost fallback; rebuilt."
+# ##         -comment: "Added support to persist utm_source, utm_medium, utm_campaign, utm_term, utm_content, base_url, tracking_url if provided on campaign save." 
 # ##
 # ## frontend:
-# ##   - task: "Connect Meta button in TopNav"
+# ##   - task: "UTM builder UI + Connect Meta relative path"
 # ##     implemented: true
 # ##     working: "NA"
-# ##     file: "/app/dmm-frontend/src/components/TopNav.jsx"
+# ##     file: "/app/dmm-frontend/src/pages/Campaigns.jsx"
 # ##     stuck_count: 0
 # ##     priority: "high"
 # ##     needs_retesting: true
 # ##     status_history:
 # ##         -working: "NA"
 # ##         -agent: "main"
-# ##         -comment: "Updated to use REACT_APP_BACKEND_URL/VITE_BACKEND_URL only; rebuilt and restarted frontend."
+# ##         -comment: "Added Tracking & UTM section with computed URL; changed Connect Meta button to relative API path and rebuilt." 
 # ##
 # ## metadata:
 # ##   created_by: "main_agent"
-# ##   version: "1.6"
-# ##   test_sequence: 8
+# ##   version: "1.7"
+# ##   test_sequence: 9
 # ##   run_ui: true
 # ##
 # ## test_plan:
 # ##   current_focus:
-# ##     - "Frontend smoke: Connect Meta redirect works; Approvals mock publish/design works"
+# ##     - "Frontend: verify UTM section appears and generates tracking URL; Approvals shows URL + Copy"
+# ##     - "TopNav: Connect Meta redirects via /api/meta/oauth/start"
 # ##   stuck_tasks: []
 # ##   test_all: false
 # ##   test_priority: "high_first"
 # ##
 # ## agent_communication:
 # ##     -agent: "main"
-# ##     -message: "Please re-run UI smoke now that frontend env fallback was removed, then share screenshots."
-
-#====================================================================================================
-# END - Testing Protocol
-#====================================================================================================
-
-## user_problem_statement: "Re-run UI smoke on preview domain: 1) Confirm TopNav shows 'Aavana Marketing' and Connect Meta button. Click Connect Meta and follow redirect; expect mock redirect JSON or a callback page. 2) Go to Approvals, approve an item if needed, then click Publish to Meta (mock) and Generate Canva Design (mock). Capture screenshots and note any errors. If preview unavailable, note the status."
-
-## backend:
-  - task: "Meta OAuth + publish (stub currently, wiring UI button)"
-    implemented: true
-    working: true
-    file: "/app/dmm-backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        -working: true
-        -agent: "testing"
-        -comment: "Backend Meta OAuth endpoints working correctly. /api/meta/oauth/start returns 200 status with mock redirect JSON. Mock mode enabled and functioning as expected."
-
-## frontend:
-  - task: "Connect Meta button in TopNav"
-    implemented: true
-    working: false
-    file: "/app/dmm-frontend/src/components/TopNav.jsx"
-    stuck_count: 1
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        -working: false
-        -agent: "testing"
-        -comment: "CRITICAL: Connect Meta button has environment variable issue. API call shows 'undefined' in URL: '/undefined/api/meta/oauth/start'. Environment variable VITE_BACKEND_URL not being resolved properly in TopNav.jsx. Frontend needs rebuild or env var fix."
-
-  - task: "Approvals page functionality"
-    implemented: true
-    working: true
-    file: "/app/dmm-frontend/src/pages/Approvals.jsx"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-        -working: true
-        -agent: "testing"
-        -comment: "Approvals page loads correctly, shows proper tabs and empty state. No test data available to test approval flow and mock buttons, but UI structure is functional."
-
-  - task: "TopNav branding display"
-    implemented: true
-    working: true
-    file: "/app/dmm-frontend/src/components/TopNav.jsx"
-    stuck_count: 0
-    priority: "low"
-    needs_retesting: false
-    status_history:
-        -working: true
-        -agent: "testing"
-        -comment: "TopNav correctly displays 'Aavana Marketing' brand text as expected."
-
-## metadata:
-  created_by: "testing_agent"
-  version: "1.0"
-  test_sequence: 1
-  run_ui: true
-
-## test_plan:
-  current_focus:
-    - "Fix Connect Meta button environment variable issue"
-    - "Create test data for approval flow testing"
-  stuck_tasks:
-    - "Connect Meta button environment variable resolution"
-  test_all: false
-  test_priority: "high_first"
-
-## agent_communication:
-    -agent: "testing"
-    -message: "UI smoke test completed. Preview domain accessible at https://dmm-deploy.preview.emergentagent.com. CRITICAL ISSUE: Connect Meta button has environment variable problem - 'undefined' appears in API URL. TopNav branding works correctly. Approvals page functional but no test data available. Screenshots captured showing current state."
+# ##     -message: "Run a UI smoke on preview: 1) UTM section visible below Budget; 2) Generate URL and save; 3) Approvals shows tracking URL; 4) Connect Meta redirects without 'undefined' URLs."
