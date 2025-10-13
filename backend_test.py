@@ -9,8 +9,8 @@ import json
 import time
 from typing import Dict, Any
 
-# Configuration - Use localhost since external URL has connectivity issues
-BASE_URL = "http://localhost:8001"
+# Configuration - Use external URL from frontend/.env
+BASE_URL = "https://dmm-deploy.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class AIFallbackTester:
