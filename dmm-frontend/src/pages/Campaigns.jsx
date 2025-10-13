@@ -198,6 +198,63 @@ export default function Campaigns() {
             />
           </div>
 
+          {/* Tracking & UTM */}
+          <div className="form-group" style={{gridColumn:'1 / -1'}}>
+            <label>Tracking & UTM</label>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Base URL</label>
+                <input type="url" placeholder="https://example.com/landing" value={formData.utm.base_url}
+                  onChange={(e)=>setFormData({...formData, utm:{...formData.utm, base_url:e.target.value}})} />
+              </div>
+              <div className="form-group">
+                <label>utm_source</label>
+                <input type="text" placeholder="facebook, instagram, google" value={formData.utm.source}
+                  onChange={(e)=>setFormData({...formData, utm:{...formData.utm, source:e.target.value}})} />
+              </div>
+              <div className="form-group">
+                <label>utm_medium</label>
+                <input type="text" placeholder="paid_social, cpc, organic_social" value={formData.utm.medium}
+                  onChange={(e)=>setFormData({...formData, utm:{...formData.utm, medium:e.target.value}})} />
+              </div>
+              <div className="form-group">
+                <label>utm_campaign</label>
+                <input type="text" placeholder="brand_launch_oct2025" value={formData.utm.campaign}
+                  onChange={(e)=>setFormData({...formData, utm:{...formData.utm, campaign:e.target.value}})} />
+              </div>
+              <div className="form-group">
+                <label>utm_term (optional)</label>
+                <input type="text" placeholder="keyword or audience" value={formData.utm.term}
+                  onChange={(e)=>setFormData({...formData, utm:{...formData.utm, term:e.target.value}})} />
+              </div>
+              <div className="form-group">
+                <label>utm_content (optional)</label>
+                <input type="text" placeholder="creative or variant" value={formData.utm.content}
+                  onChange={(e)=>setFormData({...formData, utm:{...formData.utm, content:e.target.value}})} />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Tracking URL</label>
+              <div style={{display:'flex', gap:8}}>
+                <input type="text" readOnly value={(function(){
+                  const { base_url, source, medium, campaign, term, content } = formData.utm
+                  if(!base_url) return ''
+                  const params = new URLSearchParams()
+                  if(source) params.set('utm_source', source)
+                  if(medium) params.set('utm_medium', medium)
+                  if(campaign) params.set('utm_campaign', campaign)
+                  if(term) params.set('utm_term', term)
+                  if(content) params.set('utm_content', content)
+                  const sep = base_url.includes('?') ? '&' : '?'
+                  return base_url + (params.toString()? sep+params.toString(): '')
+                })()} />
+                <button className="preview-btn" type="button" onClick={()=>{
+                  const el = document.querySelector('#tracking-url-copy')
+                }}>Copy</button>
+              </div>
+            </div>
+          </div>
+
           <div className="form-group">
             <label>Total Budget ($) *</label>
             <input
