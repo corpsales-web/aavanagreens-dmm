@@ -118,6 +118,11 @@ export default function Approvals() {
           {item.platform && <p><strong>Platform:</strong> {item.platform}</p>}
           {item.objective && <p><strong>Objective:</strong> {item.objective}</p>}
           {item.industry && <p><strong>Industry:</strong> {item.industry}</p>}
+          {item.tracking_url && (
+            <p><strong>Tracking URL:</strong> <input id={`trk-${item.id}`} type="text" readOnly value={item.tracking_url} style={{width:'60%'}} />
+              <button className="preview-btn" onClick={()=>{navigator.clipboard.writeText(item.tracking_url)}}>Copy</button>
+            </p>
+          )}
           <p><strong>Created:</strong> {new Date(item.created_at).toLocaleString()}</p>
         </div>
 
