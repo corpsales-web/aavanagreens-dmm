@@ -357,13 +357,20 @@ class AIFallbackTester:
 def main():
     """Main test execution"""
     tester = AIFallbackTester()
-    success = tester.run_fallback_tests()
+    
+    # Initialize created_campaign_id attribute
+    tester.created_campaign_id = None
+    
+    # Run demo campaign seeding test
+    success = tester.run_demo_campaign_test()
     
     if success:
-        print("\n✅ All AI fallback tests passed!")
+        print(f"\n✅ Demo campaign seeding test passed!")
+        if hasattr(tester, 'created_campaign_id') and tester.created_campaign_id:
+            print(f"Created campaign ID: {tester.created_campaign_id}")
         return True
     else:
-        print("\n❌ Some AI fallback tests failed!")
+        print("\n❌ Demo campaign seeding test failed!")
         return False
 
 if __name__ == "__main__":
