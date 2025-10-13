@@ -24,6 +24,14 @@ export default function Campaigns() {
     budget: '',
     channels: [],
     duration_days: 30,
+    utm: {
+      base_url: '',
+      source: '',
+      medium: '',
+      campaign: '',
+      term: '',
+      content: ''
+    },
     targeting: {
       age_min: '',
       age_max: '',
