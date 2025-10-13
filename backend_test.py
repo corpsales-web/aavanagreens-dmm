@@ -184,6 +184,105 @@ class AIFallbackTester:
             self.log_test("Health Check", False, f"Connection error: {str(e)}")
         return False
     
+    def test_demo_campaign_seeding(self):
+        """Test seeding demo campaign with UTM data as requested"""
+        try:
+            # Step 1: POST to /api/marketing/save with the specific JSON payload
+            demo_campaign_payload = {
+                "item_type": "campaign",
+                "data": {
+                    "campaign_name": "Demo UTM Campaign",
+                    "objective": "brand_awareness",
+                    "target_audience": "Gardeners 25-45 in India",
+                    "budget": 1000,
+                    "channels": ["facebook_ads", "instagram_ads"],
+                    "duration_days": 7,
+                    "budget_splits": {"facebook_ads": 600, "instagram_ads": 400},
+                    "targeting": {"country":"India","age_min":25,"age_max":45,"gender":["Male","Female"]},
+                    "utm": {
+                        "base_url": "https://aavanagreens.in/products/organic-fertilizer",
+                        "source": "facebook",
+                        "medium": "paid_social",
+                        "campaign": "demo_utm_campaign",
+                        "term": "gardeners_25_45",
+                        "content": "adA_reel_v1"
+                    },
+                    "tracking_url": "https://aavanagreens.in/products/organic-fertilizer?utm_source=facebook&utm_medium=paid_social&utm_campaign=demo_utm_campaign&utm_term=gardeners_25_45&utm_content=adA_reel_v1",
+                    "ai_optimization": "(AI pending — created for demo)"
+                }
+            }
+            
+            print(f"Testing POST {API_BASE}/marketing/save")
+            print(f"Payload: {json.dumps(demo_campaign_payload, indent=2)}")
+            
+            response = self.session.post(
+                f"{API_BASE}/marketing/save",
+                json=demo_campaign_payload,
+                timeout=30
+            )
+            
+            print(f"Response Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"Response Body: {json.dumps(data, indent=2)}")
+                
+                # Check for success=true and item with id
+                if (data.get("success") == True and 
+                    "item" in data and 
+                    "id" in data["item"]):
+                    
+                    created_id = data["item"]["id"]
+                    self.log_test("Demo Campaign Creation", True, 
+                                f"Campaign created successfully with ID: {created_id}")
+                    
+                    # Step 2: GET /api/marketing/list?type=campaign to confirm the item exists
+                    print(f"\nTesting GET {API_BASE}/marketing/list?type=campaign")
+                    
+                    list_response = self.session.get(
+                        f"{API_BASE}/marketing/list?type=campaign",
+                        timeout=30
+                    )
+                    
+                    print(f"List Response Status: {list_response.status_code}")
+                    
+                    if list_response.status_code == 200:
+                        list_data = list_response.json()
+                        print(f"List Response Body: {json.dumps(list_data, indent=2)}")
+                        
+                        # Find the created campaign in the list
+                        created_campaign = None
+                        for campaign in list_data:
+                            if campaign.get("id") == created_id:
+                                created_campaign = campaign
+                                break
+                        
+                        if created_campaign:
+                            if created_campaign.get("status") == "Pending Approval":
+                                self.log_test("Demo Campaign Verification", True, 
+                                            f"Campaign found in list with status 'Pending Approval', ID: {created_id}")
+                                # Store the ID for summary
+                                self.created_campaign_id = created_id
+                                return True
+                            else:
+                                self.log_test("Demo Campaign Verification", False, 
+                                            f"Campaign found but status is '{created_campaign.get('status')}', expected 'Pending Approval'")
+                        else:
+                            self.log_test("Demo Campaign Verification", False, 
+                                        f"Campaign with ID {created_id} not found in list")
+                    else:
+                        self.log_test("Demo Campaign Verification", False, 
+                                    f"List request failed with HTTP {list_response.status_code}")
+                else:
+                    self.log_test("Demo Campaign Creation", False, 
+                                "Missing success=true or item.id in response", data)
+            else:
+                self.log_test("Demo Campaign Creation", False, 
+                            f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Demo Campaign Seeding", False, f"Error: {str(e)}")
+        return False
+    
     def run_fallback_tests(self):
         """Run the specific fallback tests requested"""
         print("🚀 Starting DMM Backend AI Fallback Tests")
