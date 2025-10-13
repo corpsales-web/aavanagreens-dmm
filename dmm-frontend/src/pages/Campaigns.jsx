@@ -447,6 +447,11 @@ export default function Campaigns() {
           </div>
         )}
 
+        {/* UTM Helper Tip */}
+        <div className="error-message" style={{background:'#F0FDF4', border:'1px solid #10b98122', color:'#065F46'}}>
+          Tip: Use utm_source (channel), utm_medium (paid_social/cpc/organic_social), utm_campaign (name), utm_term (keyword/audience), utm_content (creative/variant) to track performance in analytics.
+        </div>
+
         {error && <div className="error-message">{error}</div>}
         {success && <div className="error-message" style={{background:'rgba(16,185,129,0.12)', border:'1px solid #065f46', color:'#d1fae5'}}>{success}</div>}
 
