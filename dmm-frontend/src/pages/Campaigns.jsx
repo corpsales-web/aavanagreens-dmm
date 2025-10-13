@@ -249,20 +249,9 @@ export default function Campaigns() {
             <div className="form-group">
               <label>Tracking URL</label>
               <div style={{display:'flex', gap:8}}>
-                <input type="text" readOnly value={(function(){
-                  const { base_url, source, medium, campaign, term, content } = formData.utm
-                  if(!base_url) return ''
-                  const params = new URLSearchParams()
-                  if(source) params.set('utm_source', source)
-                  if(medium) params.set('utm_medium', medium)
-                  if(campaign) params.set('utm_campaign', campaign)
-                  if(term) params.set('utm_term', term)
-                  if(content) params.set('utm_content', content)
-                  const sep = base_url.includes('?') ? '&' : '?'
-                  return base_url + (params.toString()? sep+params.toString(): '')
-                })()} />
+                <input id="tracking-url-copy" type="text" readOnly value={computeTrackingUrl()} />
                 <button className="preview-btn" type="button" onClick={()=>{
-                  const el = document.querySelector('#tracking-url-copy')
+                  const val = computeTrackingUrl(); if (val) navigator.clipboard.writeText(val)
                 }}>Copy</button>
               </div>
             </div>
