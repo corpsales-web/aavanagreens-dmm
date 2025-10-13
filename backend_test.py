@@ -283,6 +283,28 @@ class AIFallbackTester:
             self.log_test("Demo Campaign Seeding", False, f"Error: {str(e)}")
         return False
     
+    def run_demo_campaign_test(self):
+        """Run the demo campaign seeding test as requested"""
+        print("🚀 Starting DMM Backend Demo Campaign Seeding Test")
+        print("=" * 60)
+        print(f"Testing against: {BASE_URL}")
+        print("=" * 60)
+        
+        # Health check first
+        if not self.test_health_check():
+            print("❌ Health check failed - backend may be down")
+            return False
+        
+        print("\n📋 Testing Demo Campaign Seeding...")
+        
+        # Test demo campaign seeding
+        test_result = self.test_demo_campaign_seeding()
+        
+        # Summary
+        self.print_summary()
+        
+        return test_result
+    
     def run_fallback_tests(self):
         """Run the specific fallback tests requested"""
         print("🚀 Starting DMM Backend AI Fallback Tests")
