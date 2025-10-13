@@ -63,7 +63,20 @@
 # END - Testing Protocol Section
 #====================================================================================================
 
-## user_problem_statement: "Run UI smoke on the preview domain: 1) On Campaign Manager, scroll below Budget and locate 'Tracking & UTM' section; fill Base URL and utm_* fields; verify Tracking URL generated; save campaign; 2) Go to Approvals, find saved item, confirm Tracking URL present and Copy button; 3) Click Connect Meta in TopNav and confirm request goes to /api/meta/oauth/start (no undefined). Capture screenshots and report errors."
+## user_problem_statement: "Seed a demo campaign using backend API so the user can test Approvals and mock publish. Steps: 1) POST to /api/marketing/save with JSON payload for Demo UTM Campaign; 2) GET /api/marketing/list?type=campaign to confirm the new item exists with status 'Pending Approval'. Return the created item's id in the summary."
+
+## backend:
+  - task: "Demo campaign seeding via API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "✅ BACKEND API TESTING SUCCESSFUL: 1) POST /api/marketing/save with Demo UTM Campaign payload returned 200 with success=true and created campaign ID: e29eda99-f665-4606-8190-87f4db57e1ef. 2) GET /api/marketing/list?type=campaign confirmed the campaign exists with status 'Pending Approval'. 3) All UTM data (base_url, utm_source, utm_medium, utm_campaign, utm_term, utm_content) and tracking_url properly persisted. 4) Campaign includes targeting data, budget splits, and AI optimization placeholder. Backend API is fully functional for campaign creation and retrieval."
 
 ## frontend:
   - task: "UTM builder UI + Connect Meta relative path"
