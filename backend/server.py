@@ -17,8 +17,8 @@ load_dotenv()
 # ----------------------
 # Env & App Setup
 # ----------------------
-MONGO_URL = os.environ.get("MONGO_URL_DMM", "mongodb://localhost:27017")
-DB_NAME = os.environ.get("DB_NAME_DMM", "aavana_dmm")
+MONGO_URL = os.environ.get("MONGO_URL") or os.environ.get("MONGO_URL_DMM", "mongodb://localhost:27017")
+DB_NAME = os.environ.get("DB_NAME") or os.environ.get("DB_NAME_DMM", "aavana_dmm")
 JWT_SECRET = os.environ.get("DMM_JWT_SECRET", "change-me")
 CORS_ORIGINS = os.environ.get("DMM_CORS_ORIGINS", "*").split(",")
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
