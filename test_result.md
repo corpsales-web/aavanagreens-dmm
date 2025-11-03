@@ -32,7 +32,7 @@
 # ##   - task: "UTM builder UI + Connect Meta relative path"
 # ##     implemented: true
 # ##     working: "NA"
-# ##     file: "/app/dmm-frontend/src/pages/Campaigns.jsx"
+# ##     file: "/app/frontend/src/pages/Campaigns.jsx"
 # ##     stuck_count: 0
 # ##     priority: "high"
 # ##     needs_retesting: true
@@ -94,7 +94,7 @@
   - task: "UTM builder UI + Connect Meta relative path"
     implemented: true
     working: true
-    file: "/app/dmm-frontend/src/pages/Campaigns.jsx"
+    file: "/app/frontend/src/pages/Campaigns.jsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
