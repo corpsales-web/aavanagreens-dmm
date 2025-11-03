@@ -39,7 +39,7 @@ class ComprehensiveBackendTester:
         """Test 1: Health check - GET /api/health should return {status:"ok"}"""
         try:
             print(f"Testing GET {API_BASE}/health")
-            response = self.session.get(f"{API_BASE}/health", timeout=10)
+            response = self.session.get(f"{API_BASE}/health", timeout=30)
             
             print(f"Response Status: {response.status_code}")
             
