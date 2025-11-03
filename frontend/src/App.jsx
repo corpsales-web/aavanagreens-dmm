@@ -4,7 +4,7 @@ import Content from './pages/Content'
 import Campaigns from './pages/Campaigns'
 import Approvals from './pages/Approvals'
 import TopNav from './components/TopNav'
-import { AI_ENABLED } from './api.js
+import { AI_ENABLED } from './api'
 import './App.css'
 
 const TABS = [
