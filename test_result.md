@@ -112,7 +112,7 @@
   - task: "Approvals tracking URL display and Copy button"
     implemented: true
     working: true
-    file: "/app/dmm-frontend/src/pages/Approvals.jsx"
+    file: "/app/frontend/src/pages/Approvals.jsx"
     stuck_count: 0
     priority: "medium"
     needs_retesting: false
