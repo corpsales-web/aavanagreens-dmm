@@ -9,8 +9,9 @@ import json
 import time
 from typing import Dict, Any, Optional
 
-# Configuration - Use external URL from frontend/.env
-BASE_URL = "https://campaign-manager-28.preview.emergentagent.com"
+# Configuration - Test locally first, then external URL
+# BASE_URL = "https://campaign-manager-28.preview.emergentagent.com"  # External URL
+BASE_URL = "http://localhost:8001"  # Local backend for testing
 API_BASE = f"{BASE_URL}/api"
 
 class ComprehensiveBackendTester:
