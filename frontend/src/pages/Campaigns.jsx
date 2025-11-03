@@ -431,8 +431,8 @@ export default function Campaigns() {
                     <input
                       type="number"
                       placeholder="Budget"
-                      value={formData.channelBudgets[channel.id] || ''}
-                      onChange={(e) => setFormData({...formData, channelBudgets: {...formData.channelBudgets, [channel.id]: e.target.value}})}
+                      value={budgetSplits[channel.id] || ''}
+                      onChange={(e) => updateBudgetSplit(channel.id, e.target.value)}
                     />
                   </div>
                 )}
