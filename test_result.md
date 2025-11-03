@@ -127,7 +127,7 @@
   - task: "TopNav Connect Meta button functionality"
     implemented: true
     working: true
-    file: "/app/dmm-frontend/src/components/TopNav.jsx"
+    file: "/app/frontend/src/components/TopNav.jsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
