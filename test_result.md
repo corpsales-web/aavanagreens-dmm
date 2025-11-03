@@ -63,7 +63,7 @@
 # END - Testing Protocol Section
 #====================================================================================================
 
-## user_problem_statement: "Seed a demo campaign using backend API so the user can test Approvals and mock publish. Steps: 1) POST to /api/marketing/save with JSON payload for Demo UTM Campaign; 2) GET /api/marketing/list?type=campaign to confirm the new item exists with status 'Pending Approval'. Return the created item's id in the summary."
+## user_problem_statement: "We renamed dmm-frontend→frontend and dmm-backend→backend. Supervisor still references /app/dmm-backend and /app/dmm-frontend; we restored symlinks. Now thoroughly test backend FastAPI endpoints via the configured external base URL (from frontend .env VITE_BACKEND_URL or env). Perform comprehensive backend testing including health check, strategy generation, campaign save/list/approve, and mock Meta endpoints."
 
 ## backend:
   - task: "Demo campaign seeding via API"
@@ -77,6 +77,18 @@
         -working: true
         -agent: "testing"
         -comment: "✅ BACKEND API TESTING SUCCESSFUL: 1) POST /api/marketing/save with Demo UTM Campaign payload returned 200 with success=true and created campaign ID: e29eda99-f665-4606-8190-87f4db57e1ef. 2) GET /api/marketing/list?type=campaign confirmed the campaign exists with status 'Pending Approval'. 3) All UTM data (base_url, utm_source, utm_medium, utm_campaign, utm_term, utm_content) and tracking_url properly persisted. 4) Campaign includes targeting data, budget splits, and AI optimization placeholder. Backend API is fully functional for campaign creation and retrieval."
+
+  - task: "Comprehensive backend testing after directory rename"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "testing"
+        -comment: "✅ COMPREHENSIVE BACKEND TESTING SUCCESSFUL AFTER DIRECTORY RENAME: All 6 requested tests passed using external URL https://campaign-manager-28.preview.emergentagent.com/api: 1) Health check GET /api/health returned {status:'ok'} ✅ 2) Strategy generation POST /api/ai/generate-strategy with minimal payload returned success=true, persisted in DB with ID c9a06c89-760c-4188-99d3-8cec21576ee2, verified via GET /api/ai/strategies ✅ 3) Campaign save POST /api/marketing/save with UTM fields returned success=true, created campaign ID 60dddc98-ad7b-4e42-a4a0-0f8940601cf1 with all targeting and UTM data properly stored ✅ 4) List campaigns GET /api/marketing/list?type=campaign returned campaign with status 'Pending Approval' ✅ 5) Approve POST /api/marketing/approve updated status to 'Approved' and created approval log ✅ 6) Mock Meta: GET /api/meta/oauth/start returned redirect JSON, POST /api/meta/posts/publish returned success=true with mock post ID ✅. All endpoints working correctly with /api prefix, no issues with old dmm-backend paths detected. Symlinks functioning properly."
 
 ## frontend:
   - task: "UTM builder UI + Connect Meta relative path"
