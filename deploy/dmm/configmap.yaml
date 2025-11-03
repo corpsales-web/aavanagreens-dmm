@@ -5,4 +5,4 @@ metadata:
   namespace: dmm
 data:
   DB_NAME_DMM: "aavana_dmm"
-  DMM_CORS_ORIGINS: "https://dmm.aavanagreens.in,https://dmm-deploy.preview.emergentagent.com"
+  DMM_CORS_ORIGINS: "https://dmm.aavanagreens.in,https://campaign-manager-28.preview.emergentagent.com"

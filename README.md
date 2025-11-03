@@ -25,7 +25,7 @@ No‑code deploy on Emergent (GitHub driven)
   - Subpath: dmm-backend
   - Dockerfile: dmm-backend/Dockerfile
   - Port: 8000; Health: GET /api/health
-  - Env: MONGO_URL_DMM, DB_NAME_DMM=aavana_dmm, DMM_JWT_SECRET, DMM_CORS_ORIGINS="https://dmm.aavanagreens.in,https://dmm-deploy.preview.emergentagent.com"
+  - Env: MONGO_URL_DMM, DB_NAME_DMM=aavana_dmm, DMM_JWT_SECRET, DMM_CORS_ORIGINS="https://dmm.aavanagreens.in,https://campaign-manager-28.preview.emergentagent.com"
 - Create Frontend service from the same repo
   - Subpath: dmm-frontend
   - Dockerfile: dmm-frontend/Dockerfile

@@ -10,7 +10,7 @@ import time
 from typing import Dict, Any
 
 # Configuration - Use external URL from frontend/.env
-BASE_URL = "https://dmm-deploy.preview.emergentagent.com"
+BASE_URL = "https://campaign-manager-28.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class AIFallbackTester:

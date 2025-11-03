@@ -125,7 +125,7 @@
         -comment: "✅ WORKING CORRECTLY: Connect Meta button found, visible, enabled, and functional. Makes correct API request to /api/meta/oauth/start (no 'undefined' in URL), receives 200 response, and triggers OAuth callback flow. Button behavior matches expected functionality."
         -working: true
         -agent: "testing"
-        -comment: "✅ CONFIRMED WORKING: Re-tested Connect Meta button functionality. Makes proper API call to https://dmm-deploy.preview.emergentagent.com/api/meta/oauth/start with Status 200 response. No 'undefined' found in URL. OAuth flow working correctly with proper redirect to success page. Feature is fully functional."
+        -comment: "✅ CONFIRMED WORKING: Re-tested Connect Meta button functionality. Makes proper API call to https://campaign-manager-28.preview.emergentagent.com/api/meta/oauth/start with Status 200 response. No 'undefined' found in URL. OAuth flow working correctly with proper redirect to success page. Feature is fully functional."
 
 ## metadata:
   created_by: "testing_agent"
