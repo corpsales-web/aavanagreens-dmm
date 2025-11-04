@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from jose import jwt, JWTError
 from motor.motor_asyncio import AsyncIOMotorClient
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+import httpx
 
 # Load environment variables
 load_dotenv()
@@ -23,7 +24,14 @@ JWT_SECRET = os.environ.get("DMM_JWT_SECRET", "change-me")
 CORS_ORIGINS = os.environ.get("DMM_CORS_ORIGINS", "*").split(",")
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
 
-app = FastAPI(title="DMM Backend", version="0.1.1")
+# Advanced AI providers
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") or EMERGENT_LLM_KEY
+LUMA_API_KEY = os.environ.get("LUMA_API_KEY")
+LUMA_API_URL = os.environ.get("LUMA_API_URL", "https://api.aimlapi.com/v2")
+SERP_API_KEY = os.environ.get("SERP_API_KEY")
+YT_API_KEY = os.environ.get("YOUTUBE_DATA_API_KEY") or os.environ.get("YT_API_KEY")
+
+app = FastAPI(title="DMM Backend", version="0.2.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
@@ -33,6 +41,7 @@ app.add_middleware(
 )
 
 mongo_client: Optional[AsyncIOMotorClient] = None
+
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -60,6 +69,7 @@ async def ensure_indexes():
         # Index creation problems should not block app start
         pass
 
+
 @app.on_event("startup")
 async def on_startup():
     await ensure_indexes()
@@ -77,14 +87,17 @@ class ApproveFilters(BaseModel):
     time: Optional[str] = None
     behavior: Optional[List[str]] = None
 
+
 class SaveRequest(BaseModel):
     item_type: str
     data: Dict[str, Any] = Field(default_factory=dict)
     default_filters: Optional[ApproveFilters] = None
 
+
 class ListQuery(BaseModel):
     type: str
     status: Optional[str] = None
+
 
 class ApproveRequest(BaseModel):
     item_type: str
@@ -93,11 +106,13 @@ class ApproveRequest(BaseModel):
     filters: Optional[ApproveFilters] = None
     approved_by: str = "system"
 
+
 # Targeting & Campaign models
 class TargetingSchedule(BaseModel):
     start_date: Optional[str] = None  # ISO date string
-    end_date: Optional[str] = None    # ISO date string
+    end_date: Optional[str] = None  # ISO date string
     dayparts: Optional[List[str]] = None  # e.g., ["business_hours", "evenings"]
+
 
 class TargetingFilters(BaseModel):
     # Demographics
@@ -122,6 +137,7 @@ class TargetingFilters(BaseModel):
     job_titles: Optional[List[str]] = None
     company_sizes: Optional[List[str]] = None  # ["1-10", "11-50", ...]
 
+
 class StrategyRequest(BaseModel):
     company_name: str
     industry: str
@@ -130,6 +146,7 @@ class StrategyRequest(BaseModel):
     goals: List[str] = Field(default_factory=list)
     website_url: Optional[str] = None
 
+
 class ContentRequest(BaseModel):
     content_type: str  # "reel", "ugc", "brand", "influencer"
     brief: str
@@ -137,6 +154,7 @@ class ContentRequest(BaseModel):
     platform: str
     budget: Optional[str] = None
     festival: Optional[str] = None
+
 
 class CampaignRequest(BaseModel):
     campaign_name: str
@@ -147,9 +165,11 @@ class CampaignRequest(BaseModel):
     duration_days: int
     targeting: Optional[TargetingFilters] = None
 
+
 # JWT SSO consume
 class SSOConsumeRequest(BaseModel):
     token: str
+
 
 async def collections_map(db):
     return {
@@ -162,8 +182,9 @@ async def collections_map(db):
         "strategy": db["marketing_strategies"],
     }
 
+
 # ----------------------
-# AI Orchestration Helpers
+# AI Orchestration Helpers (Text)
 # ----------------------
 async def get_ai_chat():
     """Initialize AI chat with GPT-5 beta"""
@@ -174,9 +195,10 @@ async def get_ai_chat():
             "You are an expert Digital Marketing Manager AI. You specialize in creating comprehensive "
             "marketing strategies, content creation, and campaign optimization. Always provide detailed, "
             "actionable insights."
-        )
+        ),
     ).with_model("openai", "gpt-5")
     return chat
+
 
 async def generate_marketing_strategy(request: StrategyRequest):
     """Generate comprehensive marketing strategy using GPT-5 beta"""
@@ -207,6 +229,7 @@ async def generate_marketing_strategy(request: StrategyRequest):
     response = await chat.send_message(user_message)
     return response
 
+
 async def generate_content_ideas(request: ContentRequest):
     """Generate content ideas using GPT-5 beta"""
     chat = await get_ai_chat()
@@ -235,14 +258,17 @@ async def generate_content_ideas(request: ContentRequest):
     response = await chat.send_message(user_message)
     return response
 
+
 async def optimize_campaign(request: CampaignRequest):
     """Optimize campaign strategy using GPT-5 beta"""
     chat = await get_ai_chat()
 
     # Build targeting summary for the prompt
     t = request.targeting
+
     def list_or_none(v):
         return ", ".join(v) if v else "None"
+
     targeting_summary = (
         f"Age: {t.age_min or '-'}-{t.age_max or '-'}, "
         f"Gender: {list_or_none(t.gender) if t else 'None'}, "
@@ -281,16 +307,23 @@ async def optimize_campaign(request: CampaignRequest):
     response = await chat.send_message(user_message)
     return response
 
+
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "service": "dmm-backend", "time": now_iso()}
+
 
 @app.get("/api/debug/env")
 async def debug_env():
     return {
         "emergent_llm_key_present": bool(EMERGENT_LLM_KEY),
-        "emergent_llm_key_length": len(EMERGENT_LLM_KEY) if EMERGENT_LLM_KEY else 0
+        "emergent_llm_key_length": len(EMERGENT_LLM_KEY) if EMERGENT_LLM_KEY else 0,
+        "openai_key_present": bool(OPENAI_API_KEY),
+        "luma_key_present": bool(LUMA_API_KEY),
+        "serp_key_present": bool(SERP_API_KEY),
+        "yt_key_present": bool(YT_API_KEY),
     }
+
 
 @app.post("/api/auth/sso/consume")
 async def sso_consume(req: SSOConsumeRequest):
@@ -299,6 +332,7 @@ async def sso_consume(req: SSOConsumeRequest):
         return {"ok": True, "user": {k: payload.get(k) for k in ["sub", "email", "name", "roles"]}}
     except JWTError as e:
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+
 
 @app.post("/api/marketing/save")
 async def marketing_save(body: SaveRequest, db=Depends(get_db)):
@@ -315,6 +349,7 @@ async def marketing_save(body: SaveRequest, db=Depends(get_db)):
     doc.pop("_id", None)
     return {"success": True, "item": doc}
 
+
 @app.get("/api/marketing/list")
 async def marketing_list(type: str, status: Optional[str] = None, db=Depends(get_db)):
     cmap = await collections_map(db)
@@ -325,6 +360,7 @@ async def marketing_list(type: str, status: Optional[str] = None, db=Depends(get
         q["status"] = status
     items = await cmap[type].find(q, {"_id": 0}).to_list(length=500)
     return items
+
 
 @app.post("/api/marketing/approve")
 async def marketing_approve(body: ApproveRequest, db=Depends(get_db)):
@@ -353,13 +389,16 @@ async def marketing_approve(body: ApproveRequest, db=Depends(get_db)):
     await (await collections_map(db))["approvals"].insert_one(approval_log)
     return {"success": True, "item": updated}
 
+
 # ----------------------
-# AI Orchestration Endpoints
+# AI Orchestration Endpoints (Text)
 # ----------------------
+
 
 @app.post("/api/ai/generate-strategy")
 async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
     """Generate marketing strategy; gracefully fallback if AI unavailable"""
+
     def fallback_strategy(req: StrategyRequest) -> str:
         return (
             f"Strategy (fallback) for {req.company_name} in {req.industry}.\n"
@@ -368,6 +407,7 @@ async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
             f"Website: {req.website_url or '-'}\n"
             "Sections: Market Analysis, Content Plan, Channel Mix, Budget Tips, KPIs, Timeline."
         )
+
     try:
         strategy_content: str
         if EMERGENT_LLM_KEY:
@@ -388,7 +428,7 @@ async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
             "strategy_content": strategy_content,
             "status": "Generated",
             "created_at": now_iso(),
-            "updated_at": now_iso()
+            "updated_at": now_iso(),
         }
         cmap = await collections_map(db)
         await cmap["strategy"].insert_one(strategy_doc)
@@ -397,15 +437,18 @@ async def ai_generate_strategy(request: StrategyRequest, db=Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Strategy generation failed: {str(e)}")
 
+
 @app.post("/api/ai/generate-content")
 async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
     """Generate content ideas; gracefully fallback if AI unavailable"""
+
     def fallback_content(req: ContentRequest) -> str:
         return (
             f"Content ideas (fallback) for {req.content_type} on {req.platform}.\n"
             f"Brief: {req.brief}\nTarget: {req.target_audience}\nBudget: {req.budget or 'Flexible'}\n"
             "Ideas: 1) Hook, 2) Value, 3) CTA, 4) Hashtags, 5) Visual style."
         )
+
     try:
         content_ideas: str
         if EMERGENT_LLM_KEY:
@@ -427,15 +470,15 @@ async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
             "ai_content": content_ideas,
             "status": "Generated",
             "created_at": now_iso(),
-            "updated_at": now_iso()
+            "updated_at": now_iso(),
         }
         cmap = await collections_map(db)
         # Map content type to collection
         collection_map = {
             "reel": "reel",
-            "ugc": "ugc", 
+            "ugc": "ugc",
             "brand": "brand",
-            "influencer": "influencer"
+            "influencer": "influencer",
         }
         collection_key = collection_map.get(request.content_type, "reel")
         await cmap[collection_key].insert_one(content_doc)
@@ -444,14 +487,17 @@ async def ai_generate_content(request: ContentRequest, db=Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Content generation failed: {str(e)}")
 
+
 @app.post("/api/ai/optimize-campaign")
 async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
     """Optimize campaign; gracefully fallback if AI unavailable"""
+
     def fallback_opt(request: CampaignRequest) -> str:
         return (
             "Optimization (fallback): Distribute budget across selected channels with 60/30/10 rule, "
             "set upper frequency caps, add creative sizes, and start with broad targeting then narrow."
         )
+
     try:
         if EMERGENT_LLM_KEY:
             try:
@@ -473,7 +519,7 @@ async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
             "ai_optimization": optimization,
             "status": "Optimized",
             "created_at": now_iso(),
-            "updated_at": now_iso()
+            "updated_at": now_iso(),
         }
         cmap = await collections_map(db)
         await cmap["campaign"].insert_one(campaign_doc)
@@ -482,15 +528,188 @@ async def ai_optimize_campaign(request: CampaignRequest, db=Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Campaign optimization failed: {str(e)}")
 
+
+# ----------------------
+# New Advanced AI: Images (OpenAI gpt-image-1)
+# ----------------------
+class ImageGenRequest(BaseModel):
+    prompt: str
+    size: str = Field(default="1024x1024", description="1024x1024 | 1024x1536 | 1536x1024")
+    quality: str = Field(default="medium", description="low|medium|high")
+    response_format: str = Field(default="b64_json", description="url|b64_json")
+
+
+@app.post("/api/ai/images/generate")
+async def generate_image(req: ImageGenRequest):
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=501, detail="OpenAI not configured. Please set EMERGENT_LLM_KEY or OPENAI_API_KEY.")
+    try:
+        # Use OpenAI SDK lazily to avoid import if not configured
+        from openai import OpenAI
+
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        resp = client.images.generate(
+            model="gpt-image-1",
+            prompt=req.prompt,
+            size=req.size,
+            quality=req.quality,
+            n=1,
+            response_format=req.response_format,
+        )
+        data = resp.data[0]
+        return {
+            "success": True,
+            "image_url": getattr(data, "url", None),
+            "image_data": getattr(data, "b64_json", None),
+            "size": req.size,
+            "quality": req.quality,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Image generation failed: {str(e)}")
+
+
+# ----------------------
+# New Advanced AI: Video (Luma) - async job with polling
+# ----------------------
+class VideoGenRequest(BaseModel):
+    prompt: str
+    aspect_ratio: str = Field(default="16:9")
+    duration: str = Field(default="5s")
+    resolution: str = Field(default="720p")
+    model: str = Field(default="ray-2")
+
+
+@app.post("/api/ai/videos/generate")
+async def videos_generate(req: VideoGenRequest):
+    if not LUMA_API_KEY:
+        raise HTTPException(status_code=501, detail="Luma not configured. Please set LUMA_API_KEY.")
+    try:
+        async with httpx.AsyncClient(headers={
+            "Authorization": f"Bearer {LUMA_API_KEY}",
+            "Content-Type": "application/json",
+        }, timeout=30.0) as client:
+            payload = {
+                "prompt": req.prompt,
+                "aspect_ratio": req.aspect_ratio,
+                "duration": req.duration,
+                "resolution": req.resolution,
+                "model": f"luma/{req.model}",
+            }
+            r = await client.post(f"{LUMA_API_URL}/video/generations", json=payload)
+            if r.status_code >= 400:
+                raise HTTPException(status_code=r.status_code, detail=r.text)
+            data = r.json()
+            gen_id = data.get("id") or data.get("generation_id")
+            return {"success": True, "generation_id": gen_id, "status": data.get("status", "queued")}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Video generation failed: {str(e)}")
+
+
+@app.get("/api/ai/videos/status")
+async def videos_status(generation_id: str):
+    if not LUMA_API_KEY:
+        raise HTTPException(status_code=501, detail="Luma not configured. Please set LUMA_API_KEY.")
+    try:
+        async with httpx.AsyncClient(headers={
+            "Authorization": f"Bearer {LUMA_API_KEY}",
+            "Content-Type": "application/json",
+        }, timeout=30.0) as client:
+            r = await client.get(f"{LUMA_API_URL}/video/generations", params={"generation_id": generation_id})
+            if r.status_code >= 400:
+                raise HTTPException(status_code=r.status_code, detail=r.text)
+            data = r.json()
+            return {
+                "success": True,
+                "generation_id": generation_id,
+                "status": data.get("status", "processing"),
+                "video_url": (data.get("video") or {}).get("url"),
+                "thumbnail_url": (data.get("video") or {}).get("thumbnail"),
+                "error": data.get("error"),
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Status fetch failed: {str(e)}")
+
+
+# ----------------------
+# New: Competition Analysis (SERP API)
+# ----------------------
+@app.get("/api/compete/serp")
+async def compete_serp(query: str, location: str = "India"):
+    if not SERP_API_KEY:
+        raise HTTPException(status_code=501, detail="SERP API not configured. Please set SERP_API_KEY.")
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            params = {
+                "engine": "google",
+                "q": query,
+                "location": location,
+                "api_key": SERP_API_KEY,
+            }
+            r = await client.get("https://serpapi.com/search.json", params=params)
+            if r.status_code >= 400:
+                raise HTTPException(status_code=r.status_code, detail=r.text)
+            j = r.json()
+            organic = j.get("organic_results", [])[:10]
+            ads = j.get("ads", [])
+            related = j.get("related_searches", [])
+            return {"success": True, "organic": organic, "ads": ads, "related": related}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"SERP fetch failed: {str(e)}")
+
+
+# ----------------------
+# New: Influencer Discovery (YouTube Data API)
+# ----------------------
+@app.get("/api/influencer/youtube/search")
+async def youtube_search(q: str, max_results: int = 10):
+    if not YT_API_KEY:
+        raise HTTPException(status_code=501, detail="YouTube API not configured. Please set YOUTUBE_DATA_API_KEY.")
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            params = {
+                "part": "snippet",
+                "q": q,
+                "type": "channel",
+                "maxResults": max_results,
+                "key": YT_API_KEY,
+            }
+            r = await client.get("https://www.googleapis.com/youtube/v3/search", params=params)
+            if r.status_code >= 400:
+                raise HTTPException(status_code=r.status_code, detail=r.text)
+            data = r.json()
+            channels = [
+                {
+                    "channel_id": item["snippet"]["channelId"],
+                    "title": item["snippet"]["title"],
+                    "description": item["snippet"].get("description"),
+                    "thumbnails": item["snippet"].get("thumbnails", {}),
+                }
+                for item in data.get("items", [])
+            ]
+            return {"success": True, "channels": channels}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"YouTube search failed: {str(e)}")
+
+
 # ----------------------
 # Mock Integrations (Meta, Canva) - safe stubs for staging
 # ----------------------
 MOCK_MODE = True
 
+
 class MetaPublishRequest(BaseModel):
     message: str
     image_url: Optional[str] = None
     page_id: Optional[str] = None
+
 
 @app.get("/api/meta/oauth/start")
 async def meta_oauth_start():
@@ -498,11 +717,13 @@ async def meta_oauth_start():
         return {"redirect": "/api/meta/oauth/callback?code=mock_code"}
     raise HTTPException(status_code=501, detail="Meta OAuth not configured")
 
+
 @app.get("/api/meta/oauth/callback")
 async def meta_oauth_callback(code: str = "mock_code"):
     if MOCK_MODE:
         return {"success": True, "access_token": "mock_page_token", "page_id": "1234567890"}
     raise HTTPException(status_code=501, detail="Meta OAuth not configured")
+
 
 @app.post("/api/meta/posts/publish")
 async def meta_publish(req: MetaPublishRequest):
@@ -510,9 +731,11 @@ async def meta_publish(req: MetaPublishRequest):
         return {"success": True, "id": f"mock_post_{uuid.uuid4().hex[:8]}", "request": req.dict()}
     raise HTTPException(status_code=501, detail="Meta publish not configured")
 
+
 class CanvaDesignRequest(BaseModel):
     template_id: str
     variables: Dict[str, Any] = Field(default_factory=dict)
+
 
 @app.get("/api/canva/auth/start")
 async def canva_auth_start():
@@ -520,17 +743,20 @@ async def canva_auth_start():
         return {"redirect": "/api/canva/auth/callback?code=mock_code"}
     raise HTTPException(status_code=501, detail="Canva OAuth not configured")
 
+
 @app.get("/api/canva/auth/callback")
 async def canva_auth_callback(code: str = "mock_code"):
     if MOCK_MODE:
         return {"success": True, "token": "mock_canva_token"}
     raise HTTPException(status_code=501, detail="Canva OAuth not configured")
 
+
 @app.post("/api/canva/designs/generate")
 async def canva_generate(req: CanvaDesignRequest):
     if MOCK_MODE:
         return {"success": True, "design_id": f"mock_design_{uuid.uuid4().hex[:8]}", "payload": req.dict()}
     raise HTTPException(status_code=501, detail="Canva generate not configured")
+
 
 @app.get("/api/ai/strategies")
 async def list_strategies(db=Depends(get_db)):
